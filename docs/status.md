@@ -49,6 +49,10 @@
     - positive-only recall: `1177 / 1181 = 0.9966`
     - negative-only false positive rate: `128 / 11250 = 0.0114`
     - negative-only specificity: `11122 / 11250 = 0.9886`
+- ONNX export 완료
+  - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
+  - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
+- classifier ONNX 추론 래퍼는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 모두 지원한다.
 - 공개용 wake word 샘플 경로를 `wake_word/examples/audio_samples/`로 정리했다.
 - 루트 `README.md`와 `wake_word/README.md`를 프로젝트 진입 문서로 사용한다.
 - 다음 세션의 주 작업 환경은 Jetson이다.
@@ -69,8 +73,7 @@
 
 ## 다음 작업
 
-1. `06_export_onnx.py` 구현
-2. 현재 best run을 ONNX로 export
-3. Jetson에서 실시간 추론 래퍼 구현
-4. Jetson GUI 데모 구현
-5. 실제 마이크 연결 후 positive / background 실기 검증
+1. 현재 export된 ONNX와 metadata를 Jetson으로 복사
+2. Jetson에서 classifier ONNX + feature extractor를 연결
+3. Jetson GUI 데모 구현
+4. 실제 마이크 연결 후 positive / background 실기 검증

@@ -20,8 +20,8 @@
 - baseline 학습 완료
 - grid search 완료
 - full-data 최종 학습 완료
+- ONNX export 완료
 - 다음 단계
-  - ONNX export
   - Jetson 실시간 추론 및 GUI 검증
 
 ## 현재 best 모델
@@ -87,7 +87,7 @@ wake_word/
 - [`train/05_train.py`](train/05_train.py)
 - [`train/05b_search.py`](train/05b_search.py)
 - [`train/05c_evaluate.py`](train/05c_evaluate.py)
-- `06_export_onnx.py` 예정
+- [`train/06_export_onnx.py`](train/06_export_onnx.py)
 
 ### `models/`
 
@@ -164,11 +164,44 @@ wake_word/
 
 ## 다음 작업
 
-1. `06_export_onnx.py` 구현
-2. 현재 best 모델 ONNX export
-3. Jetson 실시간 추론 래퍼 구현
-4. score / threshold / detection 상태를 보여주는 GUI 데모 구현
-5. 실제 마이크 연결 후 `하이 포포` 감지와 background 오탐 검증
+1. export된 ONNX와 metadata를 Jetson으로 복사
+2. Jetson에서 classifier ONNX + feature extractor를 연결
+3. score / threshold / detection 상태를 보여주는 GUI 데모 구현
+4. 실제 마이크 연결 후 `하이 포포` 감지와 background 오탐 검증
+
+## ONNX export / Jetson 준비
+
+현재 classifier는 ONNX export 가능하도록 정리돼 있다.
+
+- export script:
+  - [`train/06_export_onnx.py`](train/06_export_onnx.py)
+- export 결과:
+  - `models/hi_popo/hi_popo_classifier.onnx`
+  - `models/hi_popo/hi_popo_classifier_onnx.json`
+- ONNX wrapper:
+  - [`wake_word.py`](wake_word.py)
+- 간단한 CLI demo:
+  - [`wake_word_demo.py`](wake_word_demo.py)
+
+중요한 점:
+
+- 현재 export 대상은 `classifier only` ONNX다.
+- 즉 입력은 raw audio가 아니라 feature다.
+- wrapper는 `(16, 96)` window와 `(T, 96)` clip feature 둘 다 받을 수 있다.
+- Jetson에서 실제 마이크 추론을 하려면, upstream embedding 추출 단계가 추가로 필요하다.
+
+예시:
+
+```bash
+python wake_word/train/06_export_onnx.py \
+  --checkpoint wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt
+
+python wake_word/wake_word_demo.py \
+  --model wake_word/models/hi_popo/hi_popo_classifier.onnx \
+  --metadata wake_word/models/hi_popo/hi_popo_classifier_onnx.json \
+  --providers cpu \
+  --features /tmp/feature_clip.npy
+```
 
 ## 관련 문서
 

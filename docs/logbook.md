@@ -846,3 +846,35 @@
 
 - 이제 문서만 읽어도 현재 wake word 개발이 최종적으로 어떤 상위 플랫폼으로 이어지는지 이해할 수 있다.
 - 프로젝트의 목적이 개별 모델 구현이 아니라, 로봇 기능과 결합 가능한 재사용형 음성 에이전트 SDK라는 점이 명확해졌다.
+
+---
+
+## 2026-03-13 | Human + Codex | ONNX export 및 Jetson용 classifier 추론 코드 준비
+
+### Context
+
+- 사용자는 현재 best checkpoint를 ONNX로 export하고, 이후 Jetson으로 코드를 복사해 이어서 개발할 계획이다.
+- 따라서 export 스크립트와, export된 ONNX를 Jetson에서 어떻게 로드해 추론하는지에 대한 최소 샘플 코드가 필요했다.
+
+### Actions
+
+- `wake_word/train/06_export_onnx.py`를 추가했다.
+- `wake_word/wake_word.py`를 classifier ONNX wrapper로 구현했다.
+- `wake_word/wake_word_demo.py`에 간단한 CLI 샘플을 추가했다.
+- `wake_word/README.md`와 `docs/status.md`에 현재 export 경로와 Jetson 준비 관점을 반영했다.
+
+### Notes
+
+- 현재 export 대상은 raw audio end-to-end 모델이 아니라 `classifier only` ONNX다.
+- 입력은 `(16, 96)` feature window이며, 실제 마이크 추론에는 upstream embedding 추출 단계가 별도로 필요하다.
+
+### Follow-up
+
+- `wake_word` 환경에 `onnx` 패키지가 없어서 첫 export가 실패했다.
+- `onnx` 설치 후 export를 다시 실행해 아래 산출물을 생성했다.
+  - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
+  - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
+- 같은 ONNX와 metadata를 `final_full_best_trial40` run 디렉토리에도 같이 복사했다.
+- 초기 demo는 `(28, 96)` clip feature를 그대로 넣어 실패했는데, classifier 입력이 `(16, 96)` window이기 때문이었다.
+- 이를 해결하기 위해 `wake_word/wake_word.py`를 보완해 `(T, 96)` clip feature를 받으면 sliding window를 만든 뒤 max score를 반환하도록 수정했다.
+- `wake_word/wake_word_demo.py`에도 provider override와 clip feature 입력 지원을 반영했다.
