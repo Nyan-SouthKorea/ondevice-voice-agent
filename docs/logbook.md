@@ -806,3 +806,22 @@
 
 - 루트 README 하단이 더 간결해졌고, 문서 진입 경로가 중복 없이 정리됐다.
 - 현재 운영 기준은 작업 단위 완료 시 `origin`과 `gitlab`에 함께 push하는 방식으로 정리됐다.
+
+---
+
+## 2026-03-13 | Human + Codex | 자동 push 운영에서 `secrets/` 보호 원칙 강화
+
+### Context
+
+- 사용자는 자동 push를 허용하되, `secrets/`가 절대 원격에 올라가지 않도록 매우 강한 주의를 요구했다.
+
+### Actions
+
+- `git ls-files secrets`로 현재 `secrets/` 아래 파일이 추적되고 있지 않음을 다시 확인했다.
+- `docs/개발방침.md`에 `secrets/`는 어떤 경우에도 추적하지 않고, 커밋/푸시 전에 반드시 상태를 확인한다는 규칙을 추가했다.
+- `docs/decisions.md`에 자동 push 운영에서도 `secrets/`는 예외 없이 제외한다는 결정을 추가했다.
+
+### Result
+
+- 자동 push 운영과 별개로 `secrets/`는 로컬 전용 영역이라는 기준이 더 강하게 명시됐다.
+- 현재 시점 기준으로 추적 중인 `secrets/` 파일은 없다.
