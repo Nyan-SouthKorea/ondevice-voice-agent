@@ -189,6 +189,7 @@ wake_word/
 - 즉 입력은 raw audio가 아니라 feature다.
 - wrapper는 `(16, 96)` window와 `(T, 96)` clip feature 둘 다 받을 수 있다.
 - Jetson에서 실제 마이크 추론을 하려면, upstream embedding 추출 단계가 추가로 필요하다.
+- `models/` 아래 산출물은 git에 포함하지 않으므로, Jetson에는 ONNX와 metadata를 별도로 복사해야 한다.
 
 예시:
 

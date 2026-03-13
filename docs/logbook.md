@@ -875,6 +875,7 @@
   - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
   - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
 - 같은 ONNX와 metadata를 `final_full_best_trial40` run 디렉토리에도 같이 복사했다.
+- `wake_word/models/`는 git에 포함하지 않으므로, Jetson에는 ONNX와 metadata를 별도로 복사해야 한다는 점도 문서에 반영했다.
 - 초기 demo는 `(28, 96)` clip feature를 그대로 넣어 실패했는데, classifier 입력이 `(16, 96)` window이기 때문이었다.
 - 이를 해결하기 위해 `wake_word/wake_word.py`를 보완해 `(T, 96)` clip feature를 받으면 sliding window를 만든 뒤 max score를 반환하도록 수정했다.
 - `wake_word/wake_word_demo.py`에도 provider override와 clip feature 입력 지원을 반영했다.

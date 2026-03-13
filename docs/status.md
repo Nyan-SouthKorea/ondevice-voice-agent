@@ -53,6 +53,7 @@
   - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
   - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
 - classifier ONNX 추론 래퍼는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 모두 지원한다.
+- `wake_word/models/`는 git 제외 대상이므로 Jetson에는 ONNX와 metadata를 별도로 복사해야 한다.
 - 공개용 wake word 샘플 경로를 `wake_word/examples/audio_samples/`로 정리했다.
 - 루트 `README.md`와 `wake_word/README.md`를 프로젝트 진입 문서로 사용한다.
 - 다음 세션의 주 작업 환경은 Jetson이다.
