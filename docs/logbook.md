@@ -691,3 +691,8 @@
 - 결과:
   - `Welcome to GitLab, @iena!`
 - 즉, 현재 GitLab SSH 인증은 정상 동작한다.
+
+### Policy Update
+
+- 이후 원격 반영은 `origin`과 `gitlab`에 같은 커밋을 같은 타이밍에 push하는 방식으로 운영하기로 했다.
+- 단, push 자체는 계속 사용자 확인 후 진행한다.
