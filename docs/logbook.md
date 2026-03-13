@@ -8,18 +8,18 @@
 
 ### Context
 
-- 사용자는 Claude Code에서 진행하던 프로젝트를 Codex와 병행하기 시작했다.
+- 사용자는 다른 도구에서 진행하던 프로젝트를 Codex와 병행하기 시작했다.
 - `docs`를 먼저 읽고 현재 프로젝트 기준을 파악해달라고 요청했다.
 
 ### Actions
 
 - `docs/README.md`, `docs/개발방침.md`, `docs/envs/wake_word_env.md`
-- `docs/archive/01_env_setup_claude.md`, `02_positive_data_claude.md`, `03_negative_data_claude.md`
+- 초기 환경/positive/negative 작업 메모
 - `docs/research/wake_word.md`, `tts_korean.md`, `negative_datasets.md`
 - 실제 디렉토리와 학습 스크립트 상태를 함께 확인했다.
 - `하이 케어로봇`으로 남아 있던 문서를 `하이 포포` 기준으로 수정했다.
 - negative 전략을 `AI Hub + MUSAN + FSD50K` 기준으로 수정했다.
-- 과거 AI 도구별 메모는 `docs/archive/`로 이동해 보관했다.
+- 과거 AI 도구별 메모를 별도 보관했다.
 - 세션 기록 방식 논의를 거쳐 `status / decisions / logbook` 체계로 개편했다.
 
 ### Findings
@@ -387,7 +387,7 @@
 - 루트 디렉토리에서 `git init`을 수행하고 기본 브랜치를 `main`으로 변경했다.
 - 로컬 Git 작성자 정보를 공개용 일반 값으로 설정했다.
 - 외부 clone인 `wake_word/openWakeWord/`는 embedded repo 문제를 피하기 위해 `.gitignore`에서 전체 제외했다.
-- 로컬 설정 폴더 `.claude/`도 ignore에 추가했다.
+- 로컬 설정 폴더도 ignore에 추가했다.
 - 첫 커밋 `Initial project import`를 생성했다.
 - 기본 원격 `origin`을 설정하고 `main` 브랜치를 push했다.
 
@@ -879,3 +879,25 @@
 - 초기 demo는 `(28, 96)` clip feature를 그대로 넣어 실패했는데, classifier 입력이 `(16, 96)` window이기 때문이었다.
 - 이를 해결하기 위해 `wake_word/wake_word.py`를 보완해 `(T, 96)` clip feature를 받으면 sliding window를 만든 뒤 max score를 반환하도록 수정했다.
 - `wake_word/wake_word_demo.py`에도 provider override와 clip feature 입력 지원을 반영했다.
+
+---
+
+## 2026-03-13 | Human + Codex | 상위 문서를 ONNX export 이후 기준으로 동기화
+
+### Context
+
+- `wake_word/README.md`와 `docs/status.md`는 이미 ONNX export 완료 상태를 반영하고 있었지만, 일부 상위 문서는 아직 `06_export_onnx.py`를 미구현 TODO처럼 설명하고 있었다.
+- 또한 Jetson handoff 문서 일부는 현재 구현된 classifier-only ONNX 래퍼 상태와 앞으로 남은 raw audio 연결 작업을 명확히 구분하지 못하고 있었다.
+
+### Actions
+
+- `docs/project_overview.md`를 현재 구현 상태 기준으로 갱신했다.
+- `docs/jetson_transition_plan.md`를 ONNX export 완료 이후 단계 기준으로 수정했다.
+- `docs/개발방침.md`의 Wake Word 상태를 실제 진행 단계에 맞게 갱신했다.
+- `wake_word/models/hi_popo/README.md`에 ONNX 산출물 설명을 추가했다.
+
+### Result
+
+- 상위 문서에서도 `06_export_onnx.py`가 이미 구현 완료된 상태로 정리됐다.
+- 현재 남은 핵심 작업이 `raw audio -> feature extractor -> classifier ONNX` 연결이라는 점이 문서에 명확히 반영됐다.
+- model artifact 문서에서도 latest `.onnx`와 `_onnx.json` 산출물을 함께 설명하게 됐다.

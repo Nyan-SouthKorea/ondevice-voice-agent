@@ -206,10 +206,12 @@ feature 추출 스크립트:
 - [05_train.py](../wake_word/train/05_train.py)
 - [05b_search.py](../wake_word/train/05b_search.py)
 - [05c_evaluate.py](../wake_word/train/05c_evaluate.py)
+- [06_export_onnx.py](../wake_word/train/06_export_onnx.py)
 
-아직 남은 스크립트:
+현재 추론 준비용 모듈:
 
-- `06_export_onnx.py`
+- [wake_word.py](../wake_word/wake_word.py)
+- [wake_word_demo.py](../wake_word/wake_word_demo.py)
 
 학습 산출물은 아래에 run 단위로 보관한다.
 
@@ -220,6 +222,17 @@ feature 추출 스크립트:
 - checkpoint
 - training history
 - run metadata
+
+현재 latest export 산출물:
+
+- `wake_word/models/hi_popo/hi_popo_classifier.onnx`
+- `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
+
+중요한 점:
+
+- 현재 export 대상은 raw audio end-to-end 모델이 아니라 `classifier only` ONNX다.
+- 즉 Jetson에서 실제 마이크 추론을 하려면 Google Speech Embedding feature 추출 단계를 함께 연결해야 한다.
+- 현재 `wake_word.py`는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 받아 ONNX classifier를 실행하는 래퍼다.
 
 ## 9. 학습 결과 요약
 
@@ -372,12 +385,12 @@ epoch 8 결과:
 
 현재 우선순위는 아래와 같다.
 
-1. `06_export_onnx.py` 구현
-2. 최종 모델 ONNX export
-3. threshold sweep 및 평가 스크립트 보강
-4. 연속 오디오 기준 false positive / false reject 평가
-5. 성능이 충분하면 Jetson Orin Nano로 이관
-6. 이관 직전, 학습 환경과 개발 히스토리를 handoff 문서로 최종 정리
+1. export된 ONNX와 metadata를 Jetson으로 복사
+2. Jetson에서 feature extractor + classifier ONNX + 마이크 입력을 연결
+3. score / threshold / detection 상태를 즉시 확인할 수 있는 실시간 CLI/GUI를 붙인다
+4. 연속 오디오 기준 false positive / false reject 평가와 threshold 점검을 진행한다
+5. 성능이 충분하면 wake word 모듈을 상위 음성 에이전트 파이프라인에 연결한다
+6. 이관 직전, 학습 환경과 개발 히스토리를 handoff 문서로 최종 정리한다
 
 현재는 이관 계획을 별도 문서로 분리했다.
 

@@ -25,12 +25,18 @@
 - best parameter 선정 완료
 - full-data final training 완료
 - positive-only / negative-only 분리 평가 완료
+- classifier ONNX export 완료
+- classifier ONNX wrapper / CLI sample 준비 완료
 
 현재 Jetson 이관 후보 모델은 아래 run이다.
 
 - run name: `final_full_best_trial40`
 - checkpoint:
   - `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt`
+- exported ONNX:
+  - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
+- exported metadata:
+  - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
 
 현재 기록된 핵심 성능:
 
@@ -49,9 +55,9 @@
 
 Jetson 단계의 1차 목표는 다음과 같다.
 
-1. 현재 best 모델을 ONNX로 export 가능 상태로 만든다.
-2. Jetson에서 마이크 입력을 받아 실시간으로 wake word score를 계산한다.
-3. GUI에서 감지 여부를 사람이 즉시 확인할 수 있게 만든다.
+1. export된 classifier ONNX와 metadata를 Jetson에서 바로 쓸 수 있게 배치한다.
+2. Jetson에서 feature extractor와 classifier ONNX를 연결해 마이크 입력으로 score를 계산한다.
+3. score와 detection 상태를 사람이 즉시 확인할 수 있는 CLI/GUI를 붙인다.
 4. 실제 환경에서 `하이 포포` 호출 성능과 배경 오탐을 직접 확인한다.
 
 즉, 지금 단계의 목적은 “실시간 데모와 실기 검증”이다.
@@ -64,6 +70,10 @@ Jetson 단계에서 우선 기준으로 삼을 파일은 아래다.
 
 - 모델 checkpoint
   - `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt`
+- latest classifier ONNX
+  - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
+- latest export metadata
+  - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
 - run metadata
   - `wake_word/models/hi_popo/runs/final_full_best_trial40/run_metadata.json`
 - training history
@@ -83,30 +93,25 @@ Jetson 단계에서는 아래 순서로 진행한다.
 
 ### 5-1. ONNX export
 
-먼저 해야 할 것은 현재 best checkpoint를 ONNX로 내보내는 것이다.
+이 단계에서 ONNX export 자체는 이미 끝났다. Jetson 단계에서는 export 결과를 기준 산출물로 사용한다.
 
-필요 작업:
+현재 준비된 파일:
 
-- `wake_word/train/06_export_onnx.py` 구현
-- `final_full_best_trial40` checkpoint를 읽어 ONNX export
-- export 결과에 threshold 정보도 함께 기록
+- `wake_word/train/06_export_onnx.py`
+- `wake_word/models/hi_popo/hi_popo_classifier.onnx`
+- `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
+- `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.onnx`
+- `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier_onnx.json`
 
-목표 산출물 예시:
+Jetson에서 먼저 할 일:
 
-- `wake_word/models/hi_popo/final_full_best_trial40.onnx`
-- `wake_word/models/hi_popo/final_full_best_trial40.json`
-
-JSON에는 최소한 아래 정보가 있어야 한다.
-
-- run name
-- threshold
-- layer/input shape 관련 정보
-- export 시각
-- source checkpoint path
+- ONNX와 metadata를 Jetson 작업 디렉토리로 복사
+- Jetson 쪽 Python 환경에서 `onnxruntime-gpu` 로딩 확인
+- metadata의 threshold와 input shape가 기대값 `(16, 96)`인지 확인
 
 ### 5-2. Jetson 추론 래퍼 구현
 
-그 다음 Jetson에서 ONNX 모델을 실시간 추론할 수 있게 래퍼를 만든다.
+현재 `wake_word/wake_word.py`는 classifier ONNX 래퍼로 이미 구현돼 있다. 다만 입력이 raw audio가 아니라 feature라는 점이 핵심이다.
 
 목표 파일:
 
@@ -114,15 +119,24 @@ JSON에는 최소한 아래 정보가 있어야 한다.
 
 최소 역할:
 
-- 마이크 입력 수집
-- 오디오를 모델 입력 포맷으로 맞춤
+- classifier ONNX 로드
+- `(16, 96)` window와 `(T, 96)` clip feature 입력 처리
 - ONNX 추론 실행
 - wake word score 계산
 - threshold 초과 시 detection 상태 반환
 
+Jetson에서 추가로 붙여야 하는 역할:
+
+- 마이크 입력 수집
+- raw audio를 Google Speech Embedding feature로 변환
+- 변환된 feature를 classifier ONNX 래퍼에 전달
+
+즉 현재 남은 핵심은 `raw audio -> feature extractor -> classifier ONNX` 연결이다.
+
 ### 5-3. 실시간 GUI 데모 구현
 
-그 다음에는 시각적으로 동작 여부를 확인할 수 있는 단순 GUI를 만든다.
+현재 `wake_word/wake_word_demo.py`는 export된 ONNX를 feature `.npy` 입력으로 테스트하는 CLI 예제다.
+Jetson 단계에서는 이 예제를 마이크 기반 실시간 CLI 또는 GUI로 확장한다.
 
 목표 파일:
 
@@ -210,7 +224,7 @@ GUI를 보는 동안 아래를 바로 판단할 수 있어야 한다.
 초기 성공 기준은 아래다.
 
 - ONNX 모델이 Jetson에서 정상 로드된다.
-- 마이크 입력이 끊기지 않고 실시간 score가 나온다.
+- feature extractor와 classifier ONNX가 연결되어, 마이크 입력이 끊기지 않고 실시간 score가 나온다.
 - `하이 포포` 호출 시 GUI에서 명확한 score 상승과 detection이 보인다.
 - idle/background에서 오탐 패턴을 확인할 수 있다.
 - threshold 조정 필요 여부를 실기 기준으로 판단할 수 있다.

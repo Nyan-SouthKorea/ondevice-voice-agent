@@ -26,7 +26,6 @@ docs/
 ├── decisions.md     ← 의사결정 로그
 ├── logbook.md       ← 작업 로그
 ├── envs/            ← 환경 세팅 기록
-├── archive/         ← 과거 AI 도구별 작업 메모 보관
 └── research/        ← 요소기술별 기술 조사 결과
     ├── wake_word.md
     ├── negative_datasets.md

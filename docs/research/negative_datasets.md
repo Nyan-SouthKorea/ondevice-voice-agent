@@ -138,4 +138,3 @@ data/hi_popo/negative/
 
 - `docs/개발방침.md`
 - `docs/research/wake_word.md`
-- `docs/archive/03_negative_data_claude.md`
