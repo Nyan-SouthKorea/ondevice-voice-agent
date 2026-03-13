@@ -358,3 +358,78 @@
 
 - `examples/audio_samples/positive_tts/`를 실제로 만들고, 직접 생성한 TTS 샘플 3개를 복사했다.
 - `examples/audio_samples/README.md`를 추가해 포함 원칙과 샘플 목록을 명시했다.
+
+---
+
+## 2026-03-13 | Git 초기화 및 GitHub 첫 push
+
+### Context
+
+- 사용자는 GitHub에서 `ondevice-voice-agent` 레포를 만들었고, 현재 작업 디렉토리를 관리 대상으로 올리길 원했다.
+- 작성자 정보는 개인 GitHub 계정/이메일이 노출되지 않도록 로컬 전용 값으로 설정하기로 했다.
+
+### Actions
+
+- 루트 디렉토리에서 `git init`을 수행하고 기본 브랜치를 `main`으로 변경했다.
+- 로컬 Git 작성자 정보를 아래처럼 설정했다.
+  - `user.name = Ryan`
+  - `user.email = ryan@local.invalid`
+- 외부 clone인 `wake_word/openWakeWord/`는 embedded repo 문제를 피하기 위해 `.gitignore`에서 전체 제외했다.
+- 로컬 설정 폴더 `.claude/`도 ignore에 추가했다.
+- 첫 커밋 `Initial project import`를 생성했다.
+- GitHub 원격 `https://github.com/Nyan-SouthKorea/ondevice-voice-agent.git`를 `origin`으로 설정하고 `main` 브랜치를 push했다.
+
+### Result
+
+- `origin/main` 첫 push 완료
+- 현재 로컬 브랜치 `main`은 원격 `origin/main`을 추적한다
+
+### Follow-up
+
+- 사용자의 요청으로 `docs/개발방침.md`에 Git 연동 시 버전 관리 원칙을 추가했다.
+- 원칙 내용은 코드 변경, 문서 변경, 추적 대상 점검을 같은 흐름 안에서 관리하도록 정리했다.
+
+---
+
+## 2026-03-13 | 루트 README 추가
+
+### Context
+
+- 사용자는 문서 허브용 `docs/README.md`와 별도로, 프로젝트 자체를 설명하는 루트 `README.md`가 필요하다고 요청했다.
+
+### Actions
+
+- 루트 `README.md`를 새로 추가했다.
+- 내용은 프로젝트 개요, 현재 범위, 목표, 진행 상태, 구조, 문서 링크, 운영 원칙 중심으로 구성했다.
+- `docs/README.md`는 문서 허브 역할로 유지하고, 루트 `README.md`가 상위 프로젝트 소개를 맡도록 역할을 분리했다.
+
+---
+
+## 2026-03-13 | GitLab remote 추가
+
+### Context
+
+- 사용자는 GitHub뿐 아니라 사내 GitLab도 함께 관리 대상으로 추가하길 원했다.
+
+### Actions
+
+- 사내 GitLab remote를 `gitlab` 이름으로 추가했다.
+  - `ssh://git@aigit.everybot.kr:9022/team/ai/ondevice-voice-agent.git`
+- 로컬 Git alias `push-all`을 추가했다.
+  - `git push origin main && git push gitlab main`
+- SSH host key verification 문제를 해결하기 위해 사내 GitLab 호스트 키를 `known_hosts`에 추가했다.
+
+### Result
+
+- remote 등록 완료
+- `known_hosts` 등록 완료
+- 현재 GitLab push는 `Permission denied (publickey)`로 실패
+
+### Next
+
+- 이 머신에서 사용할 SSH private key가 준비되면 `git push -u gitlab main`으로 바로 이어갈 수 있다.
+
+### Follow-up
+
+- 이후 Git 운용 원칙을 추가로 정리했다.
+- 중간 커밋은 작업 단위 기준으로 자율 수행하고, 원격 push는 항상 사용자 확인 후 진행한다.

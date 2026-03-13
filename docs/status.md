@@ -49,6 +49,9 @@
   - best observed metric: `val_recall 0.9907`, `val_accuracy 0.9664`, `val_fp_rate 0.0578`, `threshold 0.35`
 - `05b_search.py`로 baseline 구조의 핵심 하이퍼파라미터 탐색을 자동 실행할 수 있음
 - 탐색 결과는 `wake_word/models/hi_popo/searches/<search_name>/` 아래에 ranking과 best trial로 아카이빙됨
+- 루트 Git 저장소를 초기화했고, GitHub 원격 `origin`으로 `main` 브랜치 첫 push가 완료됨
+- 사내 GitLab remote `gitlab`을 추가했고, 로컬 `git push-all` alias를 설정함
+- 현재 GitLab push는 SSH `publickey` 권한 문제로 미완료 상태임
 
 ## 코드 상태
 
