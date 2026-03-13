@@ -812,7 +812,8 @@
 ### Result
 
 - 민감한 운영 정보는 최신 문서 기준에서 일반화 유지
-- 두 원격은 다시 같은 non-rewritten history 라인에서 동기화 가능하도록 정리 중
+- 두 원격은 다시 같은 non-rewritten history 라인에서 동기화되도록 복구했다.
+- GitLab `main`은 일반 push로 갱신했고, GitHub `main`은 한 번의 force push로 같은 커밋 라인에 맞췄다.
 
 ### Notes
 
