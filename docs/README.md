@@ -3,6 +3,7 @@
 ## 문서 운영 원칙
 
 - `docs/project_overview.md`: 프로젝트 목적, 범위, 구현 상태, 학습 결과를 한 번에 보는 통합 문서
+- `docs/jetson_transition_plan.md`: Jetson 단계에서 바로 이어갈 작업과 검증 계획
 - `docs/개발방침.md`: 현재 프로젝트의 최종 의사결정과 공통 원칙
 - `docs/research/*.md`: 요소기술별 조사 결과와 선택 근거
 - `docs/envs/*.md`: 실행 환경과 설치 절차
@@ -19,6 +20,7 @@
 docs/
 ├── README.md        ← 이 파일 (전체 개요)
 ├── project_overview.md ← 프로젝트 전체 설명과 현재 구현 상태 통합
+├── jetson_transition_plan.md ← Jetson 이관 및 실기 검증 계획
 ├── 개발방침.md       ← 개발 원칙, 기술 결정, 현황 통합
 ├── status.md        ← 최신 상태
 ├── decisions.md     ← 의사결정 로그
@@ -38,15 +40,16 @@ docs/
 
 ## 우선 참고 순서
 
-1. `docs/project_overview.md`
-2. `docs/개발방침.md`
-3. `docs/status.md`
-4. `docs/decisions.md`
-5. `docs/logbook.md`
-6. `docs/research/wake_word.md`
-7. `docs/research/negative_datasets.md`
-8. `docs/research/tts_korean.md`
-9. `docs/envs/wake_word_env.md`
+1. `docs/jetson_transition_plan.md`
+2. `docs/project_overview.md`
+3. `docs/개발방침.md`
+4. `docs/status.md`
+5. `docs/decisions.md`
+6. `docs/logbook.md`
+7. `docs/research/wake_word.md`
+8. `docs/research/negative_datasets.md`
+9. `docs/research/tts_korean.md`
+10. `docs/envs/wake_word_env.md`
 
 ## 개발 방법론: PDCA 사이클
 

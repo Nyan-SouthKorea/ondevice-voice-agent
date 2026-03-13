@@ -624,3 +624,35 @@
 ### Next
 
 - 연속 오디오 기준 평가 세트를 따로 구성해 `false accepts per hour`와 실제 배경 환경 오탐을 측정해야 한다.
+
+---
+
+## 2026-03-13 | Human + Codex | Jetson 전환 계획 문서화
+
+### Context
+
+- 사용자는 현재 서버 학습 단계는 잠시 멈추고, 이제 Jetson으로 넘어가 실제 마이크 기반 GUI 테스트를 진행하려고 한다.
+- 다음 세션이 바뀌더라도 Jetson 단계에서 바로 이어갈 수 있도록, 앞으로의 계획을 문서에 자세히 남기길 원했다.
+
+### Actions
+
+- `docs/jetson_transition_plan.md`를 새로 작성했다.
+- 현재 best 모델 경로, Jetson 단계 목표, ONNX export 우선순위, 실시간 추론 래퍼 계획, GUI 요구사항, positive/background 실기 검증 계획을 정리했다.
+- `docs/README.md`의 우선 참고 순서를 Jetson 전환 문서 기준으로 재배치했다.
+- `docs/status.md`를 Jetson phase 중심으로 갱신했다.
+- `docs/decisions.md`에 다음 phase는 Jetson 실시간 검증을 우선한다는 결정을 추가했다.
+- `docs/project_overview.md`에도 Jetson 전환 문서 링크를 추가했다.
+
+### Result
+
+- 다음 세션에서 아래 문서만 읽으면 Jetson 단계로 바로 이어갈 수 있게 됐다.
+  - `docs/jetson_transition_plan.md`
+  - `docs/status.md`
+  - `docs/project_overview.md`
+  - `docs/decisions.md`
+  - `docs/logbook.md`
+
+### Notes
+
+- 현재 기준 모델은 `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt`다.
+- Jetson 단계의 1차 목적은 추가 학습이 아니라 실시간 추론과 실기 검증이다.

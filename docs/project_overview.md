@@ -337,3 +337,9 @@ epoch 8 결과:
 4. 연속 오디오 기준 false positive / false reject 평가
 5. 성능이 충분하면 Jetson Orin Nano로 이관
 6. 이관 직전, 학습 환경과 개발 히스토리를 handoff 문서로 최종 정리
+
+현재는 이관 계획을 별도 문서로 분리했다.
+
+- [jetson_transition_plan.md](/data2/iena/260312_WakeWord-train/docs/jetson_transition_plan.md)
+
+이 문서는 Jetson 단계에서 바로 수행할 작업 순서, GUI 요구사항, 실기 검증 계획, 성공 기준을 정리한다.

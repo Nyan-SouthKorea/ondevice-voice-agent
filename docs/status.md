@@ -4,9 +4,9 @@
 
 ## 현재 목표
 
-- `하이 포포` wake word 모델을 학습하고 평가한다.
-- 성능이 충분하면 Jetson Orin Nano Developer Kit으로 이관한다.
-- Jetson 이관 이후에는 ONNX 추론 중심으로 개발을 이어간다.
+- `하이 포포` wake word 모델을 Jetson Orin Nano Developer Kit에서 실시간으로 검증한다.
+- ONNX 추론 경로와 GUI 데모를 먼저 완성한다.
+- 실기 결과를 보고 threshold 조정 또는 재학습 필요 여부를 판단한다.
 
 ## 현재 최종 기준
 
@@ -49,6 +49,8 @@
     - positive-only recall: `1177 / 1181 = 0.9966`
     - negative-only false positive rate: `128 / 11250 = 0.0114`
     - negative-only specificity: `11122 / 11250 = 0.9886`
+- 다음 세션의 주 작업 환경은 Jetson이다.
+- Jetson 단계 상세 계획은 `docs/jetson_transition_plan.md`에 정리돼 있다.
 
 ## 중요 메모
 
@@ -63,6 +65,6 @@
 
 1. `06_export_onnx.py` 구현
 2. 현재 best run을 ONNX로 export
-3. 연속 오디오 기준 평가 세트 구성
-4. 연속 오디오 기준 false positive / false reject 평가
-5. 성능이 충분하면 Jetson 이관 준비
+3. Jetson에서 실시간 추론 래퍼 구현
+4. Jetson GUI 데모 구현
+5. 실제 마이크 연결 후 positive / background 실기 검증
