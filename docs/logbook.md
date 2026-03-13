@@ -684,3 +684,10 @@
 
 - 현재 문제는 로컬 설정이 아니라, 생성한 공개키가 아직 GitLab 계정에 등록되지 않은 상태라는 뜻이다.
 - 다음 단계는 `id_ed25519.pub` 내용을 GitLab 사용자 계정의 SSH Keys에 등록하는 것이다.
+
+### Follow-up
+
+- 사용자가 공개키를 GitLab 계정에 등록한 뒤 다시 SSH 테스트를 수행했다.
+- 결과:
+  - `Welcome to GitLab, @iena!`
+- 즉, 현재 GitLab SSH 인증은 정상 동작한다.
