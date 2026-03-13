@@ -61,7 +61,6 @@
 - 현재 서버 환경에서는 ONNX feature 추출이 실제로는 GPU가 아니라 CPU로 동작했다.
 - 원인은 `onnxruntime-gpu==1.23.2`의 CUDA 12 의존성과 현재 서버의 CUDA 11.8 조합 불일치다.
 - PyTorch 학습은 사용자 셸에서 GPU 사용 가능했다.
-- 현재 `main`은 non-rewritten history 기준으로 정렬되어 있고, `origin`과 `gitlab`에 같은 커밋 라인으로 다시 동기화됐다.
 - 현재 evaluation 비율은 대략 positive:negative = `1:10`이다.
 - 이 비율은 모델 비교와 학습 선택에는 유효하지만, 실제 배치 성능을 바로 의미하지는 않는다.
 - 현재 코드에서는 이름이 `test`인 split을 best epoch와 threshold 선택에 사용하므로, 엄밀히는 held-out validation에 가깝다.
