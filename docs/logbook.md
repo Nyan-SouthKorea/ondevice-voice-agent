@@ -764,3 +764,32 @@
 
 - 최신 문서 기준으로는 내부 Git 서버 주소, 내부 사용자 식별자, 로컬 SSH 경로가 직접 노출되지 않게 정리됐다.
 - 다만 이미 push된 과거 커밋 기록까지 완전히 숨기려면 별도의 history rewrite가 필요하다.
+
+### Policy Update
+
+- 이후 민감한 운영 메모가 꼭 필요하면 `secrets/` 아래의 로컬 전용 문서로 분리하고, 공개 문서에는 일반화한 내용만 남기기로 했다.
+
+---
+
+## 2026-03-13 | Human + Codex | 모듈별 README 연결 구조 추가
+
+### Context
+
+- 사용자는 루트 `README.md`에서 각 요소기술 설명 페이지로 바로 이동할 수 있길 원했다.
+- 특히 `wake_word`는 현재 구현이 많이 진행된 만큼 별도 설명 페이지를 완성하길 원했다.
+
+### Actions
+
+- 루트 `README.md`에 각 모듈 설명 페이지 링크를 추가했다.
+- 아래 디렉토리에 `README.md`를 새로 만들었다.
+  - `wake_word/README.md`
+  - `vad/README.md`
+  - `stt/README.md`
+  - `llm/README.md`
+  - `tts/README.md`
+- `wake_word/README.md`에는 현재 데이터 상태, best 모델, 핵심 지표, 주요 스크립트, 다음 작업을 정리했다.
+
+### Result
+
+- 이제 루트 `README.md`에서 각 요소기술 설명 페이지로 직접 이동할 수 있다.
+- `wake_word`는 독립 README만 읽어도 현재 구현 상태와 다음 단계가 복구되도록 정리됐다.

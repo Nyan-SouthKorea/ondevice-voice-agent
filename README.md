@@ -14,6 +14,14 @@
 - `vad`, `stt`, `llm`, `tts`
   - 상위 음성 에이전트 구조용 모듈 자리 확보
 
+## 요소기술 안내
+
+- [Wake Word](wake_word/README.md)
+- [VAD](vad/README.md)
+- [STT](stt/README.md)
+- [LLM](llm/README.md)
+- [TTS](tts/README.md)
+
 ## 목표
 
 - Linux 서버(A100)에서 wake word 모델을 학습하고 평가한다
