@@ -93,11 +93,7 @@
 - 공개용 오디오 샘플은 `wake_word/examples/audio_samples/` 아래의 직접 생성한 소량 샘플만 유지한다.
 - 내부 주소, 계정 식별자, SSH 경로 같은 민감한 운영 정보는 공개 문서가 아니라 `secrets/` 아래의 로컬 전용 문서에서 관리한다.
 
-## 관련 문서
+## 문서 허브
 
-- [docs/README.md](docs/README.md)
-- [docs/project_overview.md](docs/project_overview.md)
-- [docs/개발방침.md](docs/개발방침.md)
-- [docs/status.md](docs/status.md)
-- [docs/decisions.md](docs/decisions.md)
-- [docs/logbook.md](docs/logbook.md)
+세부 문서는 [docs/README.md](docs/README.md)에서 한 번에 찾을 수 있다.  
+현재 구현 상태를 가장 빠르게 확인하려면 [docs/status.md](docs/status.md)와 [wake_word/README.md](wake_word/README.md)를 먼저 보면 된다.
