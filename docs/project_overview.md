@@ -167,6 +167,7 @@ feature 추출 스크립트:
 - [04_extract_features.py](/data2/iena/260312_WakeWord-train/wake_word/train/04_extract_features.py)
 - [05_train.py](/data2/iena/260312_WakeWord-train/wake_word/train/05_train.py)
 - [05b_search.py](/data2/iena/260312_WakeWord-train/wake_word/train/05b_search.py)
+- [05c_evaluate.py](/data2/iena/260312_WakeWord-train/wake_word/train/05c_evaluate.py)
 
 아직 남은 스크립트:
 
@@ -268,16 +269,23 @@ epoch 8 결과:
 - 현재까지의 best full-data training result
 - 동일 파이프라인 기준으로는 매우 강한 결과
 - 다만 이 수치는 clip-level validation 기준이며, 실제 배치 성능을 바로 보장하지는 않는다
+- 저장된 checkpoint를 같은 threshold로 다시 평가하면:
+  - positive-only recall: `1177 / 1181 = 0.9966`
+  - negative-only false positive rate: `128 / 11250 = 0.0114`
+  - negative-only specificity: `11122 / 11250 = 0.9886`
 
 ## 10. 현재 성능 해석에서 주의할 점
 
-현재 validation 비율은 대략 positive:negative = `1:10`이다.
+현재 evaluation 비율은 대략 positive:negative = `1:10`이다.
 
 이 비율은 아래 목적에는 적합하다.
 
 - 모델 간 비교
 - 하이퍼파라미터 선택
 - baseline 대비 개선 확인
+
+다만 현재 `05_train.py`는 이름이 `test`인 split 파일을 사용해 best epoch와 threshold를 선택한다.
+즉 지금 수치는 완전히 손대지 않은 final test라기보다 held-out validation에 가깝다.
 
 하지만 실제 사용 환경은 연속 스트림의 대부분이 negative이므로, 아래 평가가 추가로 필요하다.
 

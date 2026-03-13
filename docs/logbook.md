@@ -585,3 +585,42 @@
   - `docs/status.md`
   - `docs/decisions.md`
   - `docs/logbook.md`
+
+---
+
+## 2026-03-13 | Human + Codex | positive-only / negative-only 분리 평가 정리
+
+### Context
+
+- 사용자는 현재 학습 완료 모델에 대해 `하이 포포를 불렀을 때 얼마나 잘 맞추는지`와 `배경 음성에서 얼마나 오탐이 나는지`를 분리해서 보고 싶어 했다.
+- 동시에 현재 학습 로직이 이 평가 요소를 이미 반영하고 있는지도 확인하고자 했다.
+
+### Actions
+
+- `wake_word/train/05_train.py`의 validation 로직을 다시 검토했다.
+- 저장된 checkpoint를 기준으로 positive-only / negative-only를 별도로 계산하는 `wake_word/train/05c_evaluate.py`를 추가했다.
+- `final_full_best_trial40` checkpoint를 저장된 threshold `0.80`으로 재평가했다.
+
+### Result
+
+- positive-only test:
+  - total `1,181`
+  - true positives `1,177`
+  - false negatives `4`
+  - recall `0.9966`
+- negative-only test:
+  - total `11,250`
+  - false positives `128`
+  - true negatives `11,122`
+  - false positive rate `0.0114`
+  - specificity `0.9886`
+
+### Interpretation
+
+- 현재 학습 로그에 표시된 `val_recall`은 사용자가 원하는 positive-only 성능과 같은 값이다.
+- `val_fp_rate`는 사용자가 원하는 negative-only 배경 오탐 비율과 같은 값이다.
+- 다만 현재 파이프라인은 이름이 `test`인 split을 best epoch와 threshold 선택에도 사용하므로, 이 평가는 순수 final test라기보다 held-out validation 해석이 더 정확하다.
+
+### Next
+
+- 연속 오디오 기준 평가 세트를 따로 구성해 `false accepts per hour`와 실제 배경 환경 오탐을 측정해야 한다.

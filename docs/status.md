@@ -43,19 +43,26 @@
     - `val_accuracy 0.9926`
     - `val_fp_rate 0.0114`
     - `threshold 0.80`
+- 분리 평가 스크립트 추가
+  - `wake_word/train/05c_evaluate.py`
+  - 저장된 checkpoint 기준 재평가 결과:
+    - positive-only recall: `1177 / 1181 = 0.9966`
+    - negative-only false positive rate: `128 / 11250 = 0.0114`
+    - negative-only specificity: `11122 / 11250 = 0.9886`
 
 ## 중요 메모
 
 - 현재 서버 환경에서는 ONNX feature 추출이 실제로는 GPU가 아니라 CPU로 동작했다.
 - 원인은 `onnxruntime-gpu==1.23.2`의 CUDA 12 의존성과 현재 서버의 CUDA 11.8 조합 불일치다.
 - PyTorch 학습은 사용자 셸에서 GPU 사용 가능했다.
-- 현재 validation 비율은 대략 positive:negative = `1:10`이다.
+- 현재 evaluation 비율은 대략 positive:negative = `1:10`이다.
 - 이 비율은 모델 비교와 학습 선택에는 유효하지만, 실제 배치 성능을 바로 의미하지는 않는다.
+- 현재 코드에서는 이름이 `test`인 split을 best epoch와 threshold 선택에 사용하므로, 엄밀히는 held-out validation에 가깝다.
 
 ## 다음 작업
 
 1. `06_export_onnx.py` 구현
 2. 현재 best run을 ONNX로 export
-3. threshold sweep 및 평가 스크립트 추가
+3. 연속 오디오 기준 평가 세트 구성
 4. 연속 오디오 기준 false positive / false reject 평가
 5. 성능이 충분하면 Jetson 이관 준비
