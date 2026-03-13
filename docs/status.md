@@ -49,6 +49,8 @@
     - positive-only recall: `1177 / 1181 = 0.9966`
     - negative-only false positive rate: `128 / 11250 = 0.0114`
     - negative-only specificity: `11122 / 11250 = 0.9886`
+- 공개용 wake word 샘플 경로를 `wake_word/examples/audio_samples/`로 정리했다.
+- 루트 `README.md`와 `wake_word/README.md`를 프로젝트 진입 문서로 사용한다.
 - 다음 세션의 주 작업 환경은 Jetson이다.
 - Jetson 단계 상세 계획은 `docs/jetson_transition_plan.md`에 정리돼 있다.
 - `_tmp_download` 원본 보관 구조를 3개 폴더로 정리했다.

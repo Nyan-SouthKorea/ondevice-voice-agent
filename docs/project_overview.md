@@ -314,11 +314,14 @@ epoch 8 결과:
   - 외부 clone 저장소
 
 샘플 공개는 third-party dataset 원본이 아니라 직접 생성한 TTS만 허용하는 보수적 기준을 사용한다.
+공개용 샘플 경로는 `wake_word/examples/audio_samples/`를 사용한다.
 
 ## 12. 문서 운영 구조
 
 이 프로젝트의 문서는 역할을 분리해 관리한다.
 
+- 루트 `README.md`: 상위 프로젝트 진입점
+- `wake_word/README.md`: wake word 서브프로젝트 진입점
 - [project_overview.md](project_overview.md): 프로젝트 전체 이해용 통합 문서
 - [개발방침.md](개발방침.md): 운영 원칙과 상위 기술 방침
 - [status.md](status.md): 현재 최신 상태

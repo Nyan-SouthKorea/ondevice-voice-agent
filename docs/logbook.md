@@ -764,3 +764,27 @@
 
 - 최신 문서 기준으로는 내부 Git 서버 주소, 내부 사용자 식별자, 로컬 SSH 경로가 직접 노출되지 않게 정리됐다.
 - 다만 이미 push된 과거 커밋 기록까지 완전히 숨기려면 별도의 history rewrite가 필요하다.
+
+---
+
+## 2026-03-13 | Human + Codex | 공개 문서/샘플 구조 재정리
+
+### Context
+
+- 사용자는 문서 품질을 더 높이고, 공개 리포 기준으로 민감 정보와 모듈 구조를 다시 정리하길 원했다.
+- 특히 wake word 관련 공개 샘플이 상위 `examples/`에 있는 점과, `wake_word` 루트에 README가 없는 점을 문제로 봤다.
+
+### Actions
+
+- 공개용 오디오 샘플을 `examples/`에서 `wake_word/examples/audio_samples/`로 이동했다.
+- 루트 `README.md`를 상위 프로젝트 진입점으로 전면 보강했다.
+- `wake_word/README.md`를 새로 작성해 wake word 서브프로젝트 진입 문서로 추가했다.
+- `vad/README.md`, `stt/README.md`, `llm/README.md`, `tts/README.md`를 추가해 루트 README에서 각 모듈로 이동할 수 있게 했다.
+- `docs/개발방침.md`에 민감 정보 문서화 원칙을 명시했다.
+- `secrets/` 아래의 로컬 전용 문서에서 민감 운영 메모를 관리하는 방향으로 정리했다.
+
+### Result
+
+- 공개용 샘플 위치가 모듈 구조와 일치하게 정리됐다.
+- 루트 README와 `wake_word/README.md`만 읽어도 상위 프로젝트와 wake word 프로젝트의 현재 상태를 각각 이해할 수 있게 됐다.
+- 민감 정보는 공개 문서에서 직접 다루지 않고 로컬 전용 문서로 분리하는 기준이 더 명확해졌다.

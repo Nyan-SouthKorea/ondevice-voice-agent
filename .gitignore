@@ -25,13 +25,6 @@ __pycache__/
 wake_word/data/
 wake_word/models/
 
-# Public repository sample area
-# Keep all real training data ignored, and use examples/audio_samples/ only for
-# small hand-picked samples that are safe to redistribute.
-!examples/
-!examples/audio_samples/
-!examples/audio_samples/**
-
 # External repo metadata
 wake_word/openWakeWord/.git/
 wake_word/openWakeWord/

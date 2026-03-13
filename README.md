@@ -1,59 +1,103 @@
 # On-Device Voice Agent
 
-온디바이스 음성 에이전트 개발용 리포지토리다.  
-현재는 `wake_word` 학습 파이프라인이 가장 먼저 진행되고 있으며, 이후 `VAD`, `STT`, `LLM`, `TTS`를 포함한 전체 음성 에이전트 스택으로 확장하는 것을 목표로 한다.
+온디바이스 로봇 음성 에이전트를 단계적으로 구축하는 리포지토리다.  
+현재는 `하이 포포` wake word 시스템을 먼저 완성하고 있으며, 이후 `VAD`, `STT`, `LLM`, `TTS`를 결합해 Jetson Orin Nano에서 실시간으로 동작하는 전체 음성 에이전트 스택으로 확장하는 것이 목표다.
 
-## 현재 범위
+## 프로젝트 목표
 
-- `wake_word`
-  - `하이 포포` 한국어 wake word 데이터 준비
-  - feature extraction
-  - baseline 학습
-  - 하이퍼파라미터 탐색
-  - ONNX export 예정
-- `vad`, `stt`, `llm`, `tts`
-  - 상위 음성 에이전트 구조용 모듈 자리 확보
+- Linux 서버(A100)에서 데이터 준비, 학습, 평가를 수행한다.
+- Jetson Orin Nano Developer Kit에서 ONNX 기반 실시간 추론을 검증한다.
+- wake word를 시작점으로 음성 파이프라인 전체를 순차적으로 확장한다.
+- 공개 리포에는 코드와 문서 중심으로 남기고, 대용량 데이터와 민감 운영 정보는 분리 관리한다.
 
-## 목표
+## 현재 가장 앞서 있는 영역
 
-- Linux 서버(A100)에서 wake word 모델을 학습하고 평가한다
-- 성능이 충분하면 Jetson Orin Nano Developer Kit으로 이관한다
-- 이후에는 ONNX 기반 추론 중심으로 전체 음성 에이전트를 구성한다
-
-## 현재 진행 상태
+현재 구현과 실험이 가장 많이 진행된 영역은 [`wake_word`](wake_word/README.md)다.
 
 - negative 데이터셋 준비 완료
   - `AI Hub + MUSAN + FSD50K`
-- positive clean/mixed 증강 완료
+- positive clean / mixed augmentation 완료
 - feature extraction 완료
-- baseline 학습, grid search, full-data final training 완료
-- 다음 단계: ONNX export, Jetson 실시간 GUI 데모, 마이크 실기 검증
+- baseline 학습, grid search, full-data 최종 학습 완료
+- 현재 best validation snapshot
+  - `val_recall 0.9966`
+  - `val_fp_rate 0.0114`
+  - `threshold 0.80`
+- 다음 단계
+  - ONNX export
+  - Jetson 실시간 추론
+  - GUI 데모
+  - 실제 마이크 기반 검증
 
-자세한 최신 상태는 [docs/status.md](docs/status.md)를 본다.
+최신 상태는 [docs/status.md](docs/status.md)에서 계속 갱신한다.
 
-## 프로젝트 구조
+## 모듈 바로가기
+
+이 리포는 상위 프로젝트 하나 아래에 요소기술별 하위 프로젝트를 두는 구조로 운영한다.
+
+| 모듈 | 설명 | 상태 |
+|------|------|------|
+| [wake_word](wake_word/README.md) | 호출어 `하이 포포` 감지 모델 학습, 평가, 추론 | 가장 많이 진행됨 |
+| [vad](vad/README.md) | 발화 구간 감지 모듈 | 구조만 확보 |
+| [stt](stt/README.md) | 음성 인식 계층 | 구조만 확보 |
+| [llm](llm/README.md) | 명령 해석 및 응답 생성 계층 | 구조만 확보 |
+| [tts](tts/README.md) | 음성 합성 계층 | 구조만 확보 |
+
+루트 README는 상위 프로젝트 설명과 모듈 연결을 담당하고, 실제 구현이 진행된 모듈은 각 디렉토리의 README에서 더 자세히 설명한다.
+
+## Wake Word 핵심 결과
+
+현재 wake word 기준 최종 후보 모델은 `final_full_best_trial40` run이다.
+
+- 모듈 문서: [wake_word/README.md](wake_word/README.md)
+- artifact 설명:
+  - [wake_word/models/hi_popo/README.md](wake_word/models/hi_popo/README.md)
+- 최종 checkpoint 경로:
+  - `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt`
+- held-out validation 기준:
+  - positive-only recall: `1177 / 1181 = 0.9966`
+  - negative-only false positive rate: `128 / 11250 = 0.0114`
+
+중요한 점:
+- 이 수치는 현재 파이프라인 내에서는 강한 결과다.
+- 다만 실제 배치 성능은 Jetson 실기와 연속 오디오 평가에서 다시 확인해야 한다.
+
+## 리포지토리 구조
 
 ```text
 .
-├── wake_word/     # wake word 데이터, 학습, 추론 모듈
-├── vad/           # voice activity detection
-├── stt/           # speech-to-text
-├── llm/           # language model orchestration
-├── tts/           # text-to-speech
-├── docs/          # 문서 허브, 상태, 결정, 작업 로그
-└── examples/      # 공개용 소량 샘플
+├── wake_word/   # 현재 핵심 구현 영역: 데이터, 학습, 평가, 추론
+├── vad/         # voice activity detection
+├── stt/         # speech-to-text
+├── llm/         # language model orchestration
+├── tts/         # text-to-speech
+├── docs/        # 프로젝트 문서 허브
+└── secrets/     # 로컬 전용 민감 메모 및 비공개 정보 (gitignore)
 ```
 
-## 문서 안내
+## 문서 읽는 순서
 
-- 문서 허브: [docs/README.md](docs/README.md)
-- 개발 원칙: [docs/개발방침.md](docs/개발방침.md)
-- 최신 상태: [docs/status.md](docs/status.md)
-- 의사결정 기록: [docs/decisions.md](docs/decisions.md)
-- 작업 로그: [docs/logbook.md](docs/logbook.md)
+새 세션에서 빠르게 컨텍스트를 복구하려면 아래 순서를 권장한다.
 
-## 리포지토리 운영 원칙
+1. [docs/project_overview.md](docs/project_overview.md)
+2. [docs/status.md](docs/status.md)
+3. [wake_word/README.md](wake_word/README.md)
+4. [docs/개발방침.md](docs/개발방침.md)
+5. [docs/decisions.md](docs/decisions.md)
+6. [docs/logbook.md](docs/logbook.md)
 
-- 대용량 데이터와 학습 산출물은 리포에 포함하지 않는다
-- 공개용 샘플은 `examples/audio_samples/`에만 소량 유지한다
-- 코드 변경과 문서 변경은 가능한 한 같은 흐름으로 관리한다
+## 공개 리포지토리 운영 기준
+
+- 대용량 데이터셋, feature, 학습 산출물은 리포에 포함하지 않는다.
+- 외부 데이터셋 원본 샘플은 공개 리포에 포함하지 않는다.
+- 공개용 오디오 샘플은 `wake_word/examples/audio_samples/` 아래의 직접 생성한 소량 샘플만 유지한다.
+- 내부 주소, 계정 식별자, SSH 경로 같은 민감한 운영 정보는 공개 문서가 아니라 `secrets/` 아래의 로컬 전용 문서에서 관리한다.
+
+## 관련 문서
+
+- [docs/README.md](docs/README.md)
+- [docs/project_overview.md](docs/project_overview.md)
+- [docs/개발방침.md](docs/개발방침.md)
+- [docs/status.md](docs/status.md)
+- [docs/decisions.md](docs/decisions.md)
+- [docs/logbook.md](docs/logbook.md)
