@@ -379,19 +379,17 @@
 
 ### Context
 
-- 사용자는 GitHub에서 `ondevice-voice-agent` 레포를 만들었고, 현재 작업 디렉토리를 관리 대상으로 올리길 원했다.
-- 작성자 정보는 개인 GitHub 계정/이메일이 노출되지 않도록 로컬 전용 값으로 설정하기로 했다.
+- 사용자는 원격 저장소에서 현재 작업 디렉토리를 관리 대상으로 올리길 원했다.
+- 작성자 정보는 개인 계정 식별자가 직접 노출되지 않도록 로컬 전용 값으로 설정하기로 했다.
 
 ### Actions
 
 - 루트 디렉토리에서 `git init`을 수행하고 기본 브랜치를 `main`으로 변경했다.
-- 로컬 Git 작성자 정보를 아래처럼 설정했다.
-  - `user.name = Ryan`
-  - `user.email = ryan@local.invalid`
+- 로컬 Git 작성자 정보를 공개용 일반 값으로 설정했다.
 - 외부 clone인 `wake_word/openWakeWord/`는 embedded repo 문제를 피하기 위해 `.gitignore`에서 전체 제외했다.
 - 로컬 설정 폴더 `.claude/`도 ignore에 추가했다.
 - 첫 커밋 `Initial project import`를 생성했다.
-- GitHub 원격 `https://github.com/Nyan-SouthKorea/ondevice-voice-agent.git`를 `origin`으로 설정하고 `main` 브랜치를 push했다.
+- 기본 원격 `origin`을 설정하고 `main` 브랜치를 push했다.
 
 ### Result
 
@@ -423,25 +421,24 @@
 
 ### Context
 
-- 사용자는 GitHub뿐 아니라 사내 GitLab도 함께 관리 대상으로 추가하길 원했다.
+- 사용자는 기본 원격 외에 내부 Git 원격도 함께 관리 대상으로 추가하길 원했다.
 
 ### Actions
 
-- 사내 GitLab remote를 `gitlab` 이름으로 추가했다.
-  - `ssh://git@aigit.everybot.kr:9022/team/ai/ondevice-voice-agent.git`
+- 내부 Git 원격을 `gitlab` 이름으로 추가했다.
 - 로컬 Git alias `push-all`을 추가했다.
   - `git push origin main && git push gitlab main`
-- SSH host key verification 문제를 해결하기 위해 사내 GitLab 호스트 키를 `known_hosts`에 추가했다.
+- SSH host key verification 문제를 해결하기 위해 내부 Git 서버 호스트 키를 `known_hosts`에 추가했다.
 
 ### Result
 
 - remote 등록 완료
 - `known_hosts` 등록 완료
-- 현재 GitLab push는 `Permission denied (publickey)`로 실패
+- 초기에는 SSH 공개키 미등록 상태로 인해 push가 실패했다.
 
 ### Next
 
-- 이 머신에서 사용할 SSH private key가 준비되면 `git push -u gitlab main`으로 바로 이어갈 수 있다.
+- 이 머신에서 사용할 SSH 키를 준비한 뒤 내부 원격 push를 다시 시도하기로 했다.
 
 ### Follow-up
 
@@ -720,36 +717,50 @@
 
 ### Context
 
-- 사용자는 사내 GitLab SSH push가 되지 않는 문제를 해결하려고 했다.
+- 사용자는 내부 Git 원격 SSH push가 되지 않는 문제를 해결하려고 했다.
 
 ### Actions
 
-- 현재 remote 설정과 `~/.ssh` 상태를 확인했다.
-- 기존에는 이 머신에 SSH 개인키가 아예 없다는 것을 확인했다.
-- 새 키를 생성했다.
-  - private key: `/home/ubuntu/.ssh/id_ed25519`
-  - public key: `/home/ubuntu/.ssh/id_ed25519.pub`
-- GitLab 접속에 이 키를 쓰도록 `~/.ssh/config`를 추가했다.
+- 현재 remote 설정과 SSH 상태를 확인했다.
+- 기존에는 이 머신에 사용할 SSH 키가 없다는 것을 확인했다.
+- 새 SSH 키를 생성했다.
+- 내부 Git 서버 접속에 이 키를 쓰도록 SSH 설정을 추가했다.
 
 ### Result
 
 - 로컬 SSH 키 준비 완료
-- SSH test 결과:
-  - `git@aigit.everybot.kr: Permission denied (publickey)`
+- 초기 SSH test 결과, 서버에는 아직 공개키가 등록되지 않은 상태였다.
 
 ### Interpretation
 
-- 현재 문제는 로컬 설정이 아니라, 생성한 공개키가 아직 GitLab 계정에 등록되지 않은 상태라는 뜻이다.
-- 다음 단계는 `id_ed25519.pub` 내용을 GitLab 사용자 계정의 SSH Keys에 등록하는 것이다.
+- 현재 문제는 로컬 설정이 아니라, 생성한 공개키가 아직 내부 Git 계정에 등록되지 않은 상태라는 뜻이다.
+- 다음 단계는 생성한 공개키를 SSH Keys에 등록하는 것이다.
 
 ### Follow-up
 
-- 사용자가 공개키를 GitLab 계정에 등록한 뒤 다시 SSH 테스트를 수행했다.
-- 결과:
-  - `Welcome to GitLab, @iena!`
-- 즉, 현재 GitLab SSH 인증은 정상 동작한다.
+- 사용자가 공개키를 등록한 뒤 다시 SSH 테스트를 수행했다.
+- 결과적으로 내부 Git 원격 SSH 인증은 정상 동작하게 됐다.
 
 ### Policy Update
 
 - 이후 원격 반영은 `origin`과 `gitlab`에 같은 커밋을 같은 타이밍에 push하는 방식으로 운영하기로 했다.
 - 단, push 자체는 계속 사용자 확인 후 진행한다.
+
+---
+
+## 2026-03-13 | Human + Codex | 공개 문서 민감 정보 일반화
+
+### Context
+
+- 사용자는 공개 문서 기준으로 내부 식별 정보나 불필요한 운영 상세가 남아 있지 않은지 마지막 검토를 요청했다.
+
+### Actions
+
+- 문서 전반에서 내부 원격 주소, 내부 계정 식별자, 로컬 SSH 경로, 고객사 직접 표현을 점검했다.
+- 공개 문서에 불필요한 Git remote 상세와 SSH 설정 상세를 일반화했다.
+- 개발 방침의 대외 민감도가 높은 표현을 더 일반적인 문장으로 조정했다.
+
+### Result
+
+- 최신 문서 기준으로는 내부 Git 서버 주소, 내부 사용자 식별자, 로컬 SSH 경로가 직접 노출되지 않게 정리됐다.
+- 다만 이미 push된 과거 커밋 기록까지 완전히 숨기려면 별도의 history rewrite가 필요하다.
