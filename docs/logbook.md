@@ -793,3 +793,27 @@
 
 - 이제 루트 `README.md`에서 각 요소기술 설명 페이지로 직접 이동할 수 있다.
 - `wake_word`는 독립 README만 읽어도 현재 구현 상태와 다음 단계가 복구되도록 정리됐다.
+
+---
+
+## 2026-03-13 | Human + Codex | 원격 동기화를 위해 non-rewritten history로 재정렬
+
+### Context
+
+- 사용자는 민감 정보는 최신 문서에서 일반화하되, GitHub와 GitLab을 계속 함께 동기화할 수 있는 상태를 원했다.
+- GitHub에는 rewritten history가 반영됐지만, GitLab `main`은 보호 브랜치라 force push가 거부됐다.
+
+### Actions
+
+- 실제 GitLab `main`을 다시 fetch해 기준 히스토리로 삼았다.
+- 그 히스토리 위에 필요한 최신 공개 문서 변경만 정상 커밋으로 다시 얹는 방식으로 재정렬했다.
+- 이 방식으로 두 원격이 다시 같은 커밋 라인을 공유하도록 복구하기로 했다.
+
+### Result
+
+- 민감한 운영 정보는 최신 문서 기준에서 일반화 유지
+- 두 원격은 다시 같은 non-rewritten history 라인에서 동기화 가능하도록 정리 중
+
+### Notes
+
+- 보호 브랜치 force push가 풀리기 전까지는 history rewrite를 원격 정리 전략으로 사용하지 않는다.
