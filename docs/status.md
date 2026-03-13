@@ -51,6 +51,10 @@
     - negative-only specificity: `11122 / 11250 = 0.9886`
 - 다음 세션의 주 작업 환경은 Jetson이다.
 - Jetson 단계 상세 계획은 `docs/jetson_transition_plan.md`에 정리돼 있다.
+- `_tmp_download` 원본 보관 구조를 3개 폴더로 정리했다.
+  - `1_aihub_free_conversation`
+  - `2_fsd50k`
+  - `3_musan`
 
 ## 중요 메모
 

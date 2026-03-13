@@ -26,10 +26,10 @@
   - `AI Hub + MUSAN + FSD50K`
 - positive clean/mixed 증강 완료
 - feature extraction 완료
-- baseline 학습 및 grid search 준비 완료
-- 다음 단계: best trial 선정 후 전체 데이터 학습, ONNX export, 평가
+- baseline 학습, grid search, full-data final training 완료
+- 다음 단계: ONNX export, Jetson 실시간 GUI 데모, 마이크 실기 검증
 
-자세한 최신 상태는 [docs/status.md](/data2/iena/260312_WakeWord-train/docs/status.md)를 본다.
+자세한 최신 상태는 [docs/status.md](docs/status.md)를 본다.
 
 ## 프로젝트 구조
 
@@ -46,11 +46,11 @@
 
 ## 문서 안내
 
-- 문서 허브: [docs/README.md](/data2/iena/260312_WakeWord-train/docs/README.md)
-- 개발 원칙: [docs/개발방침.md](/data2/iena/260312_WakeWord-train/docs/개발방침.md)
-- 최신 상태: [docs/status.md](/data2/iena/260312_WakeWord-train/docs/status.md)
-- 의사결정 기록: [docs/decisions.md](/data2/iena/260312_WakeWord-train/docs/decisions.md)
-- 작업 로그: [docs/logbook.md](/data2/iena/260312_WakeWord-train/docs/logbook.md)
+- 문서 허브: [docs/README.md](docs/README.md)
+- 개발 원칙: [docs/개발방침.md](docs/개발방침.md)
+- 최신 상태: [docs/status.md](docs/status.md)
+- 의사결정 기록: [docs/decisions.md](docs/decisions.md)
+- 작업 로그: [docs/logbook.md](docs/logbook.md)
 
 ## 리포지토리 운영 원칙
 

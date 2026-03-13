@@ -34,7 +34,7 @@
 - Git 상태와 문서 상태의 동시 관리
 - 장시간 실행 작업의 주기 로그 보장
 
-세부 운영 원칙은 [개발방침.md](/data2/iena/260312_WakeWord-train/docs/개발방침.md)에 정리한다.
+세부 운영 원칙은 [개발방침.md](개발방침.md)에 정리한다.
 
 ## 3. 현재 시스템 범위
 
@@ -143,7 +143,7 @@ mixed 증강은 기존 clean 증강본이 아니라 원본 positive에서 직접
 
 feature 추출 스크립트:
 
-- [04_extract_features.py](/data2/iena/260312_WakeWord-train/wake_word/train/04_extract_features.py)
+- [04_extract_features.py](../wake_word/train/04_extract_features.py)
 
 중요한 환경 메모:
 
@@ -154,20 +154,20 @@ feature 추출 스크립트:
 
 검사용 스크립트:
 
-- [check_onnx_gpu.py](/data2/iena/260312_WakeWord-train/wake_word/train/check_onnx_gpu.py)
+- [check_onnx_gpu.py](../wake_word/train/check_onnx_gpu.py)
 
 ## 8. 학습 파이프라인
 
 현재 구현된 주요 스크립트:
 
-- [01_generate_positive.py](/data2/iena/260312_WakeWord-train/wake_word/train/01_generate_positive.py)
-- [02_augment.py](/data2/iena/260312_WakeWord-train/wake_word/train/02_augment.py)
-- [02b_mix_background.py](/data2/iena/260312_WakeWord-train/wake_word/train/02b_mix_background.py)
-- [03_prepare_negative.py](/data2/iena/260312_WakeWord-train/wake_word/train/03_prepare_negative.py)
-- [04_extract_features.py](/data2/iena/260312_WakeWord-train/wake_word/train/04_extract_features.py)
-- [05_train.py](/data2/iena/260312_WakeWord-train/wake_word/train/05_train.py)
-- [05b_search.py](/data2/iena/260312_WakeWord-train/wake_word/train/05b_search.py)
-- [05c_evaluate.py](/data2/iena/260312_WakeWord-train/wake_word/train/05c_evaluate.py)
+- [01_generate_positive.py](../wake_word/train/01_generate_positive.py)
+- [02_augment.py](../wake_word/train/02_augment.py)
+- [02b_mix_background.py](../wake_word/train/02b_mix_background.py)
+- [03_prepare_negative.py](../wake_word/train/03_prepare_negative.py)
+- [04_extract_features.py](../wake_word/train/04_extract_features.py)
+- [05_train.py](../wake_word/train/05_train.py)
+- [05b_search.py](../wake_word/train/05b_search.py)
+- [05c_evaluate.py](../wake_word/train/05c_evaluate.py)
 
 아직 남은 스크립트:
 
@@ -319,11 +319,11 @@ epoch 8 결과:
 
 이 프로젝트의 문서는 역할을 분리해 관리한다.
 
-- [project_overview.md](/data2/iena/260312_WakeWord-train/docs/project_overview.md): 프로젝트 전체 이해용 통합 문서
-- [개발방침.md](/data2/iena/260312_WakeWord-train/docs/개발방침.md): 운영 원칙과 상위 기술 방침
-- [status.md](/data2/iena/260312_WakeWord-train/docs/status.md): 현재 최신 상태
-- [decisions.md](/data2/iena/260312_WakeWord-train/docs/decisions.md): 중요한 결정 이력
-- [logbook.md](/data2/iena/260312_WakeWord-train/docs/logbook.md): 실제 작업 로그
+- [project_overview.md](project_overview.md): 프로젝트 전체 이해용 통합 문서
+- [개발방침.md](개발방침.md): 운영 원칙과 상위 기술 방침
+- [status.md](status.md): 현재 최신 상태
+- [decisions.md](decisions.md): 중요한 결정 이력
+- [logbook.md](logbook.md): 실제 작업 로그
 
 새 세션이 시작되더라도 위 문서만 읽으면 프로젝트 목적, 구현 상태, 남은 작업, 주의사항을 다시 파악할 수 있도록 유지한다.
 
@@ -340,6 +340,6 @@ epoch 8 결과:
 
 현재는 이관 계획을 별도 문서로 분리했다.
 
-- [jetson_transition_plan.md](/data2/iena/260312_WakeWord-train/docs/jetson_transition_plan.md)
+- [jetson_transition_plan.md](jetson_transition_plan.md)
 
 이 문서는 Jetson 단계에서 바로 수행할 작업 순서, GUI 요구사항, 실기 검증 계획, 성공 기준을 정리한다.

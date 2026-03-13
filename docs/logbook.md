@@ -659,6 +659,63 @@
 
 ---
 
+## 2026-03-13 | Human + Codex | `_tmp_download` 원본 보관 구조 정리
+
+### Context
+
+- 사용자는 `wake_word/data/hi_popo/_tmp_download` 안에서 압축 원본만 남기고, 이미 전처리에 사용한 추출본과 중간 산출물을 정리하길 원했다.
+- 또한 이후 보관과 이동을 쉽게 하기 위해 `_tmp_download` 구조를 3개 폴더로 단순화하길 원했다.
+
+### Actions
+
+- 추출된 작업용 폴더를 삭제했다.
+  - `aihub_free_conversation`
+  - `fsd50k`
+  - `musan`
+- 불필요한 중간 산출물과 실패 잔여물을 삭제했다.
+  - `FSD50K.dev_audio_merged.zip`
+  - `FSD50K.eval_audio.z01`
+  - 각종 extract log
+- 원본 보관 구조를 아래처럼 재배치했다.
+  - `_tmp_download/1_aihub_free_conversation`
+  - `_tmp_download/2_fsd50k`
+  - `_tmp_download/3_musan`
+
+### Result
+
+- `1_aihub_free_conversation`
+  - AI Hub zip 원본만 남김
+- `2_fsd50k`
+  - FSD50K 분할 압축 원본과 metadata / ground truth zip만 남김
+- `3_musan`
+  - `musan.tar.gz`와 README만 남김
+
+### Notes
+
+- 정리 후 `_tmp_download`에는 압축 원본 보관용 파일만 남아 있다.
+- 이후 D드라이브 등 다른 저장소로 옮길 때도 이 3개 폴더만 보면 된다.
+
+---
+
+## 2026-03-13 | Human + Codex | Markdown 링크를 GitHub 상대경로로 정리
+
+### Context
+
+- 사용자는 문서 안의 절대 로컬 경로 링크가 GitHub 웹에서 열리지 않는 문제를 지적했다.
+
+### Actions
+
+- 루트 `README.md`의 문서 링크를 상대경로 링크로 변경했다.
+- `docs/project_overview.md` 안의 문서/스크립트 링크를 GitHub에서 열리는 상대경로로 바꿨다.
+- 동시에 루트 `README.md`의 현재 진행 상태 문구도 최신 상태에 맞게 갱신했다.
+
+### Result
+
+- GitHub 웹에서 문서 링크가 정상 동작하는 구조로 정리됐다.
+- 더 이상 `/data2/...` 절대경로 링크는 Markdown 파일에 남아 있지 않다.
+
+---
+
 ## 2026-03-13 | Human + Codex | GitLab SSH 키 설정 정리
 
 ### Context
