@@ -656,3 +656,31 @@
 
 - 현재 기준 모델은 `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt`다.
 - Jetson 단계의 1차 목적은 추가 학습이 아니라 실시간 추론과 실기 검증이다.
+
+---
+
+## 2026-03-13 | Human + Codex | GitLab SSH 키 설정 정리
+
+### Context
+
+- 사용자는 사내 GitLab SSH push가 되지 않는 문제를 해결하려고 했다.
+
+### Actions
+
+- 현재 remote 설정과 `~/.ssh` 상태를 확인했다.
+- 기존에는 이 머신에 SSH 개인키가 아예 없다는 것을 확인했다.
+- 새 키를 생성했다.
+  - private key: `/home/ubuntu/.ssh/id_ed25519`
+  - public key: `/home/ubuntu/.ssh/id_ed25519.pub`
+- GitLab 접속에 이 키를 쓰도록 `~/.ssh/config`를 추가했다.
+
+### Result
+
+- 로컬 SSH 키 준비 완료
+- SSH test 결과:
+  - `git@aigit.everybot.kr: Permission denied (publickey)`
+
+### Interpretation
+
+- 현재 문제는 로컬 설정이 아니라, 생성한 공개키가 아직 GitLab 계정에 등록되지 않은 상태라는 뜻이다.
+- 다음 단계는 `id_ed25519.pub` 내용을 GitLab 사용자 계정의 SSH Keys에 등록하는 것이다.
