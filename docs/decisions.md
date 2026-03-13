@@ -229,3 +229,22 @@
 
 - 작업 히스토리를 안정적으로 남기기 위해서는 중간 커밋이 필요하다.
 - 반면 원격 반영은 사용자 의도와 타이밍을 확인하는 편이 안전하다.
+
+---
+
+## 2026-03-13 | 최종 전체 학습은 grid search best trial 파라미터를 사용
+
+### 결정
+
+- 최종 전체 데이터 학습은 `baseline_grid_v1_trial40`의 파라미터를 사용한다.
+- 사용 파라미터는 아래와 같다.
+  - `lr=0.0005`
+  - `negative_weight=5.0`
+  - `layer_dim=64`
+  - `n_blocks=2`
+
+### 이유
+
+- 동일한 validation 조건에서 `baseline_grid_v1_trial40`이 가장 좋은 종합 score를 기록했다.
+- baseline 대비 false positive rate가 크게 줄었고, recall도 유지됐다.
+- 구조 변경 없이 저위험 파라미터 최적화만 반영하는 보수적 경로로 적합했다.

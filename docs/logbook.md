@@ -329,6 +329,20 @@
   - `wake_word/models/hi_popo/searches/smoke_search_check/ranking.json`
   - `wake_word/models/hi_popo/searches/smoke_search_check/best_trial.json`
 
+### Search Result Update
+
+- 사용자가 `baseline_grid_v1` 전체 탐색을 직접 GPU로 완료했다.
+- 최종 top 5는 `ranking.json`에 저장됐고, 최고 trial은 아래였다.
+  - `baseline_grid_v1_trial40`
+  - `lr=0.0005`
+  - `negative_weight=5.0`
+  - `layer_dim=64`
+  - `n_blocks=2`
+  - `val_recall 0.9966`
+  - `val_accuracy 0.9855`
+  - `val_fp_rate 0.0256`
+  - `threshold 0.70`
+
 ---
 
 ## 2026-03-13 | GitHub 공개용 .gitignore 정리
@@ -433,3 +447,141 @@
 
 - 이후 Git 운용 원칙을 추가로 정리했다.
 - 중간 커밋은 작업 단위 기준으로 자율 수행하고, 원격 push는 항상 사용자 확인 후 진행한다.
+
+---
+
+## 2026-03-13 | 전체 데이터 학습 시도 후 정리
+
+### Context
+
+- 사용자는 baseline 학습이 끝난 뒤, 가장 좋은 파라미터 기준으로 전체 학습을 바로 시작해두길 요청했다.
+- grid search 결과는 아직 없으므로, 현재 best baseline인 `baseline_medium` 파라미터를 기준으로 확장하는 보수적 경로를 택했다.
+
+### Decision
+
+- 현재 전체 학습 시작 파라미터는 아래를 사용한다.
+  - `lr=0.0001`
+  - `negative_weight=5.0`
+  - `layer_dim=32`
+  - `n_blocks=1`
+  - `epochs=8`
+  - `batch_size=512`
+- train/val은 feature 전체를 사용한다.
+
+### Note
+
+- Codex 실행 컨텍스트에서는 여전히 GPU가 보이지 않아, 자동으로 시작된 전체 학습은 CPU 경로로 동작했다.
+- 이후 사용자의 요청에 따라 이 CPU run 기록은 삭제했다.
+- 삭제 대상 run:
+  - `full_from_baseline_medium_all_data`
+- 최신 포인터 파일은 다시 `baseline_medium` 결과로 복구했다.
+
+---
+
+## 2026-03-13 | Human + Codex | Grid search 완료 및 best trial 확정
+
+### Context
+
+- baseline 구조는 동작이 확인됐고, 전체 데이터 최종 학습 전에 핵심 하이퍼파라미터를 좁게 탐색하기로 했다.
+
+### Actions
+
+- 사용자가 A100 GPU 환경에서 `05b_search.py`를 직접 실행했다.
+- 탐색 축은 아래 4개였다.
+  - `lr`
+  - `negative_weight`
+  - `layer_dim`
+  - `n_blocks`
+- 총 `48`개 trial이 실행됐다.
+
+### Result
+
+- search name: `baseline_grid_v1`
+- best trial: `baseline_grid_v1_trial40`
+- best parameter:
+  - `lr=0.0005`
+  - `negative_weight=5.0`
+  - `layer_dim=64`
+  - `n_blocks=2`
+- best metric:
+  - `val_recall 0.9966`
+  - `val_accuracy 0.9855`
+  - `val_fp_rate 0.0256`
+  - `threshold 0.70`
+
+### Artifacts
+
+- `wake_word/models/hi_popo/searches/baseline_grid_v1/ranking.json`
+- `wake_word/models/hi_popo/searches/baseline_grid_v1/best_trial.json`
+
+### Notes
+
+- baseline_medium 대비 false positive rate가 크게 줄어들었다.
+- 이 결과를 기준으로 전체 데이터 최종 학습 파라미터를 확정했다.
+
+---
+
+## 2026-03-13 | Human + Codex | Best trial 파라미터로 전체 데이터 최종 학습 완료
+
+### Context
+
+- grid search best trial이 정해졌고, 같은 파라미터로 전체 train/val feature에 대해 최종 후보 모델을 학습했다.
+
+### Actions
+
+- 사용자가 A100 GPU 환경에서 아래 명령으로 전체 학습을 수행했다.
+- run name: `final_full_best_trial40`
+- 핵심 파라미터:
+  - `lr=0.0005`
+  - `negative_weight=5.0`
+  - `layer_dim=64`
+  - `n_blocks=2`
+  - `epochs=8`
+  - `batch_size=512`
+
+### Result
+
+- train: positive `10,631`, negative `101,250`
+- val: positive `1,181`, negative `11,250`
+- epoch 8 기준:
+  - `val_recall 0.9966`
+  - `val_accuracy 0.9926`
+  - `val_fp_rate 0.0114`
+  - `threshold 0.80`
+
+### Artifacts
+
+- `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt`
+- `wake_word/models/hi_popo/runs/final_full_best_trial40/training_history.json`
+- `wake_word/models/hi_popo/runs/final_full_best_trial40/run_metadata.json`
+
+### Interpretation
+
+- 현재까지의 full-data 기준 best result다.
+- 동일한 pipeline 안에서는 매우 강한 recall / fp_rate 조합이 나왔다.
+- 다만 이 평가는 clip-level validation이므로, 실제 배치 성능을 보려면 연속 오디오 기준 평가가 추가로 필요하다.
+
+---
+
+## 2026-03-13 | Human + Codex | 프로젝트 통합 문서 정리
+
+### Context
+
+- 사용자는 현재 대화 컨텍스트가 줄어드는 상황을 고려해, 대화 기록이 없어도 `docs`만 읽으면 프로젝트의 목적, 과정, 중요 포인트, 현재 상태를 모두 이해할 수 있어야 한다고 요청했다.
+
+### Actions
+
+- `docs/project_overview.md`를 새로 작성했다.
+- 목적, 범위, 데이터 전략, 환경, 구현된 스크립트, 학습 결과, 현재 한계, 다음 단계까지 한 문서에 통합했다.
+- `docs/README.md`의 우선 참고 순서를 통합 문서 중심으로 재구성했다.
+- `docs/status.md`를 실제 최신 상태에 맞게 다시 정리했다.
+- `docs/decisions.md`에 최종 전체 학습 파라미터 채택 결정을 추가했다.
+
+### Result
+
+- 새 세션에서는 최소한 아래 문서만 읽어도 전체 맥락을 빠르게 복구할 수 있게 됐다.
+  - `docs/project_overview.md`
+  - `docs/개발방침.md`
+  - `docs/status.md`
+  - `docs/decisions.md`
+  - `docs/logbook.md`
