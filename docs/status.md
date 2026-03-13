@@ -53,11 +53,17 @@
   - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
   - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
 - classifier ONNX 추론 래퍼는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 모두 지원한다.
+- Jetson runtime venv 생성 완료
+  - path: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson`
+  - ORT source: `/home/everybot/.local/lib/python3.10/site-packages`
+  - `onnxruntime-gpu 1.23.0`
+  - `wake_word/train/check_onnx_gpu.py` 결과: `GPU_OK`
 - `wake_word/models/`는 git 제외 대상이므로 Jetson에는 ONNX와 metadata를 별도로 복사해야 한다.
 - 공개용 wake word 샘플 경로를 `wake_word/examples/audio_samples/`로 정리했다.
 - 루트 `README.md`와 `wake_word/README.md`를 프로젝트 진입 문서로 사용한다.
 - 다음 세션의 주 작업 환경은 Jetson이다.
 - Jetson 단계 상세 계획은 `docs/jetson_transition_plan.md`에 정리돼 있다.
+- Jetson 환경 세팅 절차와 유지 기준은 `docs/envs/jetson_wake_word_env.md`에 정리돼 있다.
 - `_tmp_download` 원본 보관 구조를 3개 폴더로 정리했다.
   - `1_aihub_free_conversation`
   - `2_fsd50k`

@@ -901,3 +901,40 @@
 - 상위 문서에서도 `06_export_onnx.py`가 이미 구현 완료된 상태로 정리됐다.
 - 현재 남은 핵심 작업이 `raw audio -> feature extractor -> classifier ONNX` 연결이라는 점이 문서에 명확히 반영됐다.
 - model artifact 문서에서도 latest `.onnx`와 `_onnx.json` 산출물을 함께 설명하게 됐다.
+
+---
+
+## 2026-03-13 | Human + Codex | Jetson runtime venv 생성 및 환경 문서화
+
+### Context
+
+- 사용자는 `project/env/` 아래에 Jetson 전용 venv를 만들고, ONNX Runtime이 Jetson의 CUDA 설정으로 실제 동작하는 상태를 기준 환경으로 관리하길 원했다.
+- 또한 환경 세팅 절차를 읽는 사람이 쉽게 따라갈 수 있도록 문서 허브에서 바로 찾을 수 있게 만들고, 환경이 바뀔 때마다 문서를 갱신하는 원칙도 명시하길 요청했다.
+- 설치 방식은 NVIDIA 공식 JetPack 가이드를 기준으로 정리하길 원했다.
+
+### Actions
+
+- 환경 이름을 `wake_word_jetson`으로 정했다.
+- 현재 Jetson 상태를 확인했다.
+  - L4T: `R36.4.7`
+  - Python: `3.10.12`
+  - 시스템 ORT package: `onnxruntime-gpu 1.23.0`
+  - providers: `TensorrtExecutionProvider`, `CUDAExecutionProvider`, `CPUExecutionProvider`
+- 기본 `python3 -m venv`는 `ensurepip` 부재로 실패해, 사용자 영역에 `virtualenv`를 설치해 우회했다.
+- `project/env/wake_word_jetson` venv를 생성했다.
+- venv 안에서 Jetson의 기존 ORT를 재사용할 수 있도록 `.pth` bridge를 추가했다.
+- venv에 `requests`, `soundfile` 등 필요한 런타임 패키지를 보강했다.
+- `wake_word/train/check_onnx_gpu.py`를 새 venv에서 실행해 실제 CUDA session 생성 여부를 검증했다.
+- Jetson 환경 문서 `docs/envs/jetson_wake_word_env.md`를 새로 작성했다.
+- `docs/README.md`, `docs/status.md`, `docs/jetson_transition_plan.md`, `docs/개발방침.md`, `docs/envs/wake_word_env.md`를 함께 갱신했다.
+
+### Result
+
+- Jetson runtime 기준 venv 경로:
+  - `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson`
+- ORT 검증 결과:
+  - `RESULT: GPU_OK`
+- 실제 session provider:
+  - `['CUDAExecutionProvider', 'CPUExecutionProvider']`
+- 문서 허브에서 Jetson env 문서를 바로 찾을 수 있게 됐다.
+- 환경 변경 시 env 문서를 즉시 갱신한다는 기준이 `docs/개발방침.md`에 반영됐다.

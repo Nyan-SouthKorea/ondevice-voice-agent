@@ -83,6 +83,7 @@ Jetson 단계에서 우선 기준으로 삼을 파일은 아래다.
 
 - `docs/project_overview.md`
 - `docs/status.md`
+- `docs/envs/jetson_wake_word_env.md`
 - `docs/decisions.md`
 - `docs/logbook.md`
 - `docs/개발방침.md`
@@ -253,9 +254,10 @@ Jetson 실기 검증이 끝난 뒤 분기는 두 가지다.
 Jetson 단계에서 새 세션을 시작하면 아래 순서로 읽는다.
 
 1. `docs/jetson_transition_plan.md`
-2. `docs/status.md`
-3. `docs/project_overview.md`
-4. `docs/decisions.md`
-5. `docs/logbook.md`
+2. `docs/envs/jetson_wake_word_env.md`
+3. `docs/status.md`
+4. `docs/project_overview.md`
+5. `docs/decisions.md`
+6. `docs/logbook.md`
 
 이 순서를 따르면 현재 기준, 과거 결정, 실제 작업 흐름을 짧은 시간 안에 복구할 수 있다.

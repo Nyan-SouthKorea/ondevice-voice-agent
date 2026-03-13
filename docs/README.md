@@ -6,7 +6,8 @@
 - `docs/jetson_transition_plan.md`: Jetson 단계에서 바로 이어갈 작업과 검증 계획
 - `docs/개발방침.md`: 현재 프로젝트의 최종 의사결정과 공통 원칙
 - `docs/research/*.md`: 요소기술별 조사 결과와 선택 근거
-- `docs/envs/*.md`: 실행 환경과 설치 절차
+- `docs/envs/wake_word_env.md`: Linux 서버(A100) 학습 환경
+- `docs/envs/jetson_wake_word_env.md`: Jetson runtime venv, ONNX Runtime CUDA 검증 절차
 - `docs/status.md`: 현재 시점의 최신 상태
 - `docs/decisions.md`: 중요한 의사결정 이력
 - `docs/logbook.md`: 시간순 작업 로그
@@ -40,15 +41,16 @@ docs/
 ## 우선 참고 순서
 
 1. `docs/jetson_transition_plan.md`
-2. `docs/project_overview.md`
-3. `docs/개발방침.md`
-4. `docs/status.md`
-5. `docs/decisions.md`
-6. `docs/logbook.md`
-7. `docs/research/wake_word.md`
-8. `docs/research/negative_datasets.md`
-9. `docs/research/tts_korean.md`
-10. `docs/envs/wake_word_env.md`
+2. `docs/envs/jetson_wake_word_env.md`
+3. `docs/project_overview.md`
+4. `docs/개발방침.md`
+5. `docs/status.md`
+6. `docs/decisions.md`
+7. `docs/logbook.md`
+8. `docs/research/wake_word.md`
+9. `docs/research/negative_datasets.md`
+10. `docs/research/tts_korean.md`
+11. `docs/envs/wake_word_env.md`
 
 ## 개발 방법론: PDCA 사이클
 

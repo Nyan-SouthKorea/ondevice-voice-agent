@@ -3,6 +3,8 @@
 > 작성일: 2026-03-12
 > 목적: openWakeWord 커스텀 학습을 위한 conda 환경 구성
 
+> Jetson runtime venv는 `docs/envs/jetson_wake_word_env.md`에서 별도로 관리한다.
+
 ---
 
 ## 환경 정보
