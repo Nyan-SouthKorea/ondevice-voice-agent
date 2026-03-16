@@ -31,21 +31,21 @@
   - 영상 확인용 실시간 GUI 데모
   - 감지 램프, 상태 문구, 입력 레벨, confidence, threshold 슬라이더 제공
 
-## Jetson 터미널 스크린샷
+## Jetson GUI 스크린샷
 
-### Idle 상태
+### 대기 중
 
-![VAD demo idle](../docs/assets/screenshots/jetson_demos/vad_demo_idle_terminal.png)
+![VAD GUI idle](../docs/assets/screenshots/jetson_demos/vad_gui_idle.png)
 
-### Speech 상태
+### 말하는 중
 
-![VAD demo speech](../docs/assets/screenshots/jetson_demos/vad_demo_speech_terminal.png)
+![VAD GUI speaking](../docs/assets/screenshots/jetson_demos/vad_gui_speaking.png)
 
 설명:
 
-- `Idle 상태`는 대기 화면이다. `status=False`, 낮은 `level`, 거의 0에 가까운 `conf`가 보인다.
-- `Speech 상태`는 발화가 들어온 화면이다. `status=True`, 입력 레벨 상승, `silero`의 높은 `conf`를 바로 확인할 수 있다.
-- 데모는 의도적으로 단순하게 유지해서, 기본 마이크와 backend 동작 상태를 즉시 확인하는 용도로 쓴다.
+- `대기 중` 화면은 음성이 없는 상태다. 감지 램프가 꺼져 있고, 입력 레벨과 confidence가 낮게 유지된다.
+- `말하는 중` 화면은 발화가 들어온 상태다. 빨간 램프가 켜지고, confidence bar와 상태 문구가 즉시 변한다.
+- GUI 데모는 영상 촬영과 현장 확인을 쉽게 하기 위해, 상태 변화가 눈에 바로 들어오도록 구성했다.
 
 공통 사용 방식:
 
