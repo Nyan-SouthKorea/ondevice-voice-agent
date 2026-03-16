@@ -218,6 +218,69 @@
 
 ---
 
+## 2026-03-16 | wake word feature backbone은 로컬 구현과 로컬 ONNX 자산으로 고정
+
+### 결정
+
+- `wake_word/openWakeWord/` 로컬 clone에 의존하던 feature extraction 코드는 제거한다.
+- `melspectrogram.onnx`, `embedding_model.onnx`는 `wake_word/assets/feature_models/`에 둔다.
+- 공통 feature backbone 호출 로직은 `wake_word/features.py`에서 직접 관리한다.
+- 추론과 학습 smoke는 `openWakeWord` clone이 없는 상태로 다시 통과해야만 완료로 본다.
+
+### 이유
+
+- 로컬 clone 의존성은 재현성과 배포 구조를 불필요하게 흐린다.
+- 실제로 필요한 것은 Google Speech Embedding backbone ONNX 2개와 그 호출 코드뿐이다.
+- 학습과 추론 모두 같은 로컬 구현을 보게 만들면 구조가 단순해지고, 이후 SDK 확장에도 유리하다.
+
+---
+
+## 2026-03-16 | 모든 작업은 계획 수립 후 순차 실행하고 종료 시 계획 대비 확인
+
+### 결정
+
+- 모든 작업은 시작 전에 `1. 2. 3.` 형태의 계획을 먼저 세운다.
+- 작업은 계획 순서대로 하나씩 진행한다.
+- 작업 종료 시에는 계획 대비 실제 완료 여부를 다시 확인한다.
+
+### 이유
+
+- 구현만 빨리 진행하면 중간에 빠진 단계나 검증 누락이 생기기 쉽다.
+- 작업 흐름과 결과를 같은 기준으로 다시 점검해야 다음 세션에서도 맥락을 정확히 이어갈 수 있다.
+
+---
+
+## 2026-03-16 | VAD는 raw backend 판정 위에 최소 filtering을 기본으로 둔다
+
+### 결정
+
+- `VADDetector`는 backend의 raw `True/False`를 그대로 외부로 내보내지 않는다.
+- 기본값으로 아래 filtering을 둔다.
+  - `min_speech_frames=3`
+  - `min_silence_frames=10`
+- backend 원시 판정은 `raw_status`로 따로 유지한다.
+
+### 이유
+
+- `webrtcvad`는 조용한 환경에서도 raw frame 출력이 흔들릴 수 있다.
+- 지금 단계에서는 복잡한 endpointing 상태기계보다, 최소 hysteresis 레이어를 먼저 두는 편이 단순하고 효과적이다.
+
+---
+
+## 2026-03-16 | VAD 기본 백엔드는 silero로 둔다
+
+### 결정
+
+- `VADDetector`와 `vad_demo.py`의 기본 모델은 `silero`로 둔다.
+- `webrtcvad`는 옵션으로만 유지한다.
+
+### 이유
+
+- 현재 실제 마이크 실험에서 `silero`가 훨씬 안정적으로 동작했다.
+- `webrtcvad`는 조용한 환경에서도 흔들림이 있어 기본값으로 두기엔 품질이 부족했다.
+
+---
+
 ## 2026-03-13 | 중간 커밋은 자율 수행하고 push는 사용자 확인 후 진행
 
 ### 결정
@@ -407,3 +470,72 @@
 
 - 현재 프로젝트는 세션을 오가며 이어서 작업하는 일이 많아, 함수 단위 설명이 바로 보이는 편이 맥락 복구에 유리하다.
 - 코드 작성자 본인도 시간이 지나면 세부 맥락을 잊기 쉬우므로, 함수 아래 설명을 기본 습관으로 두는 편이 유지보수에 유리하다.
+
+---
+
+## 2026-03-16 | VAD는 dual-backend 구조로 시작하고 사용법은 하나로 통일
+
+### 결정
+
+- VAD는 `webrtcvad`와 ONNX 기반 `Silero VAD` 두 백엔드를 모두 두고 시작한다.
+- 외부 진입점은 `vad/detector.py`의 `VADDetector` 하나로 통일한다.
+- 두 백엔드의 핵심 사용 방식은 `infer(audio_chunk) -> bool`로 같게 유지한다.
+- 데모는 `vad/vad_demo.py`에서 기본 마이크를 받아 터미널에 `True / False`만 계속 표시하는 최소 형태로 만든다.
+
+### 이유
+
+- 현재 단계에서는 백엔드 교체 실험이 쉽고, 외부 사용법은 단순한 구조가 가장 중요하다.
+- `webrtcvad`는 빠르게 시작하기 좋고, ONNX 기반 학습형 VAD는 실제 환경에서 더 나은 성능 후보가 될 수 있다.
+- 데모는 기능 과시보다 사용 난이도를 낮추는 편이 SDK 방향과 더 잘 맞는다.
+
+---
+
+## 2026-03-16 | wake word와 VAD는 요소기술 완료 상태로 보고 문서 기준을 통일
+
+### 결정
+
+- `wake_word`와 `vad`는 모두 요소기술 개발 완료 상태로 본다.
+- 이후 문서에서는 `wake word 먼저 구현 중`, `VAD 초기 구현 시작` 같은 표현을 쓰지 않는다.
+- 남은 작업은 각 모듈의 핵심 구현이 아니라, wake word 실기 튜닝과 wake word+VAD 연동으로 정리한다.
+
+### 이유
+
+- wake word는 학습, 평가, ONNX export, Jetson GUI, openWakeWord 의존성 제거, Jetson 학습 smoke 검증까지 끝났다.
+- VAD도 dual backend, 공통 `VADDetector`, 기본 backend `silero`, 기본 마이크 demo 검증까지 끝났다.
+- 실제 다음 단계는 STT 전 단계 통합과 실기 기준 조정이므로, 문서 상태도 그 기준을 정확히 반영해야 한다.
+
+---
+
+## 2026-03-16 | Jetson 데모 스크린샷은 문서 자산으로 리포 안에 함께 관리
+
+### 결정
+
+- wake word GUI와 VAD demo 스크린샷은 `docs/assets/screenshots/jetson_demos/` 아래에 둔다.
+- 각 스크린샷은 원본 시간 기반 이름 대신 상태가 드러나는 설명형 이름을 사용한다.
+- 사용자는 루트 문서보다 각 모듈 README에서 데모 화면을 바로 확인할 수 있게 한다.
+
+### 이유
+
+- 스크린샷이 홈 디렉토리에만 있으면 세션이 바뀌었을 때 문서와 분리된다.
+- 상태가 드러나는 파일명이어야 나중에 어떤 화면인지 바로 찾을 수 있다.
+- wake word와 VAD는 각각 데모 성격이 다르므로, 해당 모듈 README에서 직접 보여주는 편이 가장 이해하기 쉽다.
+
+---
+
+## 2026-03-16 | 이번 사이클의 소형 runtime ONNX는 예외적으로 리포에 포함
+
+### 결정
+
+- 아래 소형 runtime ONNX 자산은 이번 사이클 예외로 리포에 포함한다.
+  - `wake_word/assets/feature_models/melspectrogram.onnx`
+  - `wake_word/assets/feature_models/embedding_model.onnx`
+  - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
+  - `vad/models/silero_vad.onnx`
+- wake word classifier metadata JSON도 함께 포함한다.
+- `.pt`, 학습 history, run archive 같은 대용량 산출물은 계속 제외한다.
+
+### 이유
+
+- 현재 목표는 Jetson에서 wake word와 VAD 데모를 바로 재현 가능하게 유지하는 것이다.
+- 위 파일들은 용량이 작고 runtime 재현성에 직접 필요하다.
+- 예외 범위를 명확히 적어두면, 모든 모델 산출물을 무분별하게 추적하는 문제를 피할 수 있다.

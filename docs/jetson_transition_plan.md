@@ -4,14 +4,14 @@
 
 ## 1. 이 문서의 목적
 
-이 문서는 Linux 서버(A100) 단계에서 완료된 wake word 학습 결과를 바탕으로,  
+이 문서는 Linux 서버(A100) 단계에서 완료된 wake word 학습 결과와, 현재 Jetson에서 완료된 wake word/VAD 요소기술 구현을 바탕으로,  
 다음 작업을 Jetson Orin Nano Developer Kit에서 바로 이어서 진행할 수 있도록 만드는 handoff 문서다.
 
 이 문서를 보면 아래를 바로 이해할 수 있어야 한다.
 
-- 지금까지 서버에서 무엇이 끝났는지
-- 어떤 모델을 Jetson 기준 후보로 쓸지
-- Jetson에서 무엇부터 구현하고 검증해야 하는지
+- 지금까지 서버와 Jetson에서 무엇이 끝났는지
+- 어떤 모델과 모듈을 Jetson 기준으로 쓸지
+- Jetson에서 무엇부터 연동하고 검증해야 하는지
 - 어떤 순서로 테스트하고, 어떤 기준으로 성공/실패를 판단할지
 
 ## 2. 현재 서버 단계 요약
@@ -27,6 +27,16 @@
 - positive-only / negative-only 분리 평가 완료
 - classifier ONNX export 완료
 - classifier ONNX wrapper / CLI sample 준비 완료
+- Jetson GUI demo 완료
+- feature backbone 로컬 구현 전환 완료
+- Jetson 학습 smoke 검증 완료
+
+현재 VAD도 요소기술 기준으로 아래까지 완료됐다.
+
+- `vad/detector.py` 공통 진입점 구현 완료
+- `webrtcvad` / `Silero VAD ONNX` dual backend 구현 완료
+- 기본 backend를 `silero`로 확정
+- 기본 마이크 demo 검증 완료
 
 현재 Jetson 이관 후보 모델은 아래 run이다.
 
@@ -59,8 +69,9 @@ Jetson 단계의 현재 목표는 아래처럼 정리된다.
 2. Jetson에서 실시간 GUI demo를 기준으로 score, detection, timing을 즉시 확인한다.
 3. 실제 환경에서 `하이 포포` 호출 성능과 배경 오탐을 직접 확인한다.
 4. threshold와 input gain 기본값을 현장 기준으로 확정한다.
+5. wake word 감지 뒤에 VAD를 연결해 STT 입력 전 구간 절단 기준을 정리한다.
 
-즉, 지금 단계의 목적은 “이미 구현된 실시간 데모를 기준으로 실기 검증을 마무리하는 것”이다.
+즉, 지금 단계의 목적은 “이미 구현된 wake word/VAD 요소기술을 실기 기준으로 정리하고, 둘을 연결할 준비를 마무리하는 것”이다.
 
 ## 4. Jetson으로 넘어갈 때 기준 모델과 산출물
 
@@ -90,7 +101,7 @@ Jetson 단계에서 우선 기준으로 삼을 파일은 아래다.
 
 ## 5. Jetson 단계의 현재 완료 항목과 남은 일
 
-Jetson 단계에서는 핵심 구현이 이미 끝났고, 현재는 검증과 조정이 남아 있다.
+Jetson 단계에서는 wake word와 VAD의 핵심 구현이 이미 끝났고, 현재는 검증, 조정, 두 모듈의 연동이 남아 있다.
 
 ### 5-1. ONNX export와 런타임 검증
 
@@ -171,6 +182,28 @@ GUI에서 최소한 보여야 하는 요소:
 
 이제 남은 핵심은 실제 환경에서 score 분포를 보고 threshold와 input gain을 같이 조정하는 것이다.
 
+### 5-4. VAD 모듈 구현
+
+현재 `vad/detector.py`는 공통 VAD 진입점으로 구현돼 있다.
+
+목표 파일:
+
+- `vad/detector.py`
+- `vad/model_silero.py`
+- `vad/model_webrtcvad.py`
+- `vad/vad_demo.py`
+
+현재 완료 상태:
+
+- `infer(audio_chunk) -> bool` 공통 사용 방식 정리 완료
+- 기본 backend를 `silero`로 확정
+- 최소 filtering 적용 완료
+  - `min_speech_frames=3`
+  - `min_silence_frames=10`
+- 기본 마이크에서 `status / level / conf` 기준 terminal demo 확인 완료
+
+이제 남은 핵심은 wake word 뒤에 VAD를 붙여 실제 utterance segmentation 기준을 만드는 것이다.
+
 ## 6. Jetson 실기 검증 계획
 
 Jetson에서 GUI까지 붙으면 아래 순서로 검증한다.
@@ -236,17 +269,17 @@ GUI를 보는 동안 아래를 바로 판단할 수 있어야 한다.
 
 ## 7. Jetson 단계에서 당장 하지 않을 일
 
-아래는 Jetson 초기에 바로 하지 않는다.
+아래는 Jetson 현재 단계에서 바로 하지 않는다.
 
 - 새 학습 파이프라인 확장
 - 추가 grid search
 - backbone 교체
-- VAD/STT/LLM/TTS 통합
+- STT/LLM/TTS 통합
 - 구조 변경을 동반한 재학습
 
 이유:
 
-- 지금 단계에서는 모델 자체보다 실시간 동작과 배치 감각을 먼저 보는 것이 중요하다.
+- 지금 단계에서는 STT 이후 확장보다 wake word/VAD의 실시간 동작과 배치 감각을 먼저 보는 것이 중요하다.
 - 실기 테스트 없이 다시 학습으로 돌아가면 조정 방향이 흐려진다.
 
 ## 8. Jetson 단계의 성공 기준
@@ -258,6 +291,8 @@ GUI를 보는 동안 아래를 바로 판단할 수 있어야 한다.
 - `하이 포포` 호출 시 GUI에서 명확한 score 상승과 detection이 보인다.
 - idle/background에서 오탐 패턴을 확인할 수 있다.
 - threshold와 input gain 기본값을 실기 기준으로 판단할 수 있다.
+- VAD가 기본 마이크 기준으로 안정적으로 `status`를 내보낸다.
+- wake word 뒤에 VAD를 연결할 때 구간 절단 기준을 설명할 수 있다.
 
 즉, 이 단계의 성공은 “제품 수준 완료”가 아니라  
 “실시간 데모가 가능하고, 다음 개선 방향이 명확해지는 것”이다.
@@ -269,8 +304,8 @@ Jetson 실기 검증이 끝난 뒤 분기는 두 가지다.
 ### 경우 1. 성능이 충분히 좋다
 
 - 현재 threshold를 기준값으로 채택
-- wake word 모듈을 상위 음성 에이전트 파이프라인에 연결
-- 이후 VAD/STT/LLM/TTS로 확장
+- wake word와 VAD를 연결해 상위 음성 에이전트 파이프라인의 첫 입력 모듈로 정리
+- 이후 STT/LLM/TTS로 확장
 
 ### 경우 2. 실기에서 오탐 또는 미탐이 많다
 

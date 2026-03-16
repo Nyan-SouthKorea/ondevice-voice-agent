@@ -1,7 +1,7 @@
 # Wake Word
 
 이 디렉토리는 `하이 포포` 한국어 wake word 프로젝트의 실제 구현 영역이다.  
-현재 이 리포에서 가장 많이 진행된 하위 프로젝트이며, 데이터 준비부터 feature extraction, 학습, 평가, Jetson 배포 준비까지 이 디렉토리 아래에서 관리한다.
+현재 이 리포에서 가장 많이 진행된 하위 프로젝트이며, 데이터 준비부터 feature extraction, 학습, 평가, Jetson 실시간 추론까지 이 디렉토리 아래에서 관리한다.
 
 ## 목표
 
@@ -21,13 +21,15 @@
 - grid search 완료
 - full-data 최종 학습 완료
 - ONNX export 완료
-- Jetson 실시간 마이크 GUI demo 추가
+- feature backbone ONNX 로컬 자산화 완료
+- `openWakeWord` 로컬 clone 의존성 제거 완료
+- Jetson 실시간 마이크 GUI demo 완료
 - Jetson에서 실제 실행 확인 완료
+- Jetson 학습 smoke env에서 `feature extraction -> train -> export` 최소 검증 완료
 - `wake_word.py`를 `detector.py`로 정리 완료
-- 다음 단계
-  - 실제 현장 기준 threshold와 input gain 확정
-  - hard negative와 일반 대화 기준 오탐 패턴 점검
-  - 연속 오디오 false accepts per hour 측정
+- 현재 단계 판정
+  - wake word 요소기술 개발 완료
+  - 남은 일은 실기 튜닝과 상위 모듈 연동
 
 ## 현재 best 모델
 
@@ -56,7 +58,11 @@
 
 ## 구현 흐름
 
-이 프로젝트는 openWakeWord의 구조를 참고하되, 데이터 파이프라인과 운영 방식은 이 리포에 맞게 별도로 정리했다.
+이 프로젝트는 openWakeWord의 구조를 참고하되, 현재 실행 코드는 이 리포 안의 로컬 구현만 사용한다.
+
+원본 openWakeWord 출처와 현재 어떤 부분을 로컬로 옮겼는지는 아래 문서에 정리했다.
+
+- [`../docs/research/openwakeword_reference.md`](../docs/research/openwakeword_reference.md)
 
 1. positive 생성
 2. positive augmentation
@@ -67,6 +73,18 @@
 7. ONNX export
 8. Jetson 추론 검증
 
+## Jetson GUI 스크린샷
+
+| Idle 상태 | 감지 상태 |
+|------|------|
+| ![Wake word GUI idle](../docs/assets/screenshots/jetson_demos/wake_word_gui_idle.png) | ![Wake word GUI detected](../docs/assets/screenshots/jetson_demos/wake_word_gui_detected.png) |
+
+설명:
+
+- 왼쪽은 기본 대기 상태다. 감지 램프가 꺼져 있고, score bar와 Jetson 리소스 텍스트가 함께 보인다.
+- 오른쪽은 `하이 포포` 감지 직후 상태다. 1초 유지 감지 램프, score peak, threshold 위치를 한 번에 확인할 수 있다.
+- 두 화면 모두 실제 Jetson 마이크 입력 기준 GUI 데모 결과다.
+
 ## 디렉토리 구조
 
 ```text
@@ -74,11 +92,12 @@ wake_word/
 ├── README.md                 # 이 문서
 ├── train/                    # 학습/평가 스크립트
 ├── models/                   # 모델 아카이브
+├── assets/feature_models/    # feature backbone ONNX 2개
 ├── examples/                 # 공개 가능한 소량 샘플
+├── features.py               # feature backbone 로컬 구현
 ├── detector.py               # 추론 모듈
 ├── wake_word_demo.py         # feature 입력용 CLI demo
-├── wake_word_gui_demo.py     # 마이크 입력용 실시간 GUI demo
-└── openWakeWord/             # 참고용 upstream clone (공개 리포에는 제외)
+└── wake_word_gui_demo.py     # 마이크 입력용 실시간 GUI demo
 ```
 
 ### `train/`
@@ -168,7 +187,7 @@ wake_word/
 - 연속 오디오 기반 false positive 측정
 - 실제 마이크 조건에서의 false reject 측정
 
-## 다음 작업
+## 남은 검증 및 연동 작업
 
 1. 실제 현장 마이크와 실사용 거리 기준으로 threshold와 input gain 기본값을 확정
 2. `하이 보보`, `하이 뽀뽀`, `굿바이 포포` 같은 hard negative 문구와 일반 대화로 오탐 패턴을 수집
@@ -207,10 +226,12 @@ wake_word/
 중요한 점:
 
 - 현재 추론 체인은 `melspectrogram.onnx -> embedding_model.onnx -> hi_popo_classifier.onnx` 순서의 ONNX 연결이다.
+- `melspectrogram.onnx`와 `embedding_model.onnx`는 `assets/feature_models/`에 함께 보관한다.
 - export 대상 classifier는 여전히 `classifier only` ONNX이며, 입력은 raw audio가 아니라 feature다.
 - wrapper는 `(16, 96)` window와 `(T, 96)` clip feature 둘 다 받을 수 있다.
-- `detector.py`의 realtime 래퍼는 upstream embedding 추출까지 함께 연결한다.
-- `models/` 아래 산출물은 git에 포함하지 않으므로, Jetson에는 ONNX와 metadata를 별도로 복사해야 한다.
+- `detector.py`의 realtime 래퍼는 로컬 `features.py`를 통해 embedding 추출까지 함께 연결한다.
+- `models/` 아래의 대용량 학습 산출물은 계속 git 제외 대상이다.
+- 다만 현재 Jetson runtime 재현에 필요한 최종 classifier ONNX와 metadata는 소형 자산이라 리포에 함께 둔다.
 
 예시:
 

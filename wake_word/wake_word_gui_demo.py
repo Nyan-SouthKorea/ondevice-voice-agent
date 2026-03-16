@@ -77,7 +77,7 @@ def parse_args():
         "--feature-device",
         choices=["cpu", "gpu"],
         default="gpu",
-        help="Device for openWakeWord feature extraction",
+        help="Device for Google Speech Embedding feature extraction",
     )
     parser.add_argument(
         "--input-device",

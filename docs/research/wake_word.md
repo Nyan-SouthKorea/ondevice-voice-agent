@@ -5,10 +5,11 @@
 
 ## 결론 요약
 
-- **채택**: openWakeWord
+- **참고 구조**: openWakeWord
 - **라이선스**: Apache 2.0 (상업적 사용 가능)
 - **학습**: PyTorch → ONNX export
 - **추론**: Jetson에서 onnxruntime-gpu
+- **현재 실행 구현**: 로컬 `wake_word/features.py` + 로컬 feature backbone ONNX + 로컬 classifier ONNX
 
 ---
 
@@ -98,11 +99,10 @@ nn.Sequential(
 
 > ⚠️ PyTorch는 반드시 pip으로 설치. conda install 시 `iJIT_NotifyEvent` 심볼 에러 발생.
 
-### 학습 파이프라인 구조
+### 현재 반영된 학습/추론 구조
 
 ```
 wake_word/
-├── openWakeWord/          ← git clone (레포 원본)
 ├── train/
 │   ├── 01_generate_positive.py   ← Edge TTS 한국어 positive 샘플 생성
 │   ├── 02_augment.py             ← librosa 증강 (피치/속도/노이즈)
@@ -110,6 +110,11 @@ wake_word/
 │   ├── 04_extract_features.py    ← Google Speech Embedding 사전 추출
 │   ├── 05_train.py               ← 분류기 학습 (PyTorch)
 │   └── 06_export_onnx.py         ← ONNX export → Jetson 배포
+├── assets/feature_models/
+│   ├── melspectrogram.onnx
+│   └── embedding_model.onnx
+├── features.py            ← feature backbone 로컬 구현
+├── detector.py            ← raw audio -> feature -> classifier ONNX 추론 래퍼
 ├── data/
 │   ├── positive/          ← TTS 생성 + 실제 녹음 원본
 │   ├── positive_aug/      ← 증강 후
@@ -117,6 +122,11 @@ wake_word/
 │   └── features/          ← 사전 추출 embedding (.npy)
 └── models/                ← hi_popo.onnx
 ```
+
+비고:
+
+- 현재는 `wake_word/openWakeWord/` 로컬 clone 없이 실행한다.
+- 원본 출처와 이관 범위는 `docs/research/openwakeword_reference.md`에 별도로 기록한다.
 
 ---
 

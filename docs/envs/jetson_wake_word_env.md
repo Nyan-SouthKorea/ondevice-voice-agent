@@ -1,19 +1,23 @@
-# Jetson Wake Word Runtime Env
+# Jetson Runtime Env
 
 > 마지막 업데이트: 2026-03-16
-> 목적: Jetson Orin Nano에서 wake word ONNX 추론을 위한 로컬 venv와 검증 절차를 관리한다.
+> 목적: Jetson Orin Nano에서 wake word와 VAD 데모를 실행하기 위한 로컬 venv와 검증 절차를 관리한다.
 
 ## 1. 이 문서의 역할
 
 이 문서는 Jetson 런타임 환경 문서다.
 
 - 위치: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson`
-- 용도: `wake_word` 실시간 ONNX 추론과 CUDA provider 검증
+- 용도: `wake_word` 실시간 ONNX 추론, `vad` demo 실행, CUDA provider 검증
 - 성격: Linux 서버 학습 환경 문서가 아니라 Jetson 배포/검증용 로컬 venv 문서
 
 학습 환경은 아래 문서를 본다.
 
 - `docs/envs/wake_word_env.md`
+
+Jetson에서 학습 코드 smoke 검증이 필요하면 아래 문서를 본다.
+
+- `docs/envs/wake_word_train_smoke_env.md`
 
 ## 2. 공식 기준
 
@@ -124,7 +128,7 @@ source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetso
 
 ## 5-4. 런타임 최소 패키지 설치
 
-현재 `detector.py`, `check_onnx_gpu.py`, `wake_word_gui_demo.py` 실행 기준으로 필요한 최소 패키지는 아래다.
+현재 `wake_word/detector.py`, `wake_word/train/check_onnx_gpu.py`, `wake_word/wake_word_gui_demo.py`, `vad/vad_demo.py` 실행 기준으로 필요한 최소 패키지는 아래다.
 
 ```bash
 python -m pip install --prefer-binary requests tqdm scipy scikit-learn soundfile sounddevice
@@ -133,7 +137,7 @@ python -m pip install --prefer-binary requests tqdm scipy scikit-learn soundfile
 비고:
 
 - `onnxruntime-gpu`는 현재 Jetson의 기존 설치를 재사용한다.
-- `openwakeword`는 로컬 repo의 `wake_word/openWakeWord/`를 코드 경로로 직접 사용한다.
+- feature backbone ONNX는 로컬 repo의 `wake_word/assets/feature_models/`를 직접 사용한다.
 - `tkinter`는 현재 시스템 Python 기본 제공 모듈을 사용한다.
 
 ## 6. 검증 절차
@@ -192,6 +196,20 @@ python wake_word/wake_word_gui_demo.py \
 - `melspectrogram / embedding / classifier` ONNX 시간이 표시된다
 - CPU / RAM / GPU 텍스트가 갱신된다
 
+### 6-4. VAD demo 실행 확인
+
+```bash
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+python vad/vad_demo.py
+```
+
+기대값:
+
+- 기본 입력 마이크 기준으로 상태 한 줄이 계속 갱신된다
+- `status`, `level`, `conf`가 보인다
+- 말할 때 `status=True`와 높은 `conf`가 확인된다
+
 ## 7. 다음 작업에서의 사용 기준
 
 Jetson에서 다음 작업은 이 venv를 기준으로 진행한다.
@@ -200,6 +218,8 @@ Jetson에서 다음 작업은 이 venv를 기준으로 진행한다.
 - `wake_word/wake_word_demo.py`
 - `wake_word/wake_word_gui_demo.py`
 - `wake_word/train/check_onnx_gpu.py`
+- `vad/detector.py`
+- `vad/vad_demo.py`
 - threshold / input gain 현장 튜닝
 - hard negative / 연속 background 오탐 점검
 

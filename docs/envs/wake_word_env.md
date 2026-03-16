@@ -1,7 +1,7 @@
 # Wake Word 학습 환경 세팅 (Linux PC)
 
 > 작성일: 2026-03-12
-> 목적: openWakeWord 커스텀 학습을 위한 conda 환경 구성
+> 목적: wake word 커스텀 학습을 위한 conda 환경 구성
 
 > Jetson runtime venv는 `docs/envs/jetson_wake_word_env.md`에서 별도로 관리한다.
 
@@ -44,10 +44,14 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 ### 4. 추가 패키지 설치
 
 ```bash
-pip install openwakeword
 pip install edge-tts
 pip install librosa soundfile
 ```
+
+비고:
+
+- feature backbone ONNX는 현재 리포의 `wake_word/assets/feature_models/`에 함께 보관한다.
+- 따라서 학습 스크립트 실행을 위해 `openwakeword` 패키지나 로컬 clone은 더 이상 필요하지 않다.
 
 ---
 

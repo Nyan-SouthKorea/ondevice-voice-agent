@@ -6,9 +6,9 @@ ONNX로 export한 wake word classifier를 로드해 feature 단위 추론을 수
 - 단일 입력은 `(16, 96)` window 또는 `(T, 96)` clip feature를 받을 수 있다.
 - clip feature가 들어오면 `(16, 96)` sliding window들을 만든 뒤 max score를 사용한다.
 - 실제 마이크 추론에서는 upstream embedding 추출 단계가 별도로 필요하다.
+- feature backbone ONNX는 `wake_word/assets/feature_models/` 아래의 로컬 파일을 사용한다.
 """
 
-import sys
 import time
 import json
 from dataclasses import dataclass
@@ -17,18 +17,12 @@ from pathlib import Path
 import numpy as np
 import onnxruntime as ort
 
-REPO_ROOT = Path(__file__).resolve().parent
-OPENWAKEWORD_ROOT = REPO_ROOT / "openWakeWord"
-if str(OPENWAKEWORD_ROOT) not in sys.path:
-    sys.path.insert(0, str(OPENWAKEWORD_ROOT))
-
-from openwakeword.utils import AudioFeatures, download_models
+from .features import AudioFeatures, ensure_feature_models
 
 TARGET_SR = 16000
 STREAM_CHUNK_SAMPLES = 1280
 WINDOW_FRAMES = 16
 FEATURE_DIM = 96
-OWW_MODEL_DIR = OPENWAKEWORD_ROOT / "openwakeword" / "resources" / "models"
 
 
 def _default_providers():
@@ -72,20 +66,15 @@ def _normalize_provider_name(provider):
 def _ensure_feature_models():
     """
     기능:
-    - openWakeWord feature 추출에 필요한 ONNX 모델 파일을 준비한다.
+    - wake word feature backbone ONNX 두 개의 기본 경로를 반환한다.
     
     입력:
     - 없음.
     
     반환:
-    - 함수 실행 결과를 반환한다.
+    - mel spectrogram ONNX 경로와 embedding ONNX 경로를 순서대로 반환한다.
     """
-    OWW_MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    melspec_path = OWW_MODEL_DIR / "melspectrogram.onnx"
-    embedding_path = OWW_MODEL_DIR / "embedding_model.onnx"
-    if not melspec_path.exists() or not embedding_path.exists():
-        download_models(target_directory=str(OWW_MODEL_DIR))
-    return str(melspec_path), str(embedding_path)
+    return ensure_feature_models()
 
 
 def _coerce_audio_to_pcm16(audio):

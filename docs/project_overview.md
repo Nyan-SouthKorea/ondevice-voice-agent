@@ -5,7 +5,7 @@
 ## 1. 프로젝트 목적
 
 이 프로젝트의 최종 목표는 케어 로봇용 온디바이스 음성 에이전트를 만드는 것이다.  
-현재 1차 집중 범위는 wake word 시스템이며, 호출어 `하이 포포`를 안정적으로 감지하는 모델을 학습하고 평가하는 데 초점을 둔다.
+현재 1차 집중 범위는 wake word와 VAD 요소기술이며, 호출어 `하이 포포` 감지와 이후 발화 구간 검출까지를 안정적으로 구현하는 데 초점을 둔다.
 
 프로젝트는 아래 순서로 확장된다.
 
@@ -21,9 +21,8 @@
 현재 사이클의 목표는 다음과 같다.
 
 - Linux 서버(A100)에서 wake word 모델을 학습하고 평가한다.
-- 실제 배치 후보로 볼 수 있는 수준까지 성능을 끌어올린다.
-- 결과가 충분히 좋으면 Jetson Orin Nano Developer Kit으로 이관한다.
-- Jetson 이관 이후에는 ONNX 추론 중심으로 개발을 이어간다.
+- Jetson Orin Nano Developer Kit에서 wake word 실시간 추론과 VAD demo를 검증한다.
+- wake word와 VAD를 연결해 STT 전 단계의 입력 구간 절단 기준을 정리한다.
 - 최종적으로는 다른 개발자가 바로 활용할 수 있는 음성 에이전트 SDK 형태로 정리한다.
 
 중요하게 보는 원칙은 다음과 같다.
@@ -39,7 +38,7 @@
 
 ## 3. 현재 시스템 범위
 
-현재 실제로 구현과 실험이 진행된 영역은 wake word이다.
+현재 실제로 구현과 검증이 끝난 영역은 wake word와 VAD다.
 
 전체 목표 파이프라인은 아래와 같다.
 
@@ -52,7 +51,9 @@
   -> [TTS]
 ```
 
-지금은 이 중 `Wake Word`를 먼저 완성하고, 이후 상위 음성 에이전트 스택으로 확장하는 전략이다.
+지금은 `Wake Word`와 `VAD` 요소기술을 각각 완료했고, 다음 단계로 두 모듈을 연결한 뒤 상위 음성 에이전트 스택으로 확장하는 전략이다.
+
+현재 `VAD`는 `webrtcvad`와 ONNX 기반 `Silero VAD`를 같은 인터페이스로 갈아끼울 수 있는 구조까지 정리됐다.
 
 ## 3-1. 장기 아키텍처 목표: SDK형 음성 에이전트
 
@@ -100,6 +101,11 @@
 - conda env: `wake_word`
 - PyTorch: `2.7.1+cu118`
 - CUDA: `11.8`
+- Jetson smoke env:
+  - path: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+  - PyTorch: `2.8.0`
+  - 용도: `04_extract_features.py`, `05_train.py`, `06_export_onnx.py` 최소 실행 검증
+  - 비고: 장시간 full-data 학습 기본 환경은 아니다
 
 ### 추론 환경
 
@@ -113,8 +119,18 @@
 
 - backbone: Google Speech Embedding
 - framework reference: openWakeWord
+- implementation: 로컬 `wake_word/features.py` + 로컬 feature backbone ONNX
 - classifier: 경량 FC binary classifier
 - export target: ONNX
+
+### VAD
+
+- 공통 진입점: `vad/detector.py`
+- backend 1: `webrtcvad`
+- backend 2: ONNX 기반 `Silero VAD`
+- 기본 backend: `silero`
+- 공통 인터페이스: `infer(audio_chunk) -> bool`
+- 기본 filtering: `min_speech_frames=3`, `min_silence_frames=10`
 
 ### Positive 데이터
 
@@ -213,6 +229,8 @@ feature 추출 스크립트:
 - [detector.py](../wake_word/detector.py)
 - [wake_word_demo.py](../wake_word/wake_word_demo.py)
 - [wake_word_gui_demo.py](../wake_word/wake_word_gui_demo.py)
+- [../vad/detector.py](../vad/detector.py)
+- [../vad/vad_demo.py](../vad/vad_demo.py)
 
 학습 산출물은 아래에 run 단위로 보관한다.
 
@@ -391,8 +409,10 @@ epoch 8 결과:
 1. 실제 마이크 환경에서 threshold와 input gain 기본값을 확정한다
 2. hard negative 문구와 일반 대화 기준 false positive / false reject 패턴을 정리한다
 3. 연속 오디오 기준 false accepts per hour를 측정한다
-4. 성능이 충분하면 wake word detector를 상위 음성 에이전트 SDK의 첫 모듈로 정리한다
-5. 이후 VAD/STT/LLM/TTS 통합 순서로 확장한다
+4. wake word 감지 뒤에 VAD를 이어서 STT용 발화 구간 절단 기준을 정리한다
+5. speech start / speech end / utterance cut 기준을 추가한다
+6. 성능이 충분하면 wake word detector와 VAD를 상위 음성 에이전트 SDK의 첫 모듈로 정리한다
+7. 이후 STT/LLM/TTS 통합 순서로 확장한다
 
 현재는 이관 계획을 별도 문서로 분리했다.
 

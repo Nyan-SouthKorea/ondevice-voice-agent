@@ -6,7 +6,7 @@ Positive 샘플 증강 (TTS + recorded 모두 처리)
 출력: data/hi_popo/positive_aug/clean/*.wav
 
 증강 종류:
-  - 원본 변환:    24kHz → 16kHz 모노 (openWakeWord 필수 포맷)
+  - 원본 변환:    24kHz → 16kHz 모노 (feature backbone 입력 포맷)
   - 피치 시프트:  -3, -2, +2, +3 반음 (4종)
   - 화이트 노이즈: SNR 5, 15, 25 dB (3종)
   - 볼륨 스케일:  0.5×, 0.8× (2종)

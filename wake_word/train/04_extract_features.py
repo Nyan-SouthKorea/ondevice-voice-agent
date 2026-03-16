@@ -1,6 +1,6 @@
 """
 04_extract_features.py
-openWakeWord AudioFeatures 기반 feature 추출
+Google Speech Embedding ONNX backbone 기반 feature 추출
 
 입력:
   - positive_aug/clean
@@ -18,7 +18,7 @@ openWakeWord AudioFeatures 기반 feature 추출
   - data/hi_popo/features/manifests/*.jsonl
 
 비고:
-  - openWakeWord 레포의 AudioFeatures를 직접 사용
+  - 로컬 `wake_word/features.py`의 AudioFeatures를 사용
   - trim_mmap 경로를 타지 않도록 자체 memmap 저장 루프 구현
 """
 
@@ -40,11 +40,11 @@ from tqdm import tqdm
 os.environ.setdefault("NUMBA_CACHE_DIR", "/tmp/numba_cache")
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-OPENWAKEWORD_ROOT = REPO_ROOT / "openWakeWord"
-if str(OPENWAKEWORD_ROOT) not in sys.path:
-    sys.path.insert(0, str(OPENWAKEWORD_ROOT))
+PROJECT_ROOT = REPO_ROOT.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-from openwakeword.utils import AudioFeatures, download_models  # noqa: E402
+from wake_word.features import AudioFeatures, ensure_feature_models  # noqa: E402
 
 SEED = 42
 TARGET_SR = 16000
@@ -56,7 +56,6 @@ PROGRESS_INTERVAL_SEC = 60
 BASE_DIR = REPO_ROOT / "data" / "hi_popo"
 FEATURE_DIR = BASE_DIR / "features"
 MANIFEST_DIR = FEATURE_DIR / "manifests"
-OWW_MODEL_DIR = OPENWAKEWORD_ROOT / "openwakeword" / "resources" / "models"
 
 FEATURE_DIR.mkdir(parents=True, exist_ok=True)
 MANIFEST_DIR.mkdir(parents=True, exist_ok=True)
@@ -186,25 +185,6 @@ def load_pcm16(path: Path) -> np.ndarray:
     return (audio * 32767.0).astype(np.int16)
 
 
-def ensure_openwakeword_models() -> tuple[str, str]:
-    """
-    기능:
-    - openWakeWord feature 추출에 필요한 ONNX 모델 파일을 준비한다.
-    
-    입력:
-    - 없음.
-    
-    반환:
-    - 함수 실행 결과를 반환한다.
-    """
-    OWW_MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    melspec_path = OWW_MODEL_DIR / "melspectrogram.onnx"
-    embedding_path = OWW_MODEL_DIR / "embedding_model.onnx"
-    if not melspec_path.exists() or not embedding_path.exists():
-        download_models(target_directory=str(OWW_MODEL_DIR), inference_framework="onnx")
-    return str(melspec_path), str(embedding_path)
-
-
 def extract_features(
     files: list[Path],
     output_file: Path,
@@ -229,7 +209,7 @@ def extract_features(
     if output_file.exists():
         output_file.unlink()
 
-    melspec_path, embedding_path = ensure_openwakeword_models()
+    melspec_path, embedding_path = ensure_feature_models()
     feature_extractor = AudioFeatures(
         device=device,
         melspec_model_path=melspec_path,

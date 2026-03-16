@@ -1125,3 +1125,207 @@
 - 현재 기준 문서들의 `다음 작업`과 `현재 목표`를 코드 상태와 맞췄다.
 - Jetson 단계 문서는 “구현 예정” 중심에서 “구현 완료 + 남은 실기 검증” 중심으로 정리됐다.
 - 다음 세션에서는 문서를 읽었을 때 곧바로 현재 남은 일만 따라가면 되도록 맞췄다.
+
+---
+
+## 2026-03-16 | Human + Codex | VAD 초기 구조 구현 시작
+
+### Context
+
+- 사용자는 다음 모듈로 VAD 개발을 시작하길 원했다.
+- 데모는 사용성을 강조하기 위해 매우 단순해야 했고, 터미널에 `True / False`만 계속 보이길 원했다.
+- 또한 `webrtcvad` 기반 VAD와 ONNX 기반 학습형 VAD를 같은 사용법으로 갈아끼울 수 있길 원했다.
+
+### Actions
+
+- `vad/README.md`, `docs/개발방침.md`, `docs/project_overview.md`, `docs/status.md`를 다시 읽고 현재 VAD 요구사항과 상위 구조 기준을 정리했다.
+- `vad/detector.py`를 공통 진입점으로 추가했다.
+- `vad/model_webrtcvad.py`와 `vad/model_silero.py`를 같은 `infer(audio_chunk) -> bool` 인터페이스로 구현했다.
+- `vad/vad_demo.py`는 기본 마이크를 받아 현재 상태를 `True / False`만 출력하는 최소 데모로 정리했다.
+- `vad/vad.py`는 제거하고, `vad/__init__.py`로 공통 export를 정리했다.
+- VAD 시작 상태와 dual-backend 방침을 상위 문서에도 반영했다.
+
+### Findings
+
+- 현재 프로젝트 기준 샘플레이트는 `16kHz mono`로 고정하는 것이 가장 단순하다.
+- `webrtcvad`는 바로 실행 가능한 시작점이고, Silero ONNX는 모델 파일만 준비되면 같은 인터페이스로 교체할 수 있다.
+- 데모를 최소 형태로 유지하면 이후 상위 SDK에 붙일 때도 인터페이스가 더 깔끔하다.
+
+### Result
+
+- VAD 모듈의 첫 구조가 `detector.py + backend model 2개 + 초간단 demo` 형태로 잡혔다.
+- 외부 사용자는 `VADDetector(model=\"webrtcvad\" | \"silero\")`와 `infer(audio_chunk)`만 알면 된다.
+- 다음 단계는 실제 마이크로 `webrtcvad` 경로를 먼저 확인하고, 이후 Silero ONNX 모델 파일을 연결해 비교하는 것이다.
+
+### Validation
+
+- `python vad/vad_demo.py --model webrtcvad`를 짧게 실행해 기본 마이크에서 `True / False` 출력이 계속 갱신되는 것을 확인했다.
+- `VADDetector(model="webrtcvad")`는 zero chunk 입력 기준 `False` 반환과 `status` 동기화가 확인됐다.
+- 공식 Silero ONNX를 `vad/models/silero_vad.onnx`로 내려받았다.
+- `VADDetector(model="silero")`는 zero chunk 입력 기준 `False` 반환과 `last_score` 갱신이 확인됐다.
+- `python vad/vad_demo.py --model silero`도 기본 마이크에서 `True / False` 출력이 계속 갱신되는 것을 확인했다.
+
+---
+
+## 2026-03-16 | Human + Codex | Jetson 학습 smoke env 생성 및 최소 검증
+
+### Context
+
+- 사용자는 Jetson에서도 학습 코드가 실제로 도는지 불안해했다.
+- 특히 `torch`와 `librosa`가 없는 상태라 `05_train.py`는 import 단계에서 막혀 있었고, `04_extract_features.py`도 현재 env 기준으로는 런타임 재검증이 필요했다.
+- 추론용 `wake_word_jetson` env를 건드리지 않고, 학습 smoke 전용 venv를 별도로 만들기로 했다.
+
+### Actions
+
+- Jetson 현재 상태를 다시 확인했다.
+  - JetPack: `6.2.1+b38`
+  - L4T: `R36.4.7`
+  - Python: `3.10.12`
+  - CUDA toolkit: `12.6`
+- NVIDIA 공식 PyTorch for Jetson 문서와 release notes, Jetson 공식 포럼의 JP6.2.1 설치 안내를 기준으로 `wake_word_train_smoke` venv를 만들었다.
+- `torch==2.8.0`을 `https://pypi.jetson-ai-lab.io/jp6/cu126` 인덱스에서 설치했다.
+- `librosa`, `soundfile`, `tqdm`, `numpy<2`를 함께 설치했다.
+- feature extraction smoke를 위해 기존 Jetson의 `onnxruntime-gpu 1.23.0`을 `.pth` 방식으로 재사용 연결했다.
+- `04_extract_features.py`는 zero clip 1개로 feature backbone smoke를 돌렸다.
+- `05_train.py`는 temporary synthetic feature로 `1 epoch`만 실행했다.
+- `06_export_onnx.py`도 smoke checkpoint 기준으로 끝까지 통과시켰다.
+- smoke 검증 직후 synthetic feature와 `smoke_test` run은 삭제했고, `hi_popo_classifier.pt` 최신 포인터는 다시 `final_full_best_trial40` 기준으로 복구했다.
+
+### Findings
+
+- Jetson에서도 `torch.cuda.is_available()`는 `True`로 확인됐다.
+- `04_extract_features.py`는 embedding provider `CUDAExecutionProvider`로 zero clip feature를 생성했다.
+- `05_train.py`는 `cuda:0`에서 실제로 1 epoch를 완료했다.
+- `06_export_onnx.py`도 ONNX 파일과 metadata JSON을 정상 생성했다.
+- 즉 현재 Jetson에서는 학습 코드를 전혀 검증할 수 없는 상태가 아니라, 최소 smoke 수준까지는 재현 가능하다.
+
+### Result
+
+- Jetson 학습 smoke 전용 env 경로가 확정됐다.
+  - `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+- 추론용 env와 학습 smoke env의 역할이 분리됐다.
+- 다음부터는 Jetson에서 학습 관련 리팩토링을 건드려도, 최소한 `feature extraction -> train -> export` smoke까지는 바로 확인할 수 있게 됐다.
+
+### Validation
+
+- `torch 2.8.0`, `cuda_available=True`, `device_name=Orin`
+- `onnxruntime 1.23.0`, provider에 `CUDAExecutionProvider` 포함
+- `04_extract_features.py` smoke output shape `(1, 28, 96)`
+- `05_train.py --device gpu --epochs 1` 완료
+- `06_export_onnx.py` smoke checkpoint export 완료
+
+---
+
+## 2026-03-16 | Human + Codex | openWakeWord 실행 의존성 제거 및 재검증
+
+### Context
+
+- `wake_word/openWakeWord/`는 원래 참고용으로 두었지만, 실제로는 추론과 feature extraction 코드가 직접 import하고 있었다.
+- 사용자는 이 clone을 지워도 학습과 추론이 깨지지 않는 상태를 원했다.
+
+### Actions
+
+- `melspectrogram.onnx`, `embedding_model.onnx`를 `wake_word/assets/feature_models/`로 옮겼다.
+- `wake_word/features.py`를 추가해 feature backbone 호출 로직을 로컬 구현으로 정리했다.
+- `wake_word/detector.py`, `wake_word/train/04_extract_features.py`, `wake_word/train/check_onnx_gpu.py`가 모두 새 로컬 모듈만 보도록 리팩토링했다.
+- `wake_word/openWakeWord/` 폴더를 실제로 치운 상태에서 추론과 학습 smoke를 다시 실행했다.
+- smoke 때문에 갱신된 최신 체크포인트 포인터는 다시 `final_full_best_trial40` 기준으로 복구했다.
+
+### Findings
+
+- 현재 wake word 실행에 필요한 것은 `features.py`와 feature backbone ONNX 2개, 그리고 classifier ONNX뿐이다.
+- `openWakeWord` clone 없이도 `check_onnx_gpu.py`, realtime detector, `04_extract_features.py`, `05_train.py`, `06_export_onnx.py`가 모두 다시 통과했다.
+- 따라서 지금 시점에는 `openWakeWord` 로컬 clone이 더 이상 실행 의존성이 아니다.
+
+### Result
+
+- wake word 추론과 feature extraction 경로가 로컬 구현으로 독립했다.
+- `wake_word/openWakeWord/` clone은 제거했다.
+- 문서와 환경 안내도 새 구조에 맞게 갱신했다.
+
+### Validation
+
+- `wake_word/train/check_onnx_gpu.py` 결과 `GPU_OK`
+- `HiPopoWakeWordRealtime` zero chunk streaming smoke 통과
+- `wake_word/wake_word_gui_demo.py --help` 통과
+- `04_extract_features.py` zero clip smoke output `(1, 28, 96)`
+- `05_train.py` 1 epoch smoke 통과
+- `06_export_onnx.py` smoke export 통과
+
+---
+
+## 2026-03-16 | Human + Codex | VAD 기본 filtering 추가
+
+### Context
+
+- 사용자는 `webrtcvad` 데모가 조용한 사무실에서도 `True/False`로 흔들리는 점을 확인했다.
+- 현재 `VADDetector`는 backend raw 판정을 그대로 외부에 반환하고 있었고, 최소 filtering도 없는 상태였다.
+
+### Actions
+
+- `vad/detector.py`에 연속 speech / silence frame 기반 filtering을 추가했다.
+- 새 인자:
+  - `min_speech_frames`
+  - `min_silence_frames`
+- 기본값:
+  - `min_speech_frames=3`
+  - `min_silence_frames=10`
+- raw backend 결과는 `raw_status`로 따로 유지하게 했다.
+- `vad/vad_demo.py`에도 같은 인자를 추가했다.
+- 상태 문서와 결정 문서에 기본 filtering 기준을 기록했다.
+
+### Findings
+
+- `webrtcvad`는 raw frame 기준으로는 쉽게 흔들릴 수 있다.
+- 하지만 시작/종료 방향에 서로 다른 연속 frame 기준을 주면, 적은 코드로도 체감 안정성이 꽤 좋아진다.
+
+### Result
+
+- VAD는 이제 backend raw 결과 위에 최소 hysteresis 레이어를 가진다.
+- 기본 데모에서도 `webrtcvad`가 이전보다 덜 흔들리는 방향으로 정리됐다.
+
+### Update
+
+- 이후 사용자 실험 결과를 반영해 VAD 기본 백엔드는 `silero`로 변경했다.
+- `webrtcvad`는 비교와 실험용 옵션으로만 유지한다.
+
+---
+
+## 2026-03-16 | Human + Codex | wake word / VAD 완료 기준으로 문서 재동기화
+
+### Context
+
+- 사용자는 wake word와 VAD 요소기술 개발이 끝난 현재 상태를 기준으로 모든 문서를 다시 맞추길 원했다.
+- 추가로 Jetson에서 직접 찍은 wake word GUI와 VAD demo 스크린샷을 문서 안에서 바로 보이게 정리하길 원했다.
+
+### Actions
+
+- 루트 `README.md`, `wake_word/README.md`, `vad/README.md`, `docs/status.md`, `docs/project_overview.md`, `docs/개발방침.md`, `docs/README.md`, `docs/jetson_transition_plan.md`, `docs/research/wake_word.md`를 현재 완료 기준으로 다시 정리했다.
+- `wake word 먼저 구현 중`, `VAD 초기 구현 시작`처럼 오래된 상태 표현을 제거했다.
+- `docs/envs/jetson_wake_word_env.md`도 실제 사용 기준에 맞게 wake word/VAD demo 공용 runtime 문서로 갱신했다.
+- 홈 디렉토리의 스크린샷 4장을 리포 안 `docs/assets/screenshots/jetson_demos/`로 복사하고 설명형 이름으로 정리했다.
+  - `wake_word_gui_idle.png`
+  - `wake_word_gui_detected.png`
+  - `vad_demo_idle_terminal.png`
+  - `vad_demo_speech_terminal.png`
+- `wake_word/README.md`와 `vad/README.md`에 각 스크린샷과 설명을 추가했다.
+
+### Findings
+
+- 현재 문서에서 중요한 기준은 `wake word와 VAD가 각각 동작한다`가 아니라, `둘 다 요소기술 완료 상태이고 다음은 연동`이라는 점이다.
+- 데모 화면은 모듈 README에서 직접 보이게 두는 편이 루트 문서보다 이해가 빠르다.
+
+### Result
+
+- 현재 문서 전체 기준은 `wake word 완료 + VAD 완료 + 다음은 튜닝/연동`으로 통일됐다.
+- Jetson 데모 스크린샷도 이제 리포 안 문서 자산으로 함께 관리된다.
+
+### Validation
+
+- 문서 검색 기준으로 `VAD 초기 구현 시작` 같은 오래된 표현은 핵심 문서에서 제거했다.
+- 스크린샷은 `wake_word/README.md`와 `vad/README.md`에서 바로 렌더링 가능한 상대 경로로 연결했다.
+
+### Update
+
+- 사용자가 이번 사이클의 소형 runtime ONNX는 예외적으로 리포에 포함하길 원했다.
+- 이에 맞춰 `.gitignore`와 문서 문구를 조정해, 필요한 ONNX만 정확히 추적하고 대용량 학습 산출물은 계속 제외하는 방향으로 정리했다.

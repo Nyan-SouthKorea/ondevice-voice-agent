@@ -23,8 +23,11 @@ __pycache__/
 
 # Training data and generated artifacts
 wake_word/data/
-wake_word/models/
-
-# External repo metadata
-wake_word/openWakeWord/.git/
-wake_word/openWakeWord/
+wake_word/models/**
+!wake_word/models/
+!wake_word/models/hi_popo/
+!wake_word/models/hi_popo/README.md
+!wake_word/models/hi_popo/hi_popo_classifier.onnx
+!wake_word/models/hi_popo/hi_popo_classifier_onnx.json
+vad/models/*.onnx
+!vad/models/silero_vad.onnx

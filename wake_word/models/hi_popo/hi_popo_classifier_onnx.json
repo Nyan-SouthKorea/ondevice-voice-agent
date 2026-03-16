@@ -1,0 +1,33 @@
+{
+  "checkpoint": "wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.pt",
+  "onnx_path": "/data2/iena/260312_WakeWord-train/wake_word/models/hi_popo/hi_popo_classifier.onnx",
+  "input_shape": [
+    16,
+    96
+  ],
+  "threshold": 0.8,
+  "layer_dim": 64,
+  "n_blocks": 2,
+  "best_metrics": {
+    "recall": 0.9966130397967824,
+    "accuracy": 0.9926176310095023,
+    "false_positives": 128,
+    "false_positive_rate": 0.011377777777777778
+  },
+  "train_args": {
+    "device": "gpu",
+    "seed": 42,
+    "epochs": 8,
+    "batch_size": 512,
+    "lr": 0.0005,
+    "layer_dim": 64,
+    "n_blocks": 2,
+    "negative_weight": 5.0,
+    "progress_interval_sec": 60,
+    "run_name": "final_full_best_trial40",
+    "limit_train_positive": null,
+    "limit_train_negative": null,
+    "limit_val_positive": null,
+    "limit_val_negative": null
+  }
+}

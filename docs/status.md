@@ -4,9 +4,10 @@
 
 ## 현재 목표
 
-- `하이 포포` wake word 모델을 Jetson Orin Nano Developer Kit의 실제 마이크 환경에서 검증한다.
-- threshold와 input gain 기본값을 현장 기준으로 확정한다.
-- 연속 오디오 기준 false accept 패턴을 확인하고, 이후 상위 SDK 연결 준비를 한다.
+- wake word와 VAD 요소기술을 실제 Jetson 마이크 환경 기준으로 마무리 검증한다.
+- wake word threshold와 input gain 기본값을 현장 기준으로 확정한다.
+- wake word와 VAD를 연결해 STT 입력 구간 절단 기준을 정리한다.
+- 이후 상위 SDK 연결과 STT 단계로 넘어갈 준비를 한다.
 
 ## 현재 최종 기준
 
@@ -15,9 +16,13 @@
 - mixed positive 증강: 원본 positive 기반
 - 학습 환경: Linux 서버 + A100
 - 추론 타깃: Jetson Orin Nano Developer Kit 8GB
+- VAD 기본 backend: `silero`
 
 ## 현재 상태
 
+- 요소기술 완료 상태
+  - wake word: 학습, 평가, ONNX export, Jetson 실시간 추론, openWakeWord 의존성 제거, Jetson 학습 smoke 검증까지 완료
+  - VAD: dual backend, 공통 `VADDetector`, 기본 backend `silero`, 기본 마이크 demo 검증까지 완료
 - negative 데이터셋 3종 준비 완료
   - `negative/musan`: `20,000`
   - `negative/fsd50k`: `20,000`
@@ -52,8 +57,13 @@
 - ONNX export 완료
   - `wake_word/models/hi_popo/hi_popo_classifier.onnx`
   - `wake_word/models/hi_popo/hi_popo_classifier_onnx.json`
+- feature backbone ONNX 로컬화 완료
+  - `wake_word/assets/feature_models/melspectrogram.onnx`
+  - `wake_word/assets/feature_models/embedding_model.onnx`
+  - `wake_word/features.py`로 feature extraction 로컬 구현 완료
+  - `wake_word/openWakeWord/` clone 의존성 제거 완료
 - classifier ONNX 추론 래퍼는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 모두 지원한다.
-- Jetson 실시간 GUI demo 추가
+- Jetson 실시간 GUI demo 완료
   - file: `wake_word/wake_word_gui_demo.py`
   - input: 기본 마이크
   - display: audio level gauge, wake score gauge, threshold slider, input gain slider
@@ -66,6 +76,46 @@
   - ORT source: `/home/everybot/.local/lib/python3.10/site-packages`
   - `onnxruntime-gpu 1.23.0`
   - `wake_word/train/check_onnx_gpu.py` 결과: `GPU_OK`
+- Jetson 학습 smoke venv 생성 완료
+  - path: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+  - PyTorch: `2.8.0`
+  - librosa: `0.11.0`
+  - torch CUDA 확인:
+    - `torch.cuda.is_available() = True`
+    - device: `Orin`
+  - ORT source: `/home/everybot/.local/lib/python3.10/site-packages`
+  - feature extraction smoke:
+    - zero clip 기준 output shape `(1, 28, 96)`
+    - provider `['CUDAExecutionProvider', 'CPUExecutionProvider']`
+  - train smoke:
+    - `wake_word/train/05_train.py` 1 epoch를 `cuda:0`에서 실행 확인
+  - export smoke:
+    - `wake_word/train/06_export_onnx.py` 실행 확인
+  - 비고:
+    - smoke용 synthetic feature와 run artifact는 검증 직후 제거함
+- VAD 요소기술 구현 완료
+  - 공통 진입점: `vad/detector.py`
+  - 백엔드 1: `vad/model_webrtcvad.py`
+  - 백엔드 2: `vad/model_silero.py`
+  - 공통 사용 방식: `infer(audio_chunk) -> bool`
+  - 기본 백엔드: `silero`
+  - 기본 filtering:
+    - `min_speech_frames=3`
+    - `min_silence_frames=10`
+  - 간단 데모: `vad/vad_demo.py`
+  - 데모 출력:
+    - 최종 `status`
+    - 마이크 입력 레벨 `level`
+    - `silero`일 때 `conf`
+    - `webrtcvad`일 때 `voiced_ratio`
+  - 검증 상태:
+    - `webrtcvad` 기본 마이크 demo 동작 확인
+    - `silero` 공식 ONNX 다운로드 및 기본 마이크 demo 동작 확인
+- VAD 기본 ONNX 모델 경로
+  - `vad/models/silero_vad.onnx`
+- 현재 통합 전 단계
+  - wake word와 VAD는 각각 독립적으로 검증 완료
+  - 아직 둘을 연결한 utterance segmentation 단계는 시작 전
 - Jetson synthetic chunk 기준 간단 timing 확인
   - chunk size: `1280 samples = 80 ms`
   - classifier window: `16 frames = 1.28 s`
@@ -73,11 +123,11 @@
   - avg `embedding_model.onnx`: `4.59 ms`
   - avg `hi_popo_classifier.onnx`: `1.03 ms`
   - avg total pipeline: `8.35 ms`
-- `wake_word/models/`는 git 제외 대상이므로 Jetson에는 ONNX와 metadata를 별도로 복사해야 한다.
+- `wake_word/models/`의 대용량 학습 산출물은 계속 git 제외 대상이다.
+- 다만 현재 runtime에 직접 필요한 최종 classifier ONNX와 metadata는 리포에 함께 둔다.
+- `vad/models/silero_vad.onnx`도 기본 runtime 자산으로 리포에 함께 둔다.
 - 공개용 wake word 샘플 경로를 `wake_word/examples/audio_samples/`로 정리했다.
-- 루트 `README.md`와 `wake_word/README.md`를 프로젝트 진입 문서로 사용한다.
-- 다음 세션의 주 작업 환경은 Jetson이다.
-- Jetson 단계 상세 계획은 `docs/jetson_transition_plan.md`에 정리돼 있다.
+- 루트 `README.md`, `wake_word/README.md`, `vad/README.md`를 현재 진입 문서로 사용한다.
 - Jetson 환경 세팅 절차와 유지 기준은 `docs/envs/jetson_wake_word_env.md`에 정리돼 있다.
 - `_tmp_download` 원본 보관 구조를 3개 폴더로 정리했다.
   - `1_aihub_free_conversation`
@@ -93,11 +143,14 @@
 - 이 비율은 모델 비교와 학습 선택에는 유효하지만, 실제 배치 성능을 바로 의미하지는 않는다.
 - 현재 코드에서는 이름이 `test`인 split을 best epoch와 threshold 선택에 사용하므로, 엄밀히는 held-out validation에 가깝다.
 - 현재 runtime 구조는 80ms마다 score를 갱신하고, 최초 유효 score는 약 1.28초 warm-up 뒤부터 나온다.
+- Jetson에서도 학습 코드를 전혀 못 보는 상태는 아니고, `feature extraction -> train -> export` smoke 수준까지는 재현 가능하다.
+- `openWakeWord` 로컬 clone 없이도 추론 smoke와 학습 smoke가 다시 통과했다.
 
 ## 다음 작업
 
 1. 실제 현장 오디오 기준으로 threshold와 input gain 기본값을 확정
 2. `하이 보보`, `하이 뽀뽀`, `굿바이 포포` 같은 hard negative 문구와 일반 대화 오탐 패턴을 정리
 3. false accepts per hour 관점으로 연속 배경 오디오를 점검
-4. 필요 시 데이터 보강 또는 재학습 여부를 판단
-5. 성능이 충분하면 wake word detector를 상위 SDK 첫 모듈로 정리
+4. wake word 감지 뒤에 VAD를 연결하고 speech start / speech end / utterance cut 기준을 정리
+5. 필요 시 데이터 보강 또는 재학습 여부를 판단
+6. 성능이 충분하면 wake word와 VAD를 상위 SDK 첫 모듈로 정리

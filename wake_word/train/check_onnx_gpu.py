@@ -5,9 +5,9 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-OPENWAKEWORD_ROOT = REPO_ROOT / "openWakeWord"
-if str(OPENWAKEWORD_ROOT) not in sys.path:
-    sys.path.insert(0, str(OPENWAKEWORD_ROOT))
+PROJECT_ROOT = REPO_ROOT.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def main() -> int:
@@ -22,15 +22,9 @@ def main() -> int:
     - 검사 결과를 나타내는 종료 코드 정수를 반환한다.
     """
     import onnxruntime as ort
-    from openwakeword.utils import download_models
+    from wake_word.features import ensure_feature_models
 
-    model_dir = OPENWAKEWORD_ROOT / "openwakeword" / "resources" / "models"
-    model_dir.mkdir(parents=True, exist_ok=True)
-    melspec_path = model_dir / "melspectrogram.onnx"
-    embedding_path = model_dir / "embedding_model.onnx"
-
-    if not melspec_path.exists() or not embedding_path.exists():
-        download_models(target_directory=str(model_dir), inference_framework="onnx")
+    _, embedding_path = ensure_feature_models()
 
     print("available_providers:", ort.get_available_providers())
 

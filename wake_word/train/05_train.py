@@ -1,6 +1,6 @@
 """
 05_train.py
-openWakeWord의 FC 분류기 구조를 사용해 사전 추출한 feature로 wake word 분류기를 학습한다.
+openWakeWord의 FC 분류기 구조를 참고해 사전 추출한 feature로 wake word 분류기를 학습한다.
 """
 
 from __future__ import annotations

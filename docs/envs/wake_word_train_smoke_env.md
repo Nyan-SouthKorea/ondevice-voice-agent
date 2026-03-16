@@ -1,0 +1,217 @@
+# Jetson Wake Word Train Smoke Env
+
+> 마지막 업데이트: 2026-03-16
+> 목적: Jetson Orin Nano에서 wake word 학습 코드가 최소한 실행되는지 검증하는 로컬 venv와 smoke 절차를 관리한다.
+
+## 1. 이 문서의 역할
+
+이 문서는 Jetson 학습 smoke 검증 환경 문서다.
+
+- 위치: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+- 용도: `wake_word/train/04_extract_features.py`, `05_train.py`, `06_export_onnx.py` 최소 실행 검증
+- 성격: 실전 장시간 학습 환경이 아니라, Jetson에서 학습 코드가 깨지지 않는지 확인하는 검증용 venv
+
+실제 주 학습 환경은 아래 문서를 본다.
+
+- `docs/envs/wake_word_env.md`
+
+Jetson 런타임 추론 환경은 아래 문서를 본다.
+
+- `docs/envs/jetson_wake_word_env.md`
+
+## 2. 공식 기준
+
+Jetson PyTorch 설치 기준은 NVIDIA 공식 자료를 우선으로 잡는다.
+
+- PyTorch for Jetson 설치 문서:
+  - https://docs.nvidia.com/deeplearning/frameworks/install-pytorch-jetson-platform/index.html
+- PyTorch for Jetson release notes / JetPack 호환표:
+  - https://docs.nvidia.com/deeplearning/frameworks/install-pytorch-jetson-platform-release-notes/pytorch-jetson-rel.html
+- JetPack 설치/구성 공식 문서:
+  - https://docs.nvidia.com/jetson/jetpack/install-setup/index.html
+- JetPack 문서 루트:
+  - https://docs.nvidia.com/jetson/jetpack/
+
+추가로, JetPack `6.2.1`에서 실제 wheel 인덱스 사용 경로는 NVIDIA Jetson 공식 포럼의 안내를 함께 참고했다.
+
+- Jetson forum:
+  - https://forums.developer.nvidia.com/t/installing-pytorch-on-jetson-orin-nano-dev-kit/335919
+
+운영 원칙:
+
+- 추론용 `wake_word_jetson` env와 섞지 않는다.
+- Jetson에서 장시간 full-data 학습을 기본값으로 보지 않는다.
+- 이 env는 feature extraction / train / export 코드가 Jetson에서 돌아가는지 확인하는 smoke 용도다.
+- JetPack, PyTorch wheel 경로, Python 버전이 바뀌면 같은 세션에서 이 문서를 갱신한다.
+
+## 3. 현재 확인된 시스템 상태
+
+2026-03-16 기준 확인값:
+
+- JetPack: `6.2.1+b38`
+- L4T: `R36.4.7`
+- Python: `3.10.12`
+- CUDA toolkit: `12.6`
+- venv 이름: `wake_word_train_smoke`
+- venv 경로: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+- PyTorch:
+  - version: `2.8.0`
+  - source: `https://pypi.jetson-ai-lab.io/jp6/cu126`
+- librosa: `0.11.0`
+- ORT source:
+  - package: `onnxruntime-gpu`
+  - version: `1.23.0`
+  - location: `/home/everybot/.local/lib/python3.10/site-packages`
+
+실기 검증 결과:
+
+- `torch.cuda.is_available()`: `True`
+- `torch.version.cuda`: `12.6`
+- `torch.cuda.get_device_name(0)`: `Orin`
+- ORT provider:
+  - `TensorrtExecutionProvider`
+  - `CUDAExecutionProvider`
+  - `CPUExecutionProvider`
+
+## 4. 세팅 절차
+
+## 4-1. venv 생성
+
+```bash
+python3 -m virtualenv /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+```
+
+## 4-2. Python 패키지 설치
+
+```bash
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+python -m pip install --no-cache-dir 'numpy<2' soundfile tqdm librosa
+python -m pip install --no-cache-dir torch==2.8.0 --index-url https://pypi.jetson-ai-lab.io/jp6/cu126
+```
+
+비고:
+
+- JetPack `6.2.1` 장치에서는 위 조합으로 `torch` import와 CUDA 확인이 통과했다.
+- NVIDIA 공식 설치 문서는 PyTorch `24.06+` 계열에서 `cusparselt` 선행 설치를 안내한다.
+- 현재 장치의 smoke 검증에서는 추가 시스템 패키지 설치 없이 `torch 2.8.0` import와 CUDA 사용 가능 확인까지 통과했다.
+
+## 4-3. ORT 재사용 연결
+
+feature extraction smoke를 위해 기존 Jetson ORT를 venv에서 재사용한다.
+
+파일:
+
+- `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/lib/python3.10/site-packages/jetson_user_site.pth`
+
+내용:
+
+```text
+/home/everybot/.local/lib/python3.10/site-packages
+```
+
+## 5. 검증 절차
+
+### 5-1. torch + CUDA 확인
+
+```bash
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+python - <<'PY'
+import torch
+print(torch.__version__)
+print(torch.cuda.is_available())
+print(torch.version.cuda)
+print(torch.cuda.get_device_name(0))
+PY
+```
+
+기대값:
+
+- `2.8.0`
+- `True`
+- `12.6`
+- `Orin`
+
+### 5-2. ORT provider 확인
+
+```bash
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+python - <<'PY'
+import onnxruntime as ort
+print(ort.__version__)
+print(ort.get_available_providers())
+PY
+```
+
+기대값:
+
+- `1.23.0`
+- provider 목록에 `CUDAExecutionProvider` 포함
+
+### 5-3. feature extraction smoke
+
+실제 전체 데이터셋 대신 zero clip 한 개로 `04_extract_features.py`의 feature backbone이 돌아가는지만 확인한다.
+
+검증 결과:
+
+- 출력 shape: `(1, 28, 96)`
+- embedding provider: `['CUDAExecutionProvider', 'CPUExecutionProvider']`
+
+즉 Jetson에서 Google Speech Embedding feature 추출 경로가 최소 수준에서는 정상이다.
+
+### 5-4. train smoke
+
+실제 full-data 학습 대신 임시 synthetic feature로 `05_train.py`를 `1 epoch`만 실행해 본다.
+
+검증 결과:
+
+- resolved device: `cuda:0`
+- `05_train.py` 1 epoch 완료
+- checkpoint / history / metadata 저장 완료
+
+주의:
+
+- smoke용 synthetic feature와 run artifact는 검증 직후 제거한다.
+- 이 결과를 실제 모델 품질 검증으로 해석하지 않는다.
+
+### 5-5. ONNX export smoke
+
+train smoke checkpoint로 `06_export_onnx.py`를 실행해 export 경로가 깨지지 않는지 확인한다.
+
+검증 결과:
+
+- ONNX export 완료
+- metadata JSON 저장 완료
+- 입력 shape: `(16, 96)`
+
+## 6. 현재 판단
+
+현재 Jetson에서는 아래 구분이 맞다.
+
+- `wake_word_jetson`:
+  - 실시간 추론 / GUI / ORT CUDA 검증용
+- `wake_word_train_smoke`:
+  - feature extraction / train / export 코드 smoke 검증용
+- 실제 대규모 학습:
+  - 여전히 Linux 서버 + A100이 기본
+
+즉 Jetson에서 학습 코드를 전혀 검증할 수 없는 상태는 아니고, 최소 smoke 수준까지는 확인 가능하다.
+
+## 7. 문서 업데이트 규칙
+
+아래가 바뀌면 같은 세션에서 이 문서를 바로 갱신한다.
+
+- JetPack 버전
+- L4T 버전
+- Python 버전
+- PyTorch 버전 또는 wheel 인덱스
+- ORT 버전 또는 연결 방식
+- venv 경로 또는 이름
+- feature extraction / train / export smoke 결과
+
+함께 점검할 문서:
+
+- `docs/README.md`
+- `docs/status.md`
+- `docs/project_overview.md`
+- `docs/logbook.md`
