@@ -7,7 +7,7 @@
 - wake word와 VAD 요소기술을 실제 Jetson 마이크 환경 기준으로 마무리 검증한다.
 - wake word threshold와 input gain 기본값을 현장 기준으로 확정한다.
 - wake word와 VAD를 연결해 STT 입력 구간 절단 기준을 정리한다.
-- STT v1 공통 래퍼와 온디바이스 기본 경로를 정리한다.
+- STT는 고정 문장 50개 직접 녹음 데이터셋으로 속도와 정확도를 비교한 뒤 기본 경로를 정한다.
 
 ## 현재 최종 기준
 
@@ -124,21 +124,27 @@
 - 현재 통합 전 단계
   - wake word와 VAD는 각각 독립적으로 검증 완료
   - 아직 둘을 연결한 utterance segmentation 단계는 시작 전
-- STT 초기 구조 구현 시작
+- STT 초기 구조 구현 완료
   - 공통 진입점: `stt/transcriber.py`
   - 백엔드 1: `stt/stt_whisper.py`
   - 백엔드 2: `stt/stt_api.py`
   - 최소 데모: `stt/stt_demo.py`
+  - 녹음 GUI: `stt/stt_dataset_recorder.py`
+  - 비교 평가: `stt/stt_benchmark.py`
+  - 기준 데이터셋: `stt/datasets/korean_eval_50/`
   - 현재 기준:
     - 기본 backend는 `whisper`
-    - 기본 Whisper 모델값은 `tiny`
+    - 기본 Whisper 모델값은 현재 `tiny` 잠정값
     - 입력은 `16kHz mono` wav 또는 float32 mono 배열
-    - 목적은 `짧은 utterance -> text` 기본 경로 확보
+    - 목적은 `짧은 utterance -> text` 기본 경로 확보와 비교 평가 기준 마련
   - Jetson smoke:
     - env: `wake_word_train_smoke`
     - `openai-whisper 20250625`, `openai 2.28.0`
     - `tiny + cuda` 기준 예시 샘플 전사 결과: `하이포포`
     - elapsed: 약 `3.031 sec`
+  - 다음 비교 기준:
+    - 사용자가 직접 읽은 50개 고정 문장 기준으로 `tiny / base / small`과 필요 시 API 경로 비교
+    - 속도 지표와 normalized exact match, normalized CER를 함께 기록
 - Jetson synthetic chunk 기준 간단 timing 확인
   - chunk size: `1280 samples = 80 ms`
   - classifier window: `16 frames = 1.28 s`
@@ -175,6 +181,7 @@
 2. `하이 보보`, `하이 뽀뽀`, `굿바이 포포` 같은 hard negative 문구와 일반 대화 오탐 패턴을 정리
 3. false accepts per hour 관점으로 연속 배경 오디오를 점검
 4. wake word 감지 뒤에 VAD를 연결하고 speech start / speech end / utterance cut 기준을 정리
-5. STT 기본 backend의 Jetson 실기 설치와 속도/정확도 smoke를 확인
-6. 필요 시 데이터 보강 또는 재학습 여부를 판단
-7. 성능이 충분하면 wake word와 VAD를 상위 SDK 첫 모듈로 정리
+5. STT 50문장 직접 녹음 데이터셋을 만든 뒤 `tiny / base / small`과 API 경로를 비교
+6. 비교 결과를 바탕으로 STT 기본 backend와 모델값을 확정
+7. wake word와 VAD를 연결하고 utterance cut 기준을 먼저 확정
+8. 성능이 충분하면 wake word와 VAD를 상위 SDK 첫 모듈로 정리

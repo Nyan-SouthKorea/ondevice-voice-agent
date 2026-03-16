@@ -9,6 +9,8 @@
 - v1 구현 목표:
 - `짧은 utterance -> text`
   - wake word + VAD 뒤에 붙을 공통 STT 래퍼 확보
+- 기본 모델값 확정 기준:
+  - 사용자가 직접 녹음한 고정 문장 50개 데이터셋으로 속도와 정확도를 비교한 뒤 결정
 
 ## 선택 이유
 
@@ -27,6 +29,12 @@
   - API STT
 - `stt/stt_demo.py`
   - wav 또는 짧은 마이크 녹음 기준 최소 데모
+- `stt/stt_dataset_recorder.py`
+  - 고정 문장 50개 녹음 GUI
+- `stt/stt_benchmark.py`
+  - 같은 데이터셋 기준 다중 STT 비교
+- `stt/datasets/korean_eval_50/`
+  - txt/wav 같은 파일명 기준 평가 세트
 
 ## 공식 참고 자료
 
@@ -40,7 +48,7 @@
 ## 현재 판단
 
 - v1 기본값은 `whisper`로 두는 것이 맞다.
-- 첫 smoke 기준 기본 Whisper 모델값은 `tiny`로 둔다.
+- 다만 기본 Whisper 모델값은 비교 전까지 잠정값으로만 둔다.
 - 이유:
   - 다국어 한국어 경로가 바로 있다.
   - Python에서 VAD 뒤 numpy 배열을 바로 넘기기 쉽다.
@@ -50,5 +58,6 @@
   - sample: 짧은 `하이 포포` 예시 샘플
   - result: `하이포포`
   - elapsed: 약 `3.031 sec`
-- 단, 최종 Jetson 배포 기본값이 계속 Whisper Python일지는 아직 미정이다.
-- 실기 속도와 메모리가 부족하면 다음 단계에서 `whisper_trt` 또는 더 가벼운 경로를 다시 검토한다.
+- 단, 이 값만으로 최종 모델을 정하지 않는다.
+- 다음 단계에서는 직접 녹음한 고정 문장 50개 세트로 `tiny / base / small`과 필요 시 API 경로를 같은 조건으로 비교한다.
+- 실기 속도와 메모리가 부족하면 다음 단계에서 `whisper_trt` 또는 ONNX 기반 경로를 다시 검토한다.
