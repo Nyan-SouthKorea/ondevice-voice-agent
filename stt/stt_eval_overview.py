@@ -202,6 +202,41 @@ def format_number(value):
     return f"{value:.4f}"
 
 
+def format_status(value):
+    """
+    내부 status 값을 한국어 표기 문자열로 바꾼다.
+
+    입력 인자 설명
+    - `value`: 내부에서 사용하는 status 문자열.
+
+    return 관련 설명
+    - 보고 문서에 넣을 한국어 상태 문자열을 반환한다.
+    """
+
+    return {
+        "ok": "완료",
+        "missing_summary": "summary 없음",
+    }.get(value, value)
+
+
+def format_metric_label(value):
+    """
+    규칙 기반 1위 항목 이름을 한국어 표시명으로 바꾼다.
+
+    입력 인자 설명
+    - `value`: accuracy_best 같은 내부 metric 이름.
+
+    return 관련 설명
+    - 보고 문서용 한국어 metric 이름을 반환한다.
+    """
+
+    return {
+        "accuracy_best": "정확도 우선",
+        "cer_best": "오류율 우선",
+        "latency_best": "지연 우선",
+    }.get(value, value)
+
+
 def render_markdown(results_dir, rows, winners):
     """
     overview markdown 전체 본문을 만든다.
@@ -217,31 +252,44 @@ def render_markdown(results_dir, rows, winners):
 
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
-        "# STT Evaluation Overview",
+        "# STT 평가 개요",
         "",
-        f"- results_dir: `{results_dir}`",
-        f"- generated_at: `{generated_at}`",
-        "- summary source: 각 run 디렉토리의 `summary.json`",
-        "- selection rule:",
-        "  - accuracy_best: normalized_exact_match_rate 내림차순, mean_normalized_cer 오름차순, mean_stt_sec 오름차순",
-        "  - cer_best: mean_normalized_cer 오름차순, normalized_exact_match_rate 내림차순, mean_stt_sec 오름차순",
-        "  - latency_best: mean_stt_sec 오름차순, p95_stt_sec 오름차순, mean_rtf 오름차순",
+        f"- 결과 디렉토리: `{results_dir}`",
+        f"- 생성 시각: `{generated_at}`",
+        "- 원본 산출물: 각 run 디렉토리의 `summary.json`",
+        "- 자동 선택 규칙:",
+        "  - 정확도 우선: `Normalized Exact Match` 내림차순, `Normalized CER` 오름차순, `Mean STT (s)` 오름차순",
+        "  - 오류율 우선: `Normalized CER` 오름차순, `Normalized Exact Match` 내림차순, `Mean STT (s)` 오름차순",
+        "  - 지연 우선: `Mean STT (s)` 오름차순, `P95 STT (s)` 오름차순, `Mean RTF` 오름차순",
+        "",
+        "## 지표 설명",
+        "",
+        "- `상태 (Status)`: 해당 모델 조합에 대해 summary 산출물이 존재하는지 나타낸다.",
+        "- `모델 (Label)`: 평가한 모델 이름과 실행 장치 조합이다.",
+        "- `샘플 수 (Samples)`: 실제 평가에 사용된 문장 수다.",
+        "- `Load (s)`: 모델을 메모리에 올리는 데 걸린 시간이다. warm-up 이전 1회 비용이다.",
+        "- `Mean STT (s)`: warm-up을 제외한 문장별 STT 처리 시간 평균이다.",
+        "- `P95 STT (s)`: warm-up을 제외한 문장별 STT 처리 시간의 95퍼센타일이다. 느린 구간 체감에 가깝다.",
+        "- `Mean RTF`: 평균 실시간비다. `처리 시간 / 오디오 길이`로 계산하며, 1.0 이하면 오디오 길이보다 빠르게 처리한 것이다.",
+        "- `Normalized Exact Match`: 정규화 후 기준 문장과 예측 문장이 완전히 같은 비율이다. 공백, 일부 기호 차이를 줄인 뒤 비교한다.",
+        "- `Normalized CER`: 정규화 후 문자 오류율이다. 낮을수록 좋다.",
+        "- `원본 run (Source)`: 수치를 읽어온 run 디렉토리 이름이다.",
         "",
     ]
 
     if winners:
         lines.extend(
             [
-                "## Rule-Based Winners",
+                "## 규칙 기반 자동 선택",
                 "",
-                "| Metric | Label | Source | Normalized Exact Match | Normalized CER | Mean STT (s) | Mean RTF |",
+                "| 항목 | 모델 | 원본 run | Normalized Exact Match | Normalized CER | Mean STT (s) | Mean RTF |",
                 "| --- | --- | --- | ---: | ---: | ---: | ---: |",
             ]
         )
         for metric_name in ["accuracy_best", "cer_best", "latency_best"]:
             row = winners[metric_name]
             lines.append(
-                f"| {metric_name} | {row['label']} | `{row['source_dir']}` | "
+                f"| {format_metric_label(metric_name)} | {row['label']} | `{row['source_dir']}` | "
                 f"{format_number(row['normalized_exact_match_rate'])} | "
                 f"{format_number(row['mean_normalized_cer'])} | "
                 f"{format_number(row['mean_stt_sec'])} | "
@@ -251,16 +299,16 @@ def render_markdown(results_dir, rows, winners):
 
     lines.extend(
         [
-            "## Full Table",
+            "## 전체 평가 표",
             "",
-            "| Status | Label | Samples | Load (s) | Mean STT (s) | P95 STT (s) | Mean RTF | Normalized Exact Match | Normalized CER | Source |",
+            "| 상태 | 모델 | 샘플 수 | Load (s) | Mean STT (s) | P95 STT (s) | Mean RTF | Normalized Exact Match | Normalized CER | 원본 run |",
             "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
         ]
     )
 
     for row in rows:
         lines.append(
-            f"| {row['status']} | {row['label']} | {row['sample_count'] or '-'} | "
+            f"| {format_status(row['status'])} | {row['label']} | {row['sample_count'] or '-'} | "
             f"{format_number(row['load_time_sec'])} | "
             f"{format_number(row['mean_stt_sec'])} | "
             f"{format_number(row['p95_stt_sec'])} | "
