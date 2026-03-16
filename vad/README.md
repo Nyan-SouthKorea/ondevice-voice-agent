@@ -43,6 +43,18 @@
 - `말하는 중` 화면은 발화가 들어온 상태다. 빨간 램프가 켜지고, confidence bar와 상태 문구가 즉시 변한다.
 - GUI 데모는 영상 촬영과 현장 확인을 쉽게 하기 위해, 상태 변화가 눈에 바로 들어오도록 구성했다.
 
+## Jetson 터미널 스크린샷
+
+| 대기 중 | 말하는 중 |
+| --- | --- |
+| ![VAD terminal idle](../docs/assets/screenshots/jetson_demos/vad_demo_idle_terminal.png) | ![VAD terminal speaking](../docs/assets/screenshots/jetson_demos/vad_demo_speech_terminal.png) |
+
+설명:
+
+- 터미널 데모는 가장 단순한 사용 예시다. 기본 마이크를 받아 `status`, `level`, `conf`를 한 줄로 계속 갱신한다.
+- `대기 중` 화면은 `False` 상태와 낮은 입력 레벨, 낮은 confidence를 보여준다.
+- `말하는 중` 화면은 `True` 상태와 함께 입력 레벨, confidence가 즉시 올라가는 것을 보여준다.
+
 공통 사용 방식:
 
 ```python
