@@ -86,6 +86,105 @@ python stt/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50
 
 `녹음 완료`를 누르면 현재 문장 번호의 wav를 저장하고 다음 문장으로 자동 이동한다.
 
+## 직접 실행 안내
+
+직접 평가를 돌릴 때는 아래 순서대로 보면 된다.
+
+### 1. 사용할 가상환경
+
+- 경로: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+- 용도:
+  - `torch`
+  - `openai-whisper`
+  - `openai`
+  - `librosa`
+  - STT smoke / benchmark 실행
+
+활성화:
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+```
+
+### 2. 녹음 데이터셋 만들기
+
+```bash
+python stt/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50
+```
+
+필요 시 시작 문장을 지정할 수 있다.
+
+```bash
+python stt/stt_dataset_recorder.py \
+  --dataset-dir stt/datasets/korean_eval_50 \
+  --start-index 21
+```
+
+오디오 장치를 먼저 보고 싶으면:
+
+```bash
+python stt/stt_dataset_recorder.py --list-devices
+```
+
+### 3. 로컬 Whisper 비교 평가
+
+Jetson GPU 기준 기본 비교:
+
+```bash
+python stt/stt_benchmark.py \
+  --dataset-dir stt/datasets/korean_eval_50 \
+  --config whisper:tiny \
+  --config whisper:base \
+  --config whisper:small \
+  --device cuda
+```
+
+CPU로만 보고 싶으면:
+
+```bash
+python stt/stt_benchmark.py \
+  --dataset-dir stt/datasets/korean_eval_50 \
+  --config whisper:tiny \
+  --device cpu
+```
+
+### 4. API STT 비교 평가
+
+`secrets/api_key.txt`가 있으면 별도 `--api-key` 없이 실행할 수 있다.
+
+```bash
+python stt/stt_benchmark.py \
+  --dataset-dir stt/datasets/korean_eval_50 \
+  --config api:gpt-4o-mini-transcribe \
+  --usage-purpose stt_eval_korean50_gpt4o_mini
+```
+
+API는 과금이 발생하므로 꼭 필요한 횟수만 실행한다.
+
+### 5. 결과 확인
+
+- 저장 위치: `stt/eval_results/<dataset_name>/<timestamp>/`
+- 생성 파일:
+  - `summary.csv`
+  - `summary.json`
+  - `<run_name>_per_sample.csv`
+
+### 6. API 사용 로그 확인
+
+- 키 위치: `secrets/api_key.txt`
+- 사용 로그: `secrets/api_usage_log.md`
+
+API를 실제 호출하면 아래 항목이 자동으로 남는다.
+
+- 사용 시각
+- 사용 목적
+- 모델 이름
+- 성공/실패 여부
+- 오디오 길이
+- 요청 시간
+- API가 보고한 usage 값
+
 ## 비교 평가
 
 ```bash
