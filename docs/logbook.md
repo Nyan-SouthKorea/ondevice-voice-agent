@@ -1094,3 +1094,34 @@
 
 - `wake_word_gui_demo.py`에 `tegrastats` 기반 Jetson 리소스 표시를 추가했다.
 - 현재 GUI에서 `CPU 평균 / CPU 코어 / RAM / GPU(GR3D)` 상태를 실시간으로 같이 볼 수 있다.
+
+---
+
+## 2026-03-16 | Human + Codex | 문서 최신 상태 재동기화
+
+### Context
+
+- 사용자가 `wake_word/README.md`의 `다음 작업`에 이미 끝난 Jetson 구현 단계가 남아 있는 점을 지적했다.
+- 이를 계기로 상위 README와 상태 문서, Jetson handoff 문서에도 같은 종류의 누락이 있는지 다시 점검할 필요가 생겼다.
+
+### Actions
+
+- 루트 `README.md`, `wake_word/README.md`, `docs/status.md`, `docs/project_overview.md`를 현재 코드 상태 기준으로 다시 읽었다.
+- `docs/jetson_transition_plan.md`, `docs/envs/jetson_wake_word_env.md`, `docs/README.md`의 Jetson 관련 TODO 문구도 함께 재점검했다.
+- 이미 완료된 항목은 완료 상태로 돌리고, 남은 작업은 아래 기준으로 다시 정리했다.
+  - threshold / input gain 확정
+  - hard negative / 일반 대화 오탐 점검
+  - false accepts per hour 측정
+  - 상위 SDK 연결 준비
+
+### Findings
+
+- 일부 문서는 여전히 `Jetson 실시간 추론`, `GUI demo`, `raw audio -> feature extractor -> classifier ONNX 연결`을 앞으로 할 일처럼 적고 있었다.
+- 실제 코드 기준으로는 `wake_word/detector.py`, `wake_word/wake_word_gui_demo.py`, Jetson venv, ONNX GPU 검증이 이미 동작 중이다.
+- GUI 리소스 표시는 현재 게이지가 아니라 `tegrastats` 기반 텍스트 표시가 최신 상태다.
+
+### Result
+
+- 현재 기준 문서들의 `다음 작업`과 `현재 목표`를 코드 상태와 맞췄다.
+- Jetson 단계 문서는 “구현 예정” 중심에서 “구현 완료 + 남은 실기 검증” 중심으로 정리됐다.
+- 다음 세션에서는 문서를 읽었을 때 곧바로 현재 남은 일만 따라가면 되도록 맞췄다.

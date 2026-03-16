@@ -187,7 +187,10 @@ python wake_word/wake_word_gui_demo.py \
 
 - 기본 입력 마이크가 표시된다
 - `DETECTED / IDLE` 상태와 score 게이지가 갱신된다
+- threshold 슬라이더와 마이크 입력 레벨 조절 슬라이더가 동작한다
+- 감지 시 1초 유지 램프와 3초 유지 최고점이 보인다
 - `melspectrogram / embedding / classifier` ONNX 시간이 표시된다
+- CPU / RAM / GPU 텍스트가 갱신된다
 
 ## 7. 다음 작업에서의 사용 기준
 
@@ -195,9 +198,10 @@ Jetson에서 다음 작업은 이 venv를 기준으로 진행한다.
 
 - `wake_word/detector.py`
 - `wake_word/wake_word_demo.py`
-- 마이크 입력 연결
-- raw audio -> feature extractor -> classifier ONNX 연결
-- GUI/CLI 실시간 score 확인
+- `wake_word/wake_word_gui_demo.py`
+- `wake_word/train/check_onnx_gpu.py`
+- threshold / input gain 현장 튜닝
+- hard negative / 연속 background 오탐 점검
 
 ## 8. 문서 업데이트 규칙
 

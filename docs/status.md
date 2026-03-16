@@ -4,9 +4,9 @@
 
 ## 현재 목표
 
-- `하이 포포` wake word 모델을 Jetson Orin Nano Developer Kit에서 실시간으로 검증한다.
-- ONNX 추론 경로와 GUI 데모를 먼저 완성한다.
-- 실기 결과를 보고 threshold 조정 또는 재학습 필요 여부를 판단한다.
+- `하이 포포` wake word 모델을 Jetson Orin Nano Developer Kit의 실제 마이크 환경에서 검증한다.
+- threshold와 input gain 기본값을 현장 기준으로 확정한다.
+- 연속 오디오 기준 false accept 패턴을 확인하고, 이후 상위 SDK 연결 준비를 한다.
 
 ## 현재 최종 기준
 
@@ -56,9 +56,10 @@
 - Jetson 실시간 GUI demo 추가
   - file: `wake_word/wake_word_gui_demo.py`
   - input: 기본 마이크
-  - display: audio level, wake score gauge, threshold slider, DETECTED/IDLE
+  - display: audio level gauge, wake score gauge, threshold slider, input gain slider
+  - detection UI: 1초 유지 램프, 최근 감지 시각, 3초 유지 최고점
   - timing: `melspectrogram.onnx`, `embedding_model.onnx`, `hi_popo_classifier.onnx` 실행 시간 표시
-  - resource: `tegrastats` 기반 CPU/RAM/GPU 실시간 표시
+  - resource: `tegrastats` 기반 CPU/RAM/GPU 텍스트 표시
   - user validation: Jetson에서 실제 실행 확인 완료
 - Jetson runtime venv 생성 완료
   - path: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson`
@@ -95,7 +96,8 @@
 
 ## 다음 작업
 
-1. threshold 후보를 실제 현장 오디오 기준으로 확정
-2. 현장 기준 threshold 튜닝
-3. false accepts per hour 관점으로 연속 오디오 점검
-4. 필요 시 데이터 보강 또는 재학습 판단
+1. 실제 현장 오디오 기준으로 threshold와 input gain 기본값을 확정
+2. `하이 보보`, `하이 뽀뽀`, `굿바이 포포` 같은 hard negative 문구와 일반 대화 오탐 패턴을 정리
+3. false accepts per hour 관점으로 연속 배경 오디오를 점검
+4. 필요 시 데이터 보강 또는 재학습 여부를 판단
+5. 성능이 충분하면 wake word detector를 상위 SDK 첫 모듈로 정리

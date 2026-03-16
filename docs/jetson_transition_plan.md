@@ -53,14 +53,14 @@
 
 ## 3. Jetson 단계에서의 목표
 
-Jetson 단계의 1차 목표는 다음과 같다.
+Jetson 단계의 현재 목표는 아래처럼 정리된다.
 
-1. export된 classifier ONNX와 metadata를 Jetson에서 바로 쓸 수 있게 배치한다.
-2. Jetson에서 feature extractor와 classifier ONNX를 연결해 마이크 입력으로 score를 계산한다.
-3. score와 detection 상태를 사람이 즉시 확인할 수 있는 CLI/GUI를 붙인다.
-4. 실제 환경에서 `하이 포포` 호출 성능과 배경 오탐을 직접 확인한다.
+1. export된 classifier ONNX와 metadata를 Jetson에서 계속 재현 가능하게 유지한다.
+2. Jetson에서 실시간 GUI demo를 기준으로 score, detection, timing을 즉시 확인한다.
+3. 실제 환경에서 `하이 포포` 호출 성능과 배경 오탐을 직접 확인한다.
+4. threshold와 input gain 기본값을 현장 기준으로 확정한다.
 
-즉, 지금 단계의 목적은 “실시간 데모와 실기 검증”이다.
+즉, 지금 단계의 목적은 “이미 구현된 실시간 데모를 기준으로 실기 검증을 마무리하는 것”이다.
 
 ## 4. Jetson으로 넘어갈 때 기준 모델과 산출물
 
@@ -88,13 +88,13 @@ Jetson 단계에서 우선 기준으로 삼을 파일은 아래다.
 - `docs/logbook.md`
 - `docs/개발방침.md`
 
-## 5. Jetson 단계에서 바로 할 일
+## 5. Jetson 단계의 현재 완료 항목과 남은 일
 
-Jetson 단계에서는 아래 순서로 진행한다.
+Jetson 단계에서는 핵심 구현이 이미 끝났고, 현재는 검증과 조정이 남아 있다.
 
-### 5-1. ONNX export
+### 5-1. ONNX export와 런타임 검증
 
-이 단계에서 ONNX export 자체는 이미 끝났다. Jetson 단계에서는 export 결과를 기준 산출물로 사용한다.
+ONNX export 자체는 이미 끝났고, Jetson runtime 환경 검증도 완료됐다.
 
 현재 준비된 파일:
 
@@ -104,15 +104,16 @@ Jetson 단계에서는 아래 순서로 진행한다.
 - `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier.onnx`
 - `wake_word/models/hi_popo/runs/final_full_best_trial40/hi_popo_classifier_onnx.json`
 
-Jetson에서 먼저 할 일:
+현재 완료 상태:
 
-- ONNX와 metadata를 Jetson 작업 디렉토리로 복사
-- Jetson 쪽 Python 환경에서 `onnxruntime-gpu` 로딩 확인
-- metadata의 threshold와 input shape가 기대값 `(16, 96)`인지 확인
+- ONNX와 metadata가 Jetson 작업 기준 산출물로 정리돼 있다
+- Jetson 쪽 Python 환경에서 `onnxruntime-gpu` 로딩을 확인했다
+- `wake_word/train/check_onnx_gpu.py` 결과 `GPU_OK`를 확인했다
+- metadata의 threshold와 input shape도 현재 기준과 일치한다
 
 ### 5-2. Jetson 추론 래퍼 구현
 
-현재 `wake_word/detector.py`는 classifier ONNX 래퍼로 이미 구현돼 있다. 다만 입력이 raw audio가 아니라 feature라는 점이 핵심이다.
+현재 `wake_word/detector.py`는 실시간 추론 래퍼로 구현돼 있다.
 
 목표 파일:
 
@@ -126,13 +127,13 @@ Jetson에서 먼저 할 일:
 - wake word score 계산
 - threshold 초과 시 detection 상태 반환
 
-Jetson에서 추가로 붙여야 하는 역할:
+현재 추가로 이미 붙은 역할:
 
 - 마이크 입력 수집
 - raw audio를 Google Speech Embedding feature로 변환
 - 변환된 feature를 classifier ONNX 래퍼에 전달
 
-즉 현재 남은 핵심은 `raw audio -> feature extractor -> classifier ONNX` 연결이다.
+즉 `raw audio -> feature extractor -> classifier ONNX` 연결은 이미 끝났고, 남은 핵심은 실기 데이터로 tuning하는 것이다.
 
 현재 ONNX 체인은 아래처럼 구성된다.
 
@@ -161,8 +162,14 @@ GUI에서 최소한 보여야 하는 요소:
 - `melspectrogram / embedding / classifier` ONNX 실행 시간
 - 입력 chunk 길이와 classifier window 길이
 
-현재 GUI demo는 위 목적에 맞는 최소 구성으로 구현됐다.
-이제 남은 핵심은 실제 환경에서 score 분포를 보고 threshold를 조정하는 것이다.
+현재 GUI demo는 위 목적을 넘어서 아래까지 지원한다.
+
+- 1초 유지 감지 램프
+- 3초 유지 최고점 표시
+- 마이크 입력 레벨 조절 슬라이더
+- `tegrastats` 기반 CPU / RAM / GPU 텍스트
+
+이제 남은 핵심은 실제 환경에서 score 분포를 보고 threshold와 input gain을 같이 조정하는 것이다.
 
 ## 6. Jetson 실기 검증 계획
 
@@ -244,13 +251,13 @@ GUI를 보는 동안 아래를 바로 판단할 수 있어야 한다.
 
 ## 8. Jetson 단계의 성공 기준
 
-초기 성공 기준은 아래다.
+초기 성공 기준은 대부분 달성됐고, 남은 검증 기준은 아래다.
 
 - ONNX 모델이 Jetson에서 정상 로드된다.
 - feature extractor와 classifier ONNX가 연결되어, 마이크 입력이 끊기지 않고 실시간 score가 나온다.
 - `하이 포포` 호출 시 GUI에서 명확한 score 상승과 detection이 보인다.
 - idle/background에서 오탐 패턴을 확인할 수 있다.
-- threshold 조정 필요 여부를 실기 기준으로 판단할 수 있다.
+- threshold와 input gain 기본값을 실기 기준으로 판단할 수 있다.
 
 즉, 이 단계의 성공은 “제품 수준 완료”가 아니라  
 “실시간 데모가 가능하고, 다음 개선 방향이 명확해지는 것”이다.

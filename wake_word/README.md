@@ -23,9 +23,11 @@
 - ONNX export 완료
 - Jetson 실시간 마이크 GUI demo 추가
 - Jetson에서 실제 실행 확인 완료
+- `wake_word.py`를 `detector.py`로 정리 완료
 - 다음 단계
-  - 실제 마이크 실기 검증
-  - threshold 튜닝
+  - 실제 현장 기준 threshold와 input gain 확정
+  - hard negative와 일반 대화 기준 오탐 패턴 점검
+  - 연속 오디오 false accepts per hour 측정
 
 ## 현재 best 모델
 
@@ -168,10 +170,10 @@ wake_word/
 
 ## 다음 작업
 
-1. export된 ONNX와 metadata를 Jetson 작업 경로에 유지
-2. 실제 마이크 연결 후 `하이 포포` 감지와 background 오탐 검증
-3. threshold 현장 튜닝
-4. 필요 시 데이터 보강 또는 재학습 판단
+1. 실제 현장 마이크와 실사용 거리 기준으로 threshold와 input gain 기본값을 확정
+2. `하이 보보`, `하이 뽀뽀`, `굿바이 포포` 같은 hard negative 문구와 일반 대화로 오탐 패턴을 수집
+3. idle/background 연속 재생 기준 false accepts per hour를 측정
+4. 실기 결과에 따라 데이터 보강 또는 재학습 여부를 결정하고, 성능이 충분하면 상위 SDK 연결로 넘어간다
 
 ## ONNX export / Jetson 준비
 
@@ -188,6 +190,12 @@ wake_word/
   - [`wake_word_demo.py`](wake_word_demo.py)
 - 마이크 입력용 GUI demo:
   - [`wake_word_gui_demo.py`](wake_word_gui_demo.py)
+- GUI 주요 표시:
+  - score 게이지와 3초 유지 최고점
+  - threshold 슬라이더
+  - 마이크 입력 레벨 조절 슬라이더
+  - 감지 시 1초 유지 램프
+  - `tegrastats` 기반 CPU / RAM / GPU 텍스트
 - GUI timing 표시:
   - `melspectrogram.onnx`
   - `embedding_model.onnx`

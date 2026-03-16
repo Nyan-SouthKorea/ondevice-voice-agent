@@ -105,7 +105,7 @@
 
 - Jetson Orin Nano Developer Kit 8GB
 - Ubuntu 22.04
-- ONNX Runtime GPU + TensorRT 기반 추론 예정
+- `onnxruntime-gpu 1.23.0` + TensorRT `10.3.0` 기준 검증 완료
 
 ## 5. 기술 선택
 
@@ -233,8 +233,8 @@ feature 추출 스크립트:
 
 - 현재 export 대상은 raw audio end-to-end 모델이 아니라 `classifier only` ONNX다.
 - 즉 Jetson에서 실제 마이크 추론을 하려면 Google Speech Embedding feature 추출 단계를 함께 연결해야 한다.
-- 현재 `detector.py`는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 받아 ONNX classifier를 실행하는 래퍼다.
-- 현재 실시간 GUI 데모는 `melspectrogram.onnx -> embedding_model.onnx -> hi_popo_classifier.onnx` 3단계 ONNX timing도 함께 보여준다.
+- 현재 `detector.py`는 raw audio -> feature extractor -> classifier ONNX 연결까지 포함한 실시간 래퍼를 제공한다.
+- 현재 실시간 GUI 데모는 `melspectrogram.onnx -> embedding_model.onnx -> hi_popo_classifier.onnx` 3단계 ONNX timing, 1초 유지 감지 램프, 3초 유지 최고점, input gain, `tegrastats` 리소스 텍스트를 함께 보여준다.
 - 현재 chunk 기준은 `1280 samples = 80 ms`, classifier window 기준은 `16 frames = 1.28 s`다.
 
 ## 9. 학습 결과 요약
@@ -388,15 +388,14 @@ epoch 8 결과:
 
 현재 우선순위는 아래와 같다.
 
-1. export된 ONNX와 metadata를 Jetson으로 복사
-2. Jetson에서 feature extractor + classifier ONNX + 마이크 입력을 연결
-3. score / threshold / detection 상태를 즉시 확인할 수 있는 실시간 CLI/GUI를 붙인다
-4. 연속 오디오 기준 false positive / false reject 평가와 threshold 점검을 진행한다
-5. 성능이 충분하면 wake word 모듈을 상위 음성 에이전트 파이프라인에 연결한다
-6. 이관 직전, 학습 환경과 개발 히스토리를 handoff 문서로 최종 정리한다
+1. 실제 마이크 환경에서 threshold와 input gain 기본값을 확정한다
+2. hard negative 문구와 일반 대화 기준 false positive / false reject 패턴을 정리한다
+3. 연속 오디오 기준 false accepts per hour를 측정한다
+4. 성능이 충분하면 wake word detector를 상위 음성 에이전트 SDK의 첫 모듈로 정리한다
+5. 이후 VAD/STT/LLM/TTS 통합 순서로 확장한다
 
 현재는 이관 계획을 별도 문서로 분리했다.
 
 - [jetson_transition_plan.md](jetson_transition_plan.md)
 
-이 문서는 Jetson 단계에서 바로 수행할 작업 순서, GUI 요구사항, 실기 검증 계획, 성공 기준을 정리한다.
+이 문서는 Jetson 단계에서 이미 끝난 작업과 남은 실기 검증 과제를 함께 정리한다.
