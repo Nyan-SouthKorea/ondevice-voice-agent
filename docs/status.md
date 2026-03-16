@@ -133,7 +133,7 @@
 - `wake_word/models/`의 대용량 학습 산출물은 계속 git 제외 대상이다.
 - 다만 현재 runtime에 직접 필요한 최종 classifier ONNX와 metadata는 리포에 함께 둔다.
 - `vad/models/silero_vad.onnx`도 기본 runtime 자산으로 리포에 함께 둔다.
-- 공개용 wake word 샘플 경로를 `wake_word/examples/audio_samples/`로 정리했다.
+- wake word 예시 샘플 경로를 `wake_word/examples/audio_samples/`로 정리했다.
 - 루트 `README.md`, `wake_word/README.md`, `vad/README.md`를 현재 진입 문서로 사용한다.
 - Jetson 환경 세팅 절차와 유지 기준은 `docs/envs/jetson_wake_word_env.md`에 정리돼 있다.
 - `_tmp_download` 원본 보관 구조를 3개 폴더로 정리했다.

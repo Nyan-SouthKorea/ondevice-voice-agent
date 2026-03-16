@@ -100,7 +100,7 @@ wake_word/
 ├── train/                    # 학습/평가 스크립트
 ├── models/                   # 모델 아카이브
 ├── assets/feature_models/    # feature backbone ONNX 2개
-├── examples/                 # 공개 가능한 소량 샘플
+├── examples/                 # 리포에 함께 두는 소량 샘플
 ├── features.py               # feature backbone 로컬 구현
 ├── detector.py               # 추론 모듈
 ├── wake_word_demo.py         # feature 입력용 CLI demo
@@ -133,7 +133,7 @@ wake_word/
 
 ### `examples/`
 
-공개 저장소에 포함 가능한 소량 샘플만 관리한다.
+이 리포에 함께 둘 소량 샘플만 관리한다.
 
 - [`examples/README.md`](examples/README.md)
 - [`examples/audio_samples/README.md`](examples/audio_samples/README.md)
