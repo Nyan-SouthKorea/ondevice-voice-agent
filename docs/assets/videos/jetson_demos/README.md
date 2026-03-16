@@ -1,6 +1,7 @@
 # Jetson Demo Videos
 
 이 디렉토리는 Jetson에서 직접 실행한 데모 mp4 파일을 보관한다.
+README에 바로 보이는 GIF 미리보기는 `../../gifs/jetson_demos/`에 별도로 정리한다.
 
 파일 기준:
 

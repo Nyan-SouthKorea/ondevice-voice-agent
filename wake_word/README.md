@@ -87,7 +87,10 @@
 
 ## Jetson 데모 영상
 
-- [Wake Word GUI 데모 영상 보기 (mp4)](../docs/assets/videos/jetson_demos/wake_word_gui_demo_jetson.mp4)
+[![Wake Word GUI demo gif](../docs/assets/gifs/jetson_demos/wake_word_gui_demo_jetson.gif)](../docs/assets/videos/jetson_demos/wake_word_gui_demo_jetson.mp4)
+
+- 위 GIF를 클릭하면 음성 포함 원본 mp4가 열린다.
+- 원본 파일: [Wake Word GUI 데모 영상 (mp4)](../docs/assets/videos/jetson_demos/wake_word_gui_demo_jetson.mp4)
 
 ## 디렉토리 구조
 
