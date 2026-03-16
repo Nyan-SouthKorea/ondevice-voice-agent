@@ -33,13 +33,9 @@
 
 ## Jetson GUI 스크린샷
 
-### 대기 중
-
-![VAD GUI idle](../docs/assets/screenshots/jetson_demos/vad_gui_idle.png)
-
-### 말하는 중
-
-![VAD GUI speaking](../docs/assets/screenshots/jetson_demos/vad_gui_speaking.png)
+| 대기 중 | 말하는 중 |
+| --- | --- |
+| ![VAD GUI idle](../docs/assets/screenshots/jetson_demos/vad_gui_idle.png) | ![VAD GUI speaking](../docs/assets/screenshots/jetson_demos/vad_gui_speaking.png) |
 
 설명:
 
