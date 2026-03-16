@@ -85,6 +85,10 @@
 - 오른쪽은 `하이 포포` 감지 직후 상태다. 1초 유지 감지 램프, score peak, threshold 위치를 한 번에 확인할 수 있다.
 - 두 화면 모두 실제 Jetson 마이크 입력 기준 GUI 데모 결과다.
 
+## Jetson 데모 영상
+
+- [Wake Word GUI 데모 영상 보기 (mp4)](../docs/assets/videos/jetson_demos/wake_word_gui_demo_jetson.mp4)
+
 ## 디렉토리 구조
 
 ```text

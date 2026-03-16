@@ -55,6 +55,10 @@
 - `대기 중` 화면은 `False` 상태와 낮은 입력 레벨, 낮은 confidence를 보여준다.
 - `말하는 중` 화면은 `True` 상태와 함께 입력 레벨, confidence가 즉시 올라가는 것을 보여준다.
 
+## Jetson 데모 영상
+
+- [VAD GUI 데모 영상 보기 (mp4)](../docs/assets/videos/jetson_demos/vad_gui_demo_jetson.mp4)
+
 공통 사용 방식:
 
 ```python

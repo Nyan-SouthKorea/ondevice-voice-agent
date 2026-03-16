@@ -1,6 +1,7 @@
 # Jetson Demo Screenshots
 
 이 디렉토리는 Jetson에서 직접 실행한 wake word GUI와 VAD demo 스크린샷을 보관한다.
+데모 mp4 파일은 `../videos/jetson_demos/`에 별도로 정리한다.
 
 파일 기준:
 
