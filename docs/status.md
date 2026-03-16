@@ -103,11 +103,18 @@
     - `min_speech_frames=3`
     - `min_silence_frames=10`
   - 간단 데모: `vad/vad_demo.py`
+  - GUI 데모: `vad/vad_gui_demo.py`
   - 데모 출력:
     - 최종 `status`
     - 마이크 입력 레벨 `level`
     - `silero`일 때 `conf`
     - `webrtcvad`일 때 `voiced_ratio`
+  - GUI 표시:
+    - 빨간 감지 램프
+    - `말하는 중 / 대기 중` 상태
+    - 입력 레벨 게이지
+    - confidence 게이지
+    - `silero` 기준 threshold 슬라이더
   - 검증 상태:
     - `webrtcvad` 기본 마이크 demo 동작 확인
     - `silero` 공식 ONNX 다운로드 및 기본 마이크 demo 동작 확인

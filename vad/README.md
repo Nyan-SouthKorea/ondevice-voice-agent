@@ -27,6 +27,9 @@
   - ONNX Runtime 기반 Silero VAD 백엔드
 - `vad_demo.py`
   - 기본 마이크를 받아 상태를 한 줄로 계속 표시하는 초간단 데모
+- `vad_gui_demo.py`
+  - 영상 확인용 실시간 GUI 데모
+  - 감지 램프, 상태 문구, 입력 레벨, confidence, threshold 슬라이더 제공
 
 ## Jetson 터미널 스크린샷
 
@@ -74,6 +77,14 @@ source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetso
 python vad/vad_demo.py
 ```
 
+GUI demo 실행:
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+python vad/vad_gui_demo.py
+```
+
 Silero ONNX 모델:
 
 - 기본 경로는 `vad/models/silero_vad.onnx`
@@ -95,6 +106,12 @@ Silero ONNX 모델:
   - 마이크 입력 레벨 `level`
   - `silero`일 때 실제 speech probability `conf`
   - `webrtcvad`일 때 raw frame 비율 `voiced_ratio`
+- GUI demo는 아래를 표시한다
+  - 빨간 감지 램프
+  - `말하는 중 / 대기 중` 상태 문구
+  - 마이크 입력 레벨 게이지
+  - confidence 게이지
+  - `silero` 기준 threshold 조절 슬라이더
 - `webrtcvad` 경로는 기본 마이크 데모로 실제 동작 확인
 - `silero` 경로는 공식 ONNX 파일 다운로드 후 기본 마이크 데모 동작 확인
 
