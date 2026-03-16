@@ -7,7 +7,7 @@
 - wake word와 VAD 요소기술을 실제 Jetson 마이크 환경 기준으로 마무리 검증한다.
 - wake word threshold와 input gain 기본값을 현장 기준으로 확정한다.
 - wake word와 VAD를 연결해 STT 입력 구간 절단 기준을 정리한다.
-- 이후 상위 SDK 연결과 STT 단계로 넘어갈 준비를 한다.
+- STT v1 공통 래퍼와 온디바이스 기본 경로를 정리한다.
 
 ## 현재 최종 기준
 
@@ -17,6 +17,7 @@
 - 학습 환경: Linux 서버 + A100
 - 추론 타깃: Jetson Orin Nano Developer Kit 8GB
 - VAD 기본 backend: `silero`
+- STT 기본 backend 방향: `Whisper`
 
 ## 현재 상태
 
@@ -123,6 +124,21 @@
 - 현재 통합 전 단계
   - wake word와 VAD는 각각 독립적으로 검증 완료
   - 아직 둘을 연결한 utterance segmentation 단계는 시작 전
+- STT 초기 구조 구현 시작
+  - 공통 진입점: `stt/transcriber.py`
+  - 백엔드 1: `stt/stt_whisper.py`
+  - 백엔드 2: `stt/stt_api.py`
+  - 최소 데모: `stt/stt_demo.py`
+  - 현재 기준:
+    - 기본 backend는 `whisper`
+    - 기본 Whisper 모델값은 `tiny`
+    - 입력은 `16kHz mono` wav 또는 float32 mono 배열
+    - 목적은 `짧은 utterance -> text` 기본 경로 확보
+  - Jetson smoke:
+    - env: `wake_word_train_smoke`
+    - `openai-whisper 20250625`, `openai 2.28.0`
+    - `tiny + cuda` 기준 예시 샘플 전사 결과: `하이포포`
+    - elapsed: 약 `3.031 sec`
 - Jetson synthetic chunk 기준 간단 timing 확인
   - chunk size: `1280 samples = 80 ms`
   - classifier window: `16 frames = 1.28 s`
@@ -159,5 +175,6 @@
 2. `하이 보보`, `하이 뽀뽀`, `굿바이 포포` 같은 hard negative 문구와 일반 대화 오탐 패턴을 정리
 3. false accepts per hour 관점으로 연속 배경 오디오를 점검
 4. wake word 감지 뒤에 VAD를 연결하고 speech start / speech end / utterance cut 기준을 정리
-5. 필요 시 데이터 보강 또는 재학습 여부를 판단
-6. 성능이 충분하면 wake word와 VAD를 상위 SDK 첫 모듈로 정리
+5. STT 기본 backend의 Jetson 실기 설치와 속도/정확도 smoke를 확인
+6. 필요 시 데이터 보강 또는 재학습 여부를 판단
+7. 성능이 충분하면 wake word와 VAD를 상위 SDK 첫 모듈로 정리

@@ -1234,3 +1234,34 @@
 - 문서 자산 구조가 `screenshots / videos / gifs`로 나뉘어 더 찾기 쉬워졌다.
 - `secrets/`는 어떤 경우에도 추적하지 않는 기준을 그대로 유지했다.
 - 문서 흐름도 구현, 검증, 자산 정리에 집중하는 방향으로 단순해졌다.
+
+---
+
+## 2026-03-16 | Human + Codex | STT 초기 구조 구현 시작
+
+### Context
+
+- wake word와 VAD 요소기술 구현이 끝나면서 다음 단계로 STT 개발을 시작할 시점이 됐다.
+- 현재 문서 기준으로는 `온디바이스 Whisper + API 백업 경로`를 같은 사용법으로 묶는 방향이 이미 정해져 있었다.
+
+### Actions
+
+- `stt/transcriber.py`를 추가해 공통 STT 진입점을 만들었다.
+- `stt/stt_whisper.py`에 OpenAI Whisper 기반 온디바이스 백엔드를 구현했다.
+- `stt/stt_api.py`에 OpenAI Audio Transcriptions API 백엔드를 구현했다.
+- `stt/stt_demo.py`에 wav 파일 또는 짧은 마이크 녹음을 받아 텍스트를 출력하는 최소 데모를 추가했다.
+- `stt/__init__.py`, `stt/README.md`, `docs/research/stt.md`를 추가/갱신해 현재 구조와 선택 이유를 기록했다.
+- 상위 문서에서 STT 상태를 `구조만 확보`에서 `초기 구현 시작`으로 갱신했다.
+
+### Result
+
+- STT도 wake word/VAD와 비슷하게 `공통 래퍼 + backend 2개 + 최소 demo` 구조를 갖게 됐다.
+- 현재 v1 기준으로는 짧은 utterance를 텍스트로 바꾸는 기본 경로를 붙일 준비가 됐다.
+
+### Validation
+
+- `python3 -m py_compile` 기준 STT 파일 문법 확인 완료
+- `python stt/stt_demo.py --help` 확인 완료
+- `wake_word_train_smoke` env에 `openai-whisper`, `openai` 설치 완료
+- `tiny + cuda` 기준 예시 샘플 전사 결과 `하이포포` 확인
+- 전사 시간은 약 `3.031 sec`

@@ -74,7 +74,7 @@ VAD:
 |------|------|------|
 | [wake_word](wake_word/README.md) | 호출어 `하이 포포` 감지 모델 학습, 평가, 추론 | 요소기술 완료, 실기 튜닝 진행 |
 | [vad](vad/README.md) | 발화 구간 감지 모듈 | 요소기술 완료 |
-| [stt](stt/README.md) | 음성 인식 계층 | 구조만 확보 |
+| [stt](stt/README.md) | 음성 인식 계층 | 초기 구현 시작 |
 | [llm](llm/README.md) | 명령 해석 및 응답 생성 계층 | 구조만 확보 |
 | [tts](tts/README.md) | 음성 합성 계층 | 구조만 확보 |
 

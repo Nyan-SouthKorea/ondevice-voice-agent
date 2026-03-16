@@ -7,6 +7,7 @@
 - `docs/개발방침.md`: 현재 프로젝트의 최종 의사결정과 공통 원칙
 - `docs/research/*.md`: 요소기술별 조사 결과와 선택 근거
 - `docs/research/openwakeword_reference.md`: 삭제한 upstream clone 대신, openWakeWord 원본 출처와 현재 이관 범위 기록
+- `docs/research/stt.md`: Jetson 기준 온디바이스 STT v1 선택 근거와 다음 검토 후보
 - `docs/envs/wake_word_env.md`: Linux 서버(A100) 학습 환경
 - `docs/envs/jetson_wake_word_env.md`: Jetson runtime venv, wake word/VAD demo 기준 ONNX Runtime CUDA 검증 절차
 - `docs/envs/wake_word_train_smoke_env.md`: Jetson 학습 smoke venv, torch/librosa/feature extraction/train/export 검증 절차
@@ -34,7 +35,7 @@ docs/
     ├── wake_word.md
     ├── negative_datasets.md
     ├── tts_korean.md
-    ├── stt.md        (예정)
+    ├── stt.md
     ├── llm.md        (예정)
     └── tts.md        (예정)
 ```
