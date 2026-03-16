@@ -30,14 +30,18 @@
 
 ## Jetson 터미널 스크린샷
 
-| Idle 상태 | Speech 상태 |
-|------|------|
-| ![VAD demo idle](../docs/assets/screenshots/jetson_demos/vad_demo_idle_terminal.png) | ![VAD demo speech](../docs/assets/screenshots/jetson_demos/vad_demo_speech_terminal.png) |
+### Idle 상태
+
+![VAD demo idle](../docs/assets/screenshots/jetson_demos/vad_demo_idle_terminal.png)
+
+### Speech 상태
+
+![VAD demo speech](../docs/assets/screenshots/jetson_demos/vad_demo_speech_terminal.png)
 
 설명:
 
-- 왼쪽은 대기 상태다. `status=False`, 낮은 `level`, 거의 0에 가까운 `conf`가 보인다.
-- 오른쪽은 발화가 들어온 상태다. `status=True`, 입력 레벨 상승, `silero`의 높은 `conf`를 바로 확인할 수 있다.
+- `Idle 상태`는 대기 화면이다. `status=False`, 낮은 `level`, 거의 0에 가까운 `conf`가 보인다.
+- `Speech 상태`는 발화가 들어온 화면이다. `status=True`, 입력 레벨 상승, `silero`의 높은 `conf`를 바로 확인할 수 있다.
 - 데모는 의도적으로 단순하게 유지해서, 기본 마이크와 backend 동작 상태를 즉시 확인하는 용도로 쓴다.
 
 공통 사용 방식:
