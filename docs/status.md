@@ -132,6 +132,8 @@
   - 녹음 GUI: `stt/stt_dataset_recorder.py`
   - 비교 평가: `stt/stt_benchmark.py`
   - 기준 데이터셋: `stt/datasets/korean_eval_50/`
+  - 데이터셋 관리:
+    - 기준 txt와 사용자 직접 녹음 wav를 함께 리포에 포함
   - 현재 기준:
     - 기본 backend는 `whisper`
     - 기본 Whisper 모델값은 현재 `tiny` 잠정값

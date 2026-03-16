@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import string
 import sys
+import time
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -77,6 +78,11 @@ def parse_args():
         "--usage-purpose",
         default=None,
         help="API STT 사용 목적 기록용 문자열",
+    )
+    parser.add_argument(
+        "--disable-warmup",
+        action="store_true",
+        help="로컬 모델 warm-up 1회를 생략한다",
     )
     return parser.parse_args()
 
@@ -230,6 +236,33 @@ def build_run_name(config):
     return f"{model}_{model_name}".replace("/", "_").replace(":", "_")
 
 
+def compute_percentile(values, percentile):
+    """
+    기능:
+    - 숫자 목록에서 선형 보간 방식 percentile 값을 계산한다.
+
+    입력:
+    - `values`: 숫자 목록.
+    - `percentile`: 계산할 percentile 값.
+
+    반환:
+    - percentile 실수를 반환한다.
+    """
+    if not values:
+        return 0.0
+    sorted_values = sorted(values)
+    if len(sorted_values) == 1:
+        return float(sorted_values[0])
+
+    position = (len(sorted_values) - 1) * percentile
+    lower_index = int(position)
+    upper_index = min(lower_index + 1, len(sorted_values) - 1)
+    fraction = position - lower_index
+    lower_value = float(sorted_values[lower_index])
+    upper_value = float(sorted_values[upper_index])
+    return lower_value + (upper_value - lower_value) * fraction
+
+
 def ensure_output_dir(base_dir, dataset_name):
     """
     기능:
@@ -261,6 +294,8 @@ def evaluate_config(entries, config, args):
     반환:
     - 요약 정보와 샘플별 결과를 담은 사전을 반환한다.
     """
+    run_name = build_run_name(config)
+    load_started_at = time.perf_counter()
     transcriber = STTTranscriber(
         model=config["model"],
         model_name=config["model_name"],
@@ -269,10 +304,21 @@ def evaluate_config(entries, config, args):
         download_root=args.download_root,
         api_key=args.api_key,
         prompt=args.prompt,
-        usage_purpose=args.usage_purpose or f"stt_benchmark:{args.dataset_dir.name}:{build_run_name(config)}",
+        usage_purpose=args.usage_purpose or f"stt_benchmark:{args.dataset_dir.name}:{run_name}",
     )
+    load_time_sec = time.perf_counter() - load_started_at
 
-    run_name = build_run_name(config)
+    warmup_enabled = (config["model"] != "api") and (not args.disable_warmup)
+    warmup_time_sec = 0.0
+    warmup_sample_id = ""
+    if warmup_enabled and entries:
+        warmup_entry = entries[0]
+        warmup_audio = transcriber.load_audio(warmup_entry["wav_path"])
+        warmup_started_at = time.perf_counter()
+        transcriber.transcribe(warmup_audio)
+        warmup_time_sec = time.perf_counter() - warmup_started_at
+        warmup_sample_id = warmup_entry["id"]
+
     rows = []
     total_audio_sec = 0.0
     total_stt_sec = 0.0
@@ -280,6 +326,8 @@ def evaluate_config(entries, config, args):
     total_normalized_exact_match = 0
     total_cer = 0.0
     total_normalized_cer = 0.0
+    stt_times = []
+    rtf_values = []
 
     for entry in entries:
         reference = read_text_file(entry["text_path"])
@@ -308,6 +356,7 @@ def evaluate_config(entries, config, args):
                 "normalized_exact_match": normalized_exact_match,
                 "cer": round(cer, 4),
                 "normalized_cer": round(normalized_cer, 4),
+                "warmup_excluded": 1,
                 "reference": reference,
                 "prediction": prediction,
             }
@@ -319,17 +368,30 @@ def evaluate_config(entries, config, args):
         total_normalized_exact_match += normalized_exact_match
         total_cer += cer
         total_normalized_cer += normalized_cer
+        stt_times.append(stt_sec)
+        rtf_values.append(rtf)
 
     sample_count = len(rows)
     summary = {
         "run_name": run_name,
         "model": config["model"],
         "model_name": config["model_name"] or "default",
+        "device": args.device or "auto",
         "sample_count": sample_count,
+        "load_time_sec": round(load_time_sec, 4),
+        "warmup_enabled": int(warmup_enabled),
+        "warmup_sample_id": warmup_sample_id,
+        "warmup_time_sec": round(warmup_time_sec, 4),
         "total_audio_sec": round(total_audio_sec, 4),
         "total_stt_sec": round(total_stt_sec, 4),
         "mean_stt_sec": round(total_stt_sec / sample_count, 4),
+        "p50_stt_sec": round(compute_percentile(stt_times, 0.50), 4),
+        "p95_stt_sec": round(compute_percentile(stt_times, 0.95), 4),
+        "max_stt_sec": round(max(stt_times), 4) if stt_times else 0.0,
         "mean_rtf": round(total_stt_sec / total_audio_sec, 4) if total_audio_sec > 0 else 0.0,
+        "p50_rtf": round(compute_percentile(rtf_values, 0.50), 4),
+        "p95_rtf": round(compute_percentile(rtf_values, 0.95), 4),
+        "max_rtf": round(max(rtf_values), 4) if rtf_values else 0.0,
         "exact_match_rate": round(total_exact_match / sample_count, 4),
         "normalized_exact_match_rate": round(total_normalized_exact_match / sample_count, 4),
         "mean_cer": round(total_cer / sample_count, 4),
@@ -360,6 +422,7 @@ def write_rows_csv(output_path, rows):
         "normalized_exact_match",
         "cer",
         "normalized_cer",
+        "warmup_excluded",
         "reference",
         "prediction",
     ]
@@ -385,11 +448,22 @@ def write_summary_csv(output_path, summaries):
         "run_name",
         "model",
         "model_name",
+        "device",
         "sample_count",
+        "load_time_sec",
+        "warmup_enabled",
+        "warmup_sample_id",
+        "warmup_time_sec",
         "total_audio_sec",
         "total_stt_sec",
         "mean_stt_sec",
+        "p50_stt_sec",
+        "p95_stt_sec",
+        "max_stt_sec",
         "mean_rtf",
+        "p50_rtf",
+        "p95_rtf",
+        "max_rtf",
         "exact_match_rate",
         "normalized_exact_match_rate",
         "mean_cer",
@@ -424,6 +498,107 @@ def write_summary_json(output_path, dataset_dir, summaries):
     )
 
 
+def write_summary_markdown(output_path, summaries):
+    """
+    기능:
+    - 코드가 계산한 summary 값을 그대로 Markdown 표로 저장한다.
+
+    입력:
+    - `output_path`: 저장할 Markdown 경로.
+    - `summaries`: 요약 결과 목록.
+
+    반환:
+    - 없음.
+    """
+    lines = [
+        "# STT Summary Table",
+        "",
+        "| run_name | model | device | sample_count | load_time_sec | warmup_time_sec | mean_stt_sec | p50_stt_sec | p95_stt_sec | max_stt_sec | mean_rtf | p95_rtf | norm_match | norm_cer |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for summary in summaries:
+        lines.append(
+            "| "
+            f"{summary['run_name']} | "
+            f"{summary['model_name']} | "
+            f"{summary['device']} | "
+            f"{summary['sample_count']} | "
+            f"{summary['load_time_sec']} | "
+            f"{summary['warmup_time_sec']} | "
+            f"{summary['mean_stt_sec']} | "
+            f"{summary['p50_stt_sec']} | "
+            f"{summary['p95_stt_sec']} | "
+            f"{summary['max_stt_sec']} | "
+            f"{summary['mean_rtf']} | "
+            f"{summary['p95_rtf']} | "
+            f"{summary['normalized_exact_match_rate']} | "
+            f"{summary['mean_normalized_cer']} |"
+        )
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_readable_markdown(output_path, summary, rows):
+    """
+    기능:
+    - GT와 예측을 사람이 바로 비교할 수 있는 Markdown 리포트를 저장한다.
+
+    입력:
+    - `output_path`: 저장할 Markdown 경로.
+    - `summary`: 실행 요약 사전.
+    - `rows`: 샘플별 결과 목록.
+
+    반환:
+    - 없음.
+    """
+    lines = [
+        f"# {summary['run_name']}",
+        "",
+        "## Summary",
+        "",
+        f"- model: {summary['model']}",
+        f"- model_name: {summary['model_name']}",
+        f"- device: {summary['device']}",
+        f"- sample_count: {summary['sample_count']}",
+        f"- load_time_sec: {summary['load_time_sec']}",
+        f"- warmup_enabled: {summary['warmup_enabled']}",
+        f"- warmup_sample_id: {summary['warmup_sample_id'] or '-'}",
+        f"- warmup_time_sec: {summary['warmup_time_sec']}",
+        f"- mean_stt_sec: {summary['mean_stt_sec']}",
+        f"- p50_stt_sec: {summary['p50_stt_sec']}",
+        f"- p95_stt_sec: {summary['p95_stt_sec']}",
+        f"- max_stt_sec: {summary['max_stt_sec']}",
+        f"- mean_rtf: {summary['mean_rtf']}",
+        f"- p50_rtf: {summary['p50_rtf']}",
+        f"- p95_rtf: {summary['p95_rtf']}",
+        f"- max_rtf: {summary['max_rtf']}",
+        f"- exact_match_rate: {summary['exact_match_rate']}",
+        f"- normalized_exact_match_rate: {summary['normalized_exact_match_rate']}",
+        f"- mean_cer: {summary['mean_cer']}",
+        f"- mean_normalized_cer: {summary['mean_normalized_cer']}",
+        "",
+        "## Per Sample",
+        "",
+    ]
+
+    for row in rows:
+        lines.extend(
+            [
+                f"### {row['id']}",
+                f"- stt_sec: {row['stt_sec']}",
+                f"- rtf: {row['rtf']}",
+                f"- exact_match: {row['exact_match']}",
+                f"- normalized_exact_match: {row['normalized_exact_match']}",
+                f"- cer: {row['cer']}",
+                f"- normalized_cer: {row['normalized_cer']}",
+                f"- GT: {row['reference']}",
+                f"- Pred: {row['prediction']}",
+                "",
+            ]
+        )
+
+    output_path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def print_summary_table(summaries):
     """
     기능:
@@ -441,8 +616,10 @@ def print_summary_table(summaries):
     for summary in summaries:
         print(
             f"{summary['run_name']:<28} "
+            f"load={summary['load_time_sec']:<6} "
             f"samples={summary['sample_count']:<3} "
             f"mean_stt={summary['mean_stt_sec']:<6} "
+            f"p95_stt={summary['p95_stt_sec']:<6} "
             f"mean_rtf={summary['mean_rtf']:<6} "
             f"norm_match={summary['normalized_exact_match_rate']:<6} "
             f"norm_cer={summary['mean_normalized_cer']:<6}"
@@ -475,9 +652,11 @@ def main():
         run_name = summary["run_name"]
         summaries.append(summary)
         write_rows_csv(run_dir / f"{run_name}_per_sample.csv", rows)
+        write_readable_markdown(run_dir / f"{run_name}_readable.md", summary, rows)
 
     write_summary_csv(run_dir / "summary.csv", summaries)
     write_summary_json(run_dir / "summary.json", dataset_dir, summaries)
+    write_summary_markdown(run_dir / "summary.md", summaries)
     print_summary_table(summaries)
     print("")
     print(f"결과 저장 위치: {run_dir}")

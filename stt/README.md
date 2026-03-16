@@ -59,14 +59,23 @@ print(transcriber.last_duration_sec)
   - `001.wav`
   - `002.txt`
   - `002.wav`
-- txt는 리포에 포함한다.
-- 사용자가 직접 녹음한 wav는 기본적으로 git 추적 대상에서 제외한다.
+- txt와 사용자가 직접 녹음한 wav를 모두 리포에 포함한다.
+- 현재 한국어 50문장 직접 녹음 세트는 평가 기준 자산으로 함께 관리한다.
 
 이 구조를 택한 이유:
 
 - 문장 기준과 녹음 결과가 1:1로 바로 대응된다.
 - 사람이 폴더를 열어도 진행 상태를 즉시 이해할 수 있다.
 - recorder와 benchmark가 같은 포맷을 그대로 사용한다.
+
+## 데이터셋 제작 화면
+
+| Recorder GUI | 저장된 데이터셋 |
+|---|---|
+| ![STT dataset recorder](../docs/assets/screenshots/stt/stt_dataset_recorder_gui.png) | ![STT dataset files](../docs/assets/screenshots/stt/stt_korean_eval50_dataset_files.png) |
+
+왼쪽은 기준 문장을 순서대로 읽으며 `녹음 시작 / 녹음 정지 / 들어보기 / 재시도 / 녹음 완료`를 수행하는 GUI다.  
+오른쪽은 실제 저장 결과이며, 같은 번호의 `txt + wav`가 한 쌍으로 관리된다.
 
 ## 녹음 GUI
 
@@ -207,6 +216,8 @@ python stt/stt_benchmark.py \
 - 설정별 normalized CER
 
 평가 결과는 `stt/eval_results/` 아래에 저장한다.
+- 샘플별 GT/예측 비교는 `<run_name>_readable.md`에 사람이 읽기 쉬운 형태로 저장한다.
+- 실행별 요약 표는 `summary.csv`, `summary.json`, `summary.md`로 함께 저장한다.
 
 API STT 실행 메모:
 

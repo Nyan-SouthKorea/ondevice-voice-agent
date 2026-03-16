@@ -204,8 +204,13 @@ class OpenAIAPISTTModel:
             return {"unit": "", "amount": 0.0}
 
         usage_type = getattr(usage, "type", "") or ""
-        usage_seconds = float(getattr(usage, "seconds", 0.0) or 0.0)
-        return {"unit": usage_type, "amount": usage_seconds}
+        if usage_type == "duration":
+            usage_seconds = float(getattr(usage, "seconds", 0.0) or 0.0)
+            return {"unit": usage_type, "amount": usage_seconds}
+        if usage_type == "tokens":
+            total_tokens = float(getattr(usage, "total_tokens", 0.0) or 0.0)
+            return {"unit": usage_type, "amount": total_tokens}
+        return {"unit": usage_type, "amount": 0.0}
 
     def _append_usage_log(self, audio_sec, request_sec, success, error_text):
         """
