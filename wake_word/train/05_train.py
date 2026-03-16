@@ -39,6 +39,16 @@ RUNS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    기능:
+    - 명령행 인자를 정의하고 파싱한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 파싱된 명령행 인자 객체를 반환한다.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", choices=["cpu", "gpu"], default="gpu")
     parser.add_argument("--seed", type=int, default=SEED)
@@ -58,6 +68,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def set_seed(seed: int) -> None:
+    """
+    기능:
+    - 재현 가능한 실행을 위해 난수 시드를 고정한다.
+    
+    입력:
+    - `seed`: 재현성을 맞추기 위한 난수 시드.
+    
+    반환:
+    - 없음.
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -66,12 +86,33 @@ def set_seed(seed: int) -> None:
 
 
 def resolve_device(requested: str) -> torch.device:
+    """
+    기능:
+    - 요청한 장치 문자열을 실제 실행 장치로 변환한다.
+    
+    입력:
+    - `requested`: 사용자가 요청한 장치 문자열.
+    
+    반환:
+    - 실제 실행에 사용할 장치 값을 반환한다.
+    """
     if requested == "gpu" and torch.cuda.is_available():
         return torch.device("cuda:0")
     return torch.device("cpu")
 
 
 def load_feature_file(path: Path, limit: int | None = None) -> np.memmap:
+    """
+    기능:
+    - 학습 또는 평가에 사용할 feature 파일을 memmap으로 연다.
+    
+    입력:
+    - `path`: 처리할 파일 경로.
+    - `limit`: 읽어올 개수 제한값.
+    
+    반환:
+    - 읽어 온 데이터 또는 객체를 반환한다.
+    """
     arr = np.load(path, mmap_mode="r")
     if limit is None:
         return arr
@@ -80,6 +121,17 @@ def load_feature_file(path: Path, limit: int | None = None) -> np.memmap:
 
 class RandomWindowDataset(Dataset):
     def __init__(self, pos: np.ndarray, neg: np.ndarray):
+        """
+        기능:
+        - positive/negative feature 배열을 받아 학습용 데이터셋 상태를 준비한다.
+        
+        입력:
+        - `pos`: positive feature 배열.
+        - `neg`: negative feature 배열.
+        
+        반환:
+        - 없음.
+        """
         self.pos = pos
         self.neg = neg
         self.n_pos = len(pos)
@@ -87,14 +139,44 @@ class RandomWindowDataset(Dataset):
         self.length = self.n_pos + self.n_neg
 
     def __len__(self) -> int:
+        """
+        기능:
+        - 데이터셋의 전체 길이를 반환한다.
+        
+        입력:
+        - 없음.
+        
+        반환:
+        - 데이터셋 길이를 정수로 반환한다.
+        """
         return self.length
 
     def _sample_window(self, clip: np.ndarray) -> np.ndarray:
+        """
+        기능:
+        - clip feature에서 학습용 window 하나를 무작위로 뽑는다.
+        
+        입력:
+        - `clip`: 함수에서 사용할 `clip` 값.
+        
+        반환:
+        - 함수 실행 결과를 반환한다.
+        """
         max_start = clip.shape[0] - WINDOW_FRAMES
         start = 0 if max_start <= 0 else np.random.randint(0, max_start + 1)
         return clip[start:start + WINDOW_FRAMES, :]
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        기능:
+        - 학습용 window와 라벨 한 쌍을 생성한다.
+        
+        입력:
+        - `index`: 가져올 샘플 인덱스.
+        
+        반환:
+        - 학습용 입력 텐서와 라벨 텐서를 함께 반환한다.
+        """
         if index % 2 == 0:
             clip = self.pos[np.random.randint(0, self.n_pos)]
             label = 1.0
@@ -107,17 +189,49 @@ class RandomWindowDataset(Dataset):
 
 class FCNBlock(nn.Module):
     def __init__(self, layer_dim: int):
+        """
+        기능:
+        - FCN block의 레이어 구성을 초기화한다.
+        
+        입력:
+        - `layer_dim`: 은닉층 차원 크기.
+        
+        반환:
+        - 없음.
+        """
         super().__init__()
         self.fcn_layer = nn.Linear(layer_dim, layer_dim)
         self.relu = nn.ReLU()
         self.layer_norm = nn.LayerNorm(layer_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        기능:
+        - FCN block 한 단계를 적용해 다음 표현을 만든다.
+        
+        입력:
+        - `x`: 모델에 전달할 입력 텐서.
+        
+        반환:
+        - 모델이 계산한 출력 텐서를 반환한다.
+        """
         return self.relu(self.layer_norm(self.fcn_layer(x)))
 
 
 class WakeWordFCModel(nn.Module):
     def __init__(self, input_shape: tuple[int, int], layer_dim: int, n_blocks: int):
+        """
+        기능:
+        - wake word 분류기 모델 구조를 초기화한다.
+        
+        입력:
+        - `input_shape`: 모델 입력 feature shape.
+        - `layer_dim`: 은닉층 차원 크기.
+        - `n_blocks`: FCN block 개수.
+        
+        반환:
+        - 없음.
+        """
         super().__init__()
         self.flatten = nn.Flatten()
         self.layer1 = nn.Linear(input_shape[0] * input_shape[1], layer_dim)
@@ -128,6 +242,16 @@ class WakeWordFCModel(nn.Module):
         self.last_act = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        기능:
+        - 입력 텐서를 wake word score 출력으로 변환한다.
+        
+        입력:
+        - `x`: 모델에 전달할 입력 텐서.
+        
+        반환:
+        - 모델이 계산한 출력 텐서를 반환한다.
+        """
         x = self.relu1(self.layernorm1(self.layer1(self.flatten(x))))
         for block in self.blocks:
             x = block(x)
@@ -144,6 +268,19 @@ class ClipEvalResult:
 
 
 def predict_clip_scores(model: nn.Module, clips: np.ndarray, device: torch.device, batch_size: int) -> np.ndarray:
+    """
+    기능:
+    - clip feature 배열에 대해 clip 단위 score를 계산한다.
+    
+    입력:
+    - `model`: 추론 또는 평가에 사용할 모델 객체.
+    - `clips`: 여러 clip feature 배열.
+    - `device`: 실행에 사용할 장치 또는 장치 식별자.
+    - `batch_size`: 한 번에 처리할 배치 크기.
+    
+    반환:
+    - 계산된 결과 목록 또는 배열을 반환한다.
+    """
     scores: list[float] = []
     model.eval()
     with torch.no_grad():
@@ -168,6 +305,20 @@ def evaluate_clip_level(
     device: torch.device,
     batch_size: int,
 ) -> ClipEvalResult:
+    """
+    기능:
+    - positive/negative held-out split 기준 성능을 계산한다.
+    
+    입력:
+    - `model`: 추론 또는 평가에 사용할 모델 객체.
+    - `pos_val`: 검증용 positive feature 배열.
+    - `neg_val`: 검증용 negative feature 배열.
+    - `device`: 실행에 사용할 장치 또는 장치 식별자.
+    - `batch_size`: 한 번에 처리할 배치 크기.
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     pos_scores = predict_clip_scores(model, pos_val, device, batch_size)
     neg_scores = predict_clip_scores(model, neg_val, device, batch_size)
     thresholds = np.linspace(0.1, 0.9, 17)
@@ -198,6 +349,20 @@ def evaluate_clip_level(
 
 
 def log_progress(prefix: str, step: int, total_steps: int, start_time: float, loss: float) -> None:
+    """
+    기능:
+    - 학습 진행률, 평균 loss, ETA를 로그로 출력한다.
+    
+    입력:
+    - `prefix`: 로그 출력에 붙일 접두어.
+    - `step`: 현재 진행 step 번호.
+    - `total_steps`: 전체 step 수.
+    - `start_time`: 작업 시작 시각.
+    - `loss`: 현재까지 계산된 loss 값.
+    
+    반환:
+    - 없음.
+    """
     elapsed = time.monotonic() - start_time
     rate = step / elapsed if elapsed > 0 else 0.0
     eta = int((total_steps - step) / rate) if rate > 0 else -1
@@ -211,6 +376,16 @@ def log_progress(prefix: str, step: int, total_steps: int, start_time: float, lo
 
 
 def main() -> None:
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     args = parse_args()
     set_seed(args.seed)
 

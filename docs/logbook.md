@@ -859,7 +859,7 @@
 ### Actions
 
 - `wake_word/train/06_export_onnx.py`를 추가했다.
-- `wake_word/wake_word.py`를 classifier ONNX wrapper로 구현했다.
+- `wake_word/detector.py`를 classifier ONNX wrapper로 구현했다.
 - `wake_word/wake_word_demo.py`에 간단한 CLI 샘플을 추가했다.
 - `wake_word/README.md`와 `docs/status.md`에 현재 export 경로와 Jetson 준비 관점을 반영했다.
 
@@ -877,7 +877,7 @@
 - 같은 ONNX와 metadata를 `final_full_best_trial40` run 디렉토리에도 같이 복사했다.
 - `wake_word/models/`는 git에 포함하지 않으므로, Jetson에는 ONNX와 metadata를 별도로 복사해야 한다는 점도 문서에 반영했다.
 - 초기 demo는 `(28, 96)` clip feature를 그대로 넣어 실패했는데, classifier 입력이 `(16, 96)` window이기 때문이었다.
-- 이를 해결하기 위해 `wake_word/wake_word.py`를 보완해 `(T, 96)` clip feature를 받으면 sliding window를 만든 뒤 max score를 반환하도록 수정했다.
+- 이를 해결하기 위해 `wake_word/detector.py`를 보완해 `(T, 96)` clip feature를 받으면 sliding window를 만든 뒤 max score를 반환하도록 수정했다.
 - `wake_word/wake_word_demo.py`에도 provider override와 clip feature 입력 지원을 반영했다.
 
 ---
@@ -983,3 +983,114 @@
 
 - `wake_word_jetson`은 ROS2가 자동 source되는 셸에서도 독립 Python 환경으로 동작하게 됐다.
 - 이 현상은 Jetson 기존 셸 설정 영향으로 분류하고, 공식 환경 세팅 절차 문서에는 포함하지 않았다.
+
+---
+
+## 2026-03-16 | Human + Codex | Jetson 실시간 wake word GUI demo 추가
+
+### Context
+
+- 사용자는 A100에서 학습한 wake word 모델을 Jetson에서 ONNX 가속으로 실제 마이크 입력에 연결하고, GUI에서 실시간으로 `하이 포포` 인식 score를 보고 싶어 했다.
+- 필요한 UI는 기본 입력 마이크 확인, 실시간 게이지바, detection 상태, threshold 조정 정도의 단순한 형태를 원했다.
+
+### Actions
+
+- `wake_word/wake_word_gui_demo.py`를 새로 추가했다.
+- `HiPopoWakeWordRealtime`를 마이크 입력과 연결해 raw audio -> ONNX feature extractor -> ONNX classifier 흐름으로 실시간 추론하도록 구현했다.
+- GUI에는 아래 요소를 넣었다.
+  - 기본 입력 마이크 정보
+  - classifier / feature provider 정보
+  - mic input level gauge
+  - wake score gauge
+  - threshold slider
+  - `DETECTED / IDLE` 상태
+  - 마지막 감지 시각
+- 기존 `wake_word/wake_word_demo.py`는 feature `.npy` 입력용 CLI demo로 유지했다.
+- `wake_word/__init__.py`에 `HiPopoWakeWordRealtime`와 `StreamingPrediction` export를 추가했다.
+- `wake_word/README.md`, `docs/status.md`, `docs/jetson_transition_plan.md`, `docs/envs/jetson_wake_word_env.md`를 현재 상태에 맞게 갱신했다.
+
+### Validation
+
+- `python3 -m py_compile`로 관련 Python 파일 문법 검증을 통과했다.
+- `wake_word_gui_demo.py --help`가 정상 출력되는 것을 확인했다.
+- `PYTHONPATH=/home/everybot/workspace/ondevice-voice-agent/project/repo` 기준으로 `wake_word` 패키지 import가 정상인 것도 확인했다.
+
+### Result
+
+- Jetson에서 바로 띄워 볼 수 있는 실시간 GUI demo 진입점이 추가됐다.
+- 현재 남은 핵심 작업은 실제 마이크 환경에서 score 분포를 보고 threshold를 현장 튜닝하는 것이다.
+
+---
+
+## 2026-03-16 | Human + Codex | runtime 파일명 정리와 함수 시그니처 단순화
+
+### Context
+
+- 사용자는 폴더명 `wake_word/`와 같은 이름의 파일 `wake_word.py`보다, 역할이 드러나는 별도 파일명이 더 낫다고 판단했다.
+- 또한 함수 정의에 `-> list[str]` 같은 타입 힌트를 넣지 않는 쪽을 프로젝트 기본 스타일로 정하길 원했다.
+
+### Actions
+
+- `wake_word/wake_word.py`를 `wake_word/detector.py`로 옮겼다.
+- `wake_word/__init__.py`와 관련 문서의 참조 경로를 `detector.py` 기준으로 정리했다.
+- `wake_word/detector.py`와 `wake_word/wake_word_demo.py`에서 함수 시그니처 타입 힌트를 제거했다.
+- `docs/개발방침.md`와 `docs/decisions.md`에 해당 원칙을 반영했다.
+
+### Result
+
+- 추론 모듈 파일명이 역할 중심으로 정리됐다.
+- 새로 수정하는 runtime/demo 코드는 단순한 함수 시그니처 기준을 따르게 됐다.
+
+---
+
+## 2026-03-16 | Human + Codex | 함수 한국어 docstring 규칙과 ONNX timing 표시 추가
+
+### Context
+
+- 사용자는 지금까지 작성한 코드의 모든 함수 아래에 한국어 docstring을 넣고, `기능 / 입력 / 반환` 형식으로 친절하게 유지하길 원했다.
+- 또한 Jetson GUI demo에서 `melspectrogram.onnx`, `embedding_model.onnx`, `hi_popo_classifier.onnx` 각각의 실행 시간을 직접 보고 싶어 했다.
+
+### Actions
+
+- `wake_word/`와 `wake_word/train/`의 함수들 아래에 한국어 docstring을 일괄 추가했다.
+- `docs/개발방침.md`에 함수 docstring 작성 원칙을 추가했다.
+- `wake_word/detector.py`에서 streaming 경로를 따라 `melspectrogram`, `embedding`, `classifier` ONNX 실행 시간을 따로 집계하도록 보강했다.
+- `wake_word/wake_word_gui_demo.py`에 아래 표시를 추가했다.
+  - chunk 크기와 classifier window 길이
+  - `melspectrogram / embedding / classifier` ONNX 실행 시간
+  - 전체 pipeline 처리 시간
+
+### Result
+
+- 함수 단위 설명이 코드 안에 직접 남게 됐다.
+- Jetson GUI demo에서 ONNX 3개 각각의 실행 시간을 바로 확인할 수 있게 됐다.
+
+---
+
+## 2026-03-16 | Human + Codex | Jetson GUI demo 실기 확인 및 최종 문서 반영
+
+### Context
+
+- 사용자가 Jetson에서 `wake_word_gui_demo.py`를 직접 실행했고, 현재 데모가 실제로 잘 동작한다고 확인했다.
+- 이에 따라 현재 working state와 timing 수치를 문서 기준에도 반영해, 다음 세션에서도 그대로 이어갈 수 있게 정리할 필요가 있었다.
+
+### Actions
+
+- `docs/status.md`에 Jetson GUI demo 실기 확인 상태를 반영했다.
+- `docs/envs/jetson_wake_word_env.md`에 GUI 실행 확인 절차와 현재 timing 수치를 추가했다.
+- `docs/project_overview.md`와 `wake_word/README.md`에 현재 실시간 ONNX 체인과 chunk/window 기준을 반영했다.
+- synthetic chunk 기준 timing을 다시 측정했다.
+  - `melspectrogram.onnx`: `1.52 ms`
+  - `embedding_model.onnx`: `4.59 ms`
+  - `hi_popo_classifier.onnx`: `1.03 ms`
+  - total pipeline: `8.35 ms`
+
+### Result
+
+- 현재 기준 문서들에 Jetson GUI demo의 실제 작동 상태가 반영됐다.
+- 다음 세션에서도 `80 ms chunk`, `1.28 s classifier window`, ONNX timing 확인 기준으로 바로 이어갈 수 있게 됐다.
+
+### Update
+
+- `wake_word_gui_demo.py`에 `tegrastats` 기반 Jetson 리소스 표시를 추가했다.
+- 현재 GUI에서 `CPU 평균 / CPU 코어 / RAM / GPU(GR3D)` 상태를 실시간으로 같이 볼 수 있다.

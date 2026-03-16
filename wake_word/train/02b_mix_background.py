@@ -59,11 +59,31 @@ np.random.seed(SEED)
 
 
 def load_audio(path: Path) -> np.ndarray:
+    """
+    기능:
+    - 오디오 파일을 읽어 현재 파이프라인에서 쓸 배열로 변환한다.
+    
+    입력:
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 읽어 온 데이터 또는 객체를 반환한다.
+    """
     y, _ = librosa.load(str(path), sr=TARGET_SR, mono=True)
     return y.astype(np.float32, copy=False)
 
 
 def fit_to_3s(y: np.ndarray) -> np.ndarray:
+    """
+    기능:
+    - 오디오를 3초 길이에 맞게 자르거나 zero-padding 한다.
+    
+    입력:
+    - `y`: 처리할 오디오 파형 배열.
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     if len(y) >= CLIP_SAMPLES:
         return y[:CLIP_SAMPLES]
     out = np.zeros(CLIP_SAMPLES, dtype=np.float32)
@@ -72,6 +92,16 @@ def fit_to_3s(y: np.ndarray) -> np.ndarray:
 
 
 def sample_background(bg_files: list[Path]) -> np.ndarray:
+    """
+    기능:
+    - 배경 파일 목록에서 무작위 3초 구간 하나를 뽑는다.
+    
+    입력:
+    - `bg_files`: 함수에서 사용할 `bg_files` 값.
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     path = random.choice(bg_files)
     y = load_audio(path)
     if len(y) <= CLIP_SAMPLES:
@@ -81,6 +111,18 @@ def sample_background(bg_files: list[Path]) -> np.ndarray:
 
 
 def mix_with_snr(fg: np.ndarray, bg: np.ndarray, snr_db: float) -> np.ndarray:
+    """
+    기능:
+    - 전경 음성과 배경 음성을 원하는 SNR로 혼합한다.
+    
+    입력:
+    - `fg`: 전경 음성 신호.
+    - `bg`: 배경 오디오 신호.
+    - `snr_db`: 혼합 시 적용할 SNR 값(dB).
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     fg = fit_to_3s(fg)
     bg = fit_to_3s(bg)
     fg_power = np.mean(np.square(fg)) + 1e-12
@@ -92,10 +134,31 @@ def mix_with_snr(fg: np.ndarray, bg: np.ndarray, snr_db: float) -> np.ndarray:
 
 
 def save_audio(y: np.ndarray, path: Path) -> None:
+    """
+    기능:
+    - 오디오 배열을 PCM_16 WAV로 저장한다.
+    
+    입력:
+    - `y`: 처리할 오디오 파형 배열.
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 없음.
+    """
     sf.write(str(path), y, TARGET_SR, subtype="PCM_16")
 
 
 def collect_positive_files() -> list[Path]:
+    """
+    기능:
+    - mixed 증강 대상이 될 positive 원본 파일 목록을 모은다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 수집한 목록 또는 그룹 정보를 반환한다.
+    """
     files: list[Path] = []
     for d in POSITIVE_DIRS:
         if d.exists():
@@ -104,6 +167,16 @@ def collect_positive_files() -> list[Path]:
 
 
 def collect_background_groups() -> dict[str, list[Path]]:
+    """
+    기능:
+    - mixed 증강에 사용할 배경 파일들을 소스별로 모은다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 수집한 목록 또는 그룹 정보를 반환한다.
+    """
     groups = {
         "musan_noise": sorted((NEGATIVE_DIR / "musan").glob("*.wav")),
         "fsd50k": sorted((NEGATIVE_DIR / "fsd50k").glob("*.wav")),
@@ -114,6 +187,16 @@ def collect_background_groups() -> dict[str, list[Path]]:
 
 def choose_background_source() -> str:
     # MUSAN 50 / FSD50K 30 / AI Hub 20
+    """
+    기능:
+    - 정해진 비율에 따라 배경 소스를 무작위 선택한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 문자열 결과를 반환한다.
+    """
     r = random.random()
     if r < 0.5:
         return "musan_noise"
@@ -123,6 +206,16 @@ def choose_background_source() -> str:
 
 
 def main() -> None:
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     positives = collect_positive_files()
     backgrounds = collect_background_groups()
 

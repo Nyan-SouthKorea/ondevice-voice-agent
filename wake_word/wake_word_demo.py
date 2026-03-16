@@ -8,8 +8,6 @@ python wake_word/wake_word_demo.py \
   --features /tmp/feature_window.npy
 """
 
-from __future__ import annotations
-
 import argparse
 from pathlib import Path
 
@@ -18,7 +16,17 @@ import numpy as np
 from wake_word import HiPopoWakeWordONNX
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args():
+    """
+    기능:
+    - 명령행 인자를 정의하고 파싱한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 파싱된 명령행 인자 객체를 반환한다.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model",
@@ -48,7 +56,17 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
+def main():
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     args = parse_args()
     providers = args.providers.split(",") if args.providers else None
     detector = HiPopoWakeWordONNX(

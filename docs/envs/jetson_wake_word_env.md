@@ -1,6 +1,6 @@
 # Jetson Wake Word Runtime Env
 
-> 마지막 업데이트: 2026-03-13
+> 마지막 업데이트: 2026-03-16
 > 목적: Jetson Orin Nano에서 wake word ONNX 추론을 위한 로컬 venv와 검증 절차를 관리한다.
 
 ## 1. 이 문서의 역할
@@ -61,6 +61,18 @@ Jetson의 CUDA / TensorRT / JetPack 기본 스택은 NVIDIA 공식 문서를 기
 
 즉 현재 이 Jetson에서는 ONNX Runtime CUDA provider 세션 생성이 정상이다.
 
+추가 검증 결과:
+
+- `wake_word/wake_word_gui_demo.py` 실제 실행 확인 완료
+- synthetic chunk 기준 평균 timing
+  - `melspectrogram.onnx`: `1.52 ms`
+  - `embedding_model.onnx`: `4.59 ms`
+  - `hi_popo_classifier.onnx`: `1.03 ms`
+  - total pipeline: `8.35 ms`
+- 기준 chunk
+  - `1280 samples = 80 ms`
+  - classifier window: `16 frames = 1.28 s`
+
 ## 4. 환경 이름과 경로
 
 이 환경 이름은 `wake_word_jetson`으로 고정한다.
@@ -112,16 +124,17 @@ source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetso
 
 ## 5-4. 런타임 최소 패키지 설치
 
-현재 `wake_word.py`와 `check_onnx_gpu.py` 실행 기준으로 필요한 최소 패키지는 아래다.
+현재 `detector.py`, `check_onnx_gpu.py`, `wake_word_gui_demo.py` 실행 기준으로 필요한 최소 패키지는 아래다.
 
 ```bash
-python -m pip install --prefer-binary requests tqdm scipy scikit-learn soundfile
+python -m pip install --prefer-binary requests tqdm scipy scikit-learn soundfile sounddevice
 ```
 
 비고:
 
 - `onnxruntime-gpu`는 현재 Jetson의 기존 설치를 재사용한다.
 - `openwakeword`는 로컬 repo의 `wake_word/openWakeWord/`를 코드 경로로 직접 사용한다.
+- `tkinter`는 현재 시스템 Python 기본 제공 모듈을 사용한다.
 
 ## 6. 검증 절차
 
@@ -159,11 +172,28 @@ python /home/everybot/workspace/ondevice-voice-agent/project/repo/wake_word/trai
 2. ORT 설치 위치와 버전 확인
 3. 이 문서의 현재 상태 섹션과 결과를 갱신
 
+### 6-3. GUI demo 실행 확인
+
+```bash
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+python wake_word/wake_word_gui_demo.py \
+  --model wake_word/models/hi_popo/hi_popo_classifier.onnx \
+  --metadata wake_word/models/hi_popo/hi_popo_classifier_onnx.json \
+  --feature-device gpu
+```
+
+기대값:
+
+- 기본 입력 마이크가 표시된다
+- `DETECTED / IDLE` 상태와 score 게이지가 갱신된다
+- `melspectrogram / embedding / classifier` ONNX 시간이 표시된다
+
 ## 7. 다음 작업에서의 사용 기준
 
 Jetson에서 다음 작업은 이 venv를 기준으로 진행한다.
 
-- `wake_word/wake_word.py`
+- `wake_word/detector.py`
 - `wake_word/wake_word_demo.py`
 - 마이크 입력 연결
 - raw audio -> feature extractor -> classifier ONNX 연결

@@ -21,8 +21,11 @@
 - grid search 완료
 - full-data 최종 학습 완료
 - ONNX export 완료
+- Jetson 실시간 마이크 GUI demo 추가
+- Jetson에서 실제 실행 확인 완료
 - 다음 단계
-  - Jetson 실시간 추론 및 GUI 검증
+  - 실제 마이크 실기 검증
+  - threshold 튜닝
 
 ## 현재 best 모델
 
@@ -70,8 +73,9 @@ wake_word/
 ├── train/                    # 학습/평가 스크립트
 ├── models/                   # 모델 아카이브
 ├── examples/                 # 공개 가능한 소량 샘플
-├── wake_word.py              # 추론 모듈
-├── wake_word_demo.py         # 데모 진입점
+├── detector.py               # 추론 모듈
+├── wake_word_demo.py         # feature 입력용 CLI demo
+├── wake_word_gui_demo.py     # 마이크 입력용 실시간 GUI demo
 └── openWakeWord/             # 참고용 upstream clone (공개 리포에는 제외)
 ```
 
@@ -164,10 +168,10 @@ wake_word/
 
 ## 다음 작업
 
-1. export된 ONNX와 metadata를 Jetson으로 복사
-2. Jetson에서 classifier ONNX + feature extractor를 연결
-3. score / threshold / detection 상태를 보여주는 GUI 데모 구현
-4. 실제 마이크 연결 후 `하이 포포` 감지와 background 오탐 검증
+1. export된 ONNX와 metadata를 Jetson 작업 경로에 유지
+2. 실제 마이크 연결 후 `하이 포포` 감지와 background 오탐 검증
+3. threshold 현장 튜닝
+4. 필요 시 데이터 보강 또는 재학습 판단
 
 ## ONNX export / Jetson 준비
 
@@ -179,16 +183,25 @@ wake_word/
   - `models/hi_popo/hi_popo_classifier.onnx`
   - `models/hi_popo/hi_popo_classifier_onnx.json`
 - ONNX wrapper:
-  - [`wake_word.py`](wake_word.py)
-- 간단한 CLI demo:
+  - [`detector.py`](detector.py)
+- feature 입력용 CLI demo:
   - [`wake_word_demo.py`](wake_word_demo.py)
+- 마이크 입력용 GUI demo:
+  - [`wake_word_gui_demo.py`](wake_word_gui_demo.py)
+- GUI timing 표시:
+  - `melspectrogram.onnx`
+  - `embedding_model.onnx`
+  - `hi_popo_classifier.onnx`
+- 현재 간단 benchmark:
+  - chunk `80 ms`
+  - avg total pipeline `8.35 ms`
 
 중요한 점:
 
-- 현재 export 대상은 `classifier only` ONNX다.
-- 즉 입력은 raw audio가 아니라 feature다.
+- 현재 추론 체인은 `melspectrogram.onnx -> embedding_model.onnx -> hi_popo_classifier.onnx` 순서의 ONNX 연결이다.
+- export 대상 classifier는 여전히 `classifier only` ONNX이며, 입력은 raw audio가 아니라 feature다.
 - wrapper는 `(16, 96)` window와 `(T, 96)` clip feature 둘 다 받을 수 있다.
-- Jetson에서 실제 마이크 추론을 하려면, upstream embedding 추출 단계가 추가로 필요하다.
+- `detector.py`의 realtime 래퍼는 upstream embedding 추출까지 함께 연결한다.
 - `models/` 아래 산출물은 git에 포함하지 않으므로, Jetson에는 ONNX와 metadata를 별도로 복사해야 한다.
 
 예시:
@@ -202,6 +215,12 @@ python wake_word/wake_word_demo.py \
   --metadata wake_word/models/hi_popo/hi_popo_classifier_onnx.json \
   --providers cpu \
   --features /tmp/feature_clip.npy
+
+source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+python wake_word/wake_word_gui_demo.py \
+  --model wake_word/models/hi_popo/hi_popo_classifier.onnx \
+  --metadata wake_word/models/hi_popo/hi_popo_classifier_onnx.json \
+  --feature-device gpu
 ```
 
 ## 관련 문서

@@ -21,6 +21,16 @@ MODEL_DIR = REPO_ROOT / "models" / "hi_popo"
 
 
 def load_train_module():
+    """
+    기능:
+    - 평가에 필요한 05_train 모듈을 동적으로 로드한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 읽어 온 데이터 또는 객체를 반환한다.
+    """
     path = Path(__file__).with_name("05_train.py")
     spec = importlib.util.spec_from_file_location("train05_module", path)
     if spec is None or spec.loader is None:
@@ -32,6 +42,16 @@ def load_train_module():
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    기능:
+    - 명령행 인자를 정의하고 파싱한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 파싱된 명령행 인자 객체를 반환한다.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--device", choices=["cpu", "gpu"], default="cpu")
@@ -43,12 +63,32 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_device(requested: str) -> torch.device:
+    """
+    기능:
+    - 요청한 장치 문자열을 실제 실행 장치로 변환한다.
+    
+    입력:
+    - `requested`: 사용자가 요청한 장치 문자열.
+    
+    반환:
+    - 실제 실행에 사용할 장치 값을 반환한다.
+    """
     if requested == "gpu" and torch.cuda.is_available():
         return torch.device("cuda:0")
     return torch.device("cpu")
 
 
 def main() -> None:
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     args = parse_args()
     train_module = load_train_module()
 

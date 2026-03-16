@@ -1,6 +1,6 @@
 # On-Device Voice Agent Project Overview
 
-> 마지막 업데이트: 2026-03-13
+> 마지막 업데이트: 2026-03-16
 
 ## 1. 프로젝트 목적
 
@@ -210,8 +210,9 @@ feature 추출 스크립트:
 
 현재 추론 준비용 모듈:
 
-- [wake_word.py](../wake_word/wake_word.py)
+- [detector.py](../wake_word/detector.py)
 - [wake_word_demo.py](../wake_word/wake_word_demo.py)
+- [wake_word_gui_demo.py](../wake_word/wake_word_gui_demo.py)
 
 학습 산출물은 아래에 run 단위로 보관한다.
 
@@ -232,7 +233,9 @@ feature 추출 스크립트:
 
 - 현재 export 대상은 raw audio end-to-end 모델이 아니라 `classifier only` ONNX다.
 - 즉 Jetson에서 실제 마이크 추론을 하려면 Google Speech Embedding feature 추출 단계를 함께 연결해야 한다.
-- 현재 `wake_word.py`는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 받아 ONNX classifier를 실행하는 래퍼다.
+- 현재 `detector.py`는 `(16, 96)` window와 `(T, 96)` clip feature 입력을 받아 ONNX classifier를 실행하는 래퍼다.
+- 현재 실시간 GUI 데모는 `melspectrogram.onnx -> embedding_model.onnx -> hi_popo_classifier.onnx` 3단계 ONNX timing도 함께 보여준다.
+- 현재 chunk 기준은 `1280 samples = 80 ms`, classifier window 기준은 `16 frames = 1.28 s`다.
 
 ## 9. 학습 결과 요약
 

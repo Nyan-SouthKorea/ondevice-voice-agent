@@ -22,14 +22,44 @@ SEARCH_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def parse_int_list(value: str) -> list[int]:
+    """
+    기능:
+    - 쉼표로 구분된 정수 문자열을 리스트로 변환한다.
+    
+    입력:
+    - `value`: 게이지에 표시할 현재 값.
+    
+    반환:
+    - 파싱된 값 또는 리스트를 반환한다.
+    """
     return [int(v.strip()) for v in value.split(",") if v.strip()]
 
 
 def parse_float_list(value: str) -> list[float]:
+    """
+    기능:
+    - 쉼표로 구분된 실수 문자열을 리스트로 변환한다.
+    
+    입력:
+    - `value`: 게이지에 표시할 현재 값.
+    
+    반환:
+    - 파싱된 값 또는 리스트를 반환한다.
+    """
     return [float(v.strip()) for v in value.split(",") if v.strip()]
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    기능:
+    - 명령행 인자를 정의하고 파싱한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 파싱된 명령행 인자 객체를 반환한다.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", choices=["cpu", "gpu"], default="gpu")
     parser.add_argument("--epochs", type=int, default=6)
@@ -49,11 +79,36 @@ def parse_args() -> argparse.Namespace:
 
 
 def score_run(metadata: dict) -> float:
+    """
+    기능:
+    - run metadata에서 검색용 종합 점수를 계산한다.
+    
+    입력:
+    - `metadata`: 함수에서 사용할 `metadata` 값.
+    
+    반환:
+    - 계산된 점수 하나를 반환한다.
+    """
     best = metadata["best_metrics"]
     return float(best["recall"]) - 0.25 * float(best["false_positive_rate"])
 
 
 def build_command(args: argparse.Namespace, run_name: str, lr: float, negative_weight: float, layer_dim: int, n_blocks: int) -> list[str]:
+    """
+    기능:
+    - 주어진 하이퍼파라미터 조합으로 학습 실행 명령을 만든다.
+    
+    입력:
+    - `args`: 명령행에서 파싱된 실행 인자 객체.
+    - `run_name`: 실험 run 이름.
+    - `lr`: 학습률 값.
+    - `negative_weight`: negative 샘플 loss 가중치.
+    - `layer_dim`: 은닉층 차원 크기.
+    - `n_blocks`: FCN block 개수.
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     return [
         sys.executable,
         str(TRAIN_SCRIPT),
@@ -87,6 +142,16 @@ def build_command(args: argparse.Namespace, run_name: str, lr: float, negative_w
 
 
 def main() -> None:
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     args = parse_args()
     if args.search_name is None:
         args.search_name = f"{dt.datetime.now().strftime('%Y%m%d_%H%M%S')}_grid_search"

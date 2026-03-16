@@ -1,6 +1,6 @@
 # Jetson Transition Plan
 
-> 마지막 업데이트: 2026-03-13
+> 마지막 업데이트: 2026-03-16
 
 ## 1. 이 문서의 목적
 
@@ -112,11 +112,11 @@ Jetson에서 먼저 할 일:
 
 ### 5-2. Jetson 추론 래퍼 구현
 
-현재 `wake_word/wake_word.py`는 classifier ONNX 래퍼로 이미 구현돼 있다. 다만 입력이 raw audio가 아니라 feature라는 점이 핵심이다.
+현재 `wake_word/detector.py`는 classifier ONNX 래퍼로 이미 구현돼 있다. 다만 입력이 raw audio가 아니라 feature라는 점이 핵심이다.
 
 목표 파일:
 
-- `wake_word/wake_word.py`
+- `wake_word/detector.py`
 
 최소 역할:
 
@@ -134,14 +134,21 @@ Jetson에서 추가로 붙여야 하는 역할:
 
 즉 현재 남은 핵심은 `raw audio -> feature extractor -> classifier ONNX` 연결이다.
 
+현재 ONNX 체인은 아래처럼 구성된다.
+
+- `melspectrogram.onnx`
+- `embedding_model.onnx`
+- `hi_popo_classifier.onnx`
+
 ### 5-3. 실시간 GUI 데모 구현
 
 현재 `wake_word/wake_word_demo.py`는 export된 ONNX를 feature `.npy` 입력으로 테스트하는 CLI 예제다.
-Jetson 단계에서는 이 예제를 마이크 기반 실시간 CLI 또는 GUI로 확장한다.
+추가로 `wake_word/wake_word_gui_demo.py`는 마이크 기반 실시간 GUI demo로 구현됐다.
 
 목표 파일:
 
 - `wake_word/wake_word_demo.py`
+- `wake_word/wake_word_gui_demo.py`
 
 GUI에서 최소한 보여야 하는 요소:
 
@@ -151,9 +158,11 @@ GUI에서 최소한 보여야 하는 요소:
 - 최근 감지 시각
 - 최근 몇 초간의 score 변화
 - 마이크 입력 레벨
+- `melspectrogram / embedding / classifier` ONNX 실행 시간
+- 입력 chunk 길이와 classifier window 길이
 
-GUI는 화려할 필요가 없다.  
-지금 필요한 것은 “하이 포포를 불렀을 때 점수가 올라가는지”와 “배경에서 흔들리는지”를 바로 볼 수 있는 도구다.
+현재 GUI demo는 위 목적에 맞는 최소 구성으로 구현됐다.
+이제 남은 핵심은 실제 환경에서 score 분포를 보고 threshold를 조정하는 것이다.
 
 ## 6. Jetson 실기 검증 계획
 
@@ -204,6 +213,19 @@ GUI를 보는 동안 아래를 바로 판단할 수 있어야 한다.
 - positive에서 score peak가 충분한가
 - background에서 baseline score가 얼마나 안정적인가
 - threshold `0.80`이 너무 높거나 낮지 않은가
+
+### 6-4. Threshold 설정 기준
+
+처음에는 `0.80`을 기준값으로 두고 아래 순서로 본다.
+
+1. positive 테스트를 여러 조건에서 20회 이상 반복해, 호출 시 peak score가 어디까지 오르는지 확인한다.
+2. idle/background를 10~30분 이상 틀어두고, false positive 없이 score가 어디까지 튀는지 본다.
+3. background 최고점보다 충분히 위이면서, positive 최저 peak보다 충분히 아래인 구간에 threshold를 둔다.
+
+실무적으로는 아래처럼 판단하면 된다.
+
+- positive 최저 peak가 `0.90` 근처인데 background 최고점이 `0.35`라면 `0.75~0.85` 범위가 안전하다.
+- positive와 background score가 많이 겹치면 threshold만 만지지 말고, 실패 음성을 모아 데이터 보강이나 재학습으로 돌아간다.
 
 ## 7. Jetson 단계에서 당장 하지 않을 일
 

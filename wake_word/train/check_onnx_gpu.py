@@ -11,6 +11,16 @@ if str(OPENWAKEWORD_ROOT) not in sys.path:
 
 
 def main() -> int:
+    """
+    기능:
+    - 현재 환경에서 ONNX Runtime CUDA provider가 실제로 동작하는지 확인한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 검사 결과를 나타내는 종료 코드 정수를 반환한다.
+    """
     import onnxruntime as ort
     from openwakeword.utils import download_models
 

@@ -47,6 +47,18 @@ PITCHES = ["-15Hz", "-10Hz", "-5Hz", "+0Hz", "+5Hz", "+10Hz", "+15Hz"]
 
 
 async def generate_one(voice: str, rate: str, pitch: str) -> Path:
+    """
+    기능:
+    - 주어진 음성 설정으로 positive 샘플 하나를 생성한다.
+    
+    입력:
+    - `voice`: Edge TTS에서 사용할 음성 이름.
+    - `rate`: TTS 말하기 속도 설정값.
+    - `pitch`: TTS 음높이 설정값.
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     rate_tag = rate.replace("%", "p").replace("+", "pos").replace("-", "neg")
     pitch_tag = pitch.replace("Hz", "hz").replace("+", "pos").replace("-", "neg")
     filename = f"{voice}__{rate_tag}__{pitch_tag}.wav"
@@ -66,6 +78,16 @@ async def generate_one(voice: str, rate: str, pitch: str) -> Path:
 
 
 async def main():
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     combos = list(itertools.product(KO_VOICES, RATES, PITCHES))
     print(f"생성 목표: {len(combos)}개 → data/positive/tts/")
 

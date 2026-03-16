@@ -77,6 +77,16 @@ np.random.seed(SEED)
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    기능:
+    - 명령행 인자를 정의하고 파싱한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 파싱된 명령행 인자 객체를 반환한다.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--device", default="cpu", choices=["cpu", "gpu"])
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE)
@@ -94,6 +104,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def collect_files(paths: list[Path]) -> list[Path]:
+    """
+    기능:
+    - 여러 디렉토리에서 WAV 파일 목록을 모은다.
+    
+    입력:
+    - `paths`: 처리할 파일 또는 디렉토리 경로 목록.
+    
+    반환:
+    - 수집한 목록 또는 그룹 정보를 반환한다.
+    """
     files: list[Path] = []
     for path in paths:
         if path.exists():
@@ -102,6 +122,17 @@ def collect_files(paths: list[Path]) -> list[Path]:
 
 
 def split_files(files: list[Path], test_ratio: float) -> tuple[list[Path], list[Path]]:
+    """
+    기능:
+    - 파일 목록을 train/test split으로 무작위 분할한다.
+    
+    입력:
+    - `files`: 처리 대상 파일 목록.
+    - `test_ratio`: test split 비율.
+    
+    반환:
+    - train 파일 목록과 test 파일 목록을 순서대로 반환한다.
+    """
     files = list(files)
     random.shuffle(files)
     n_test = max(1, int(len(files) * test_ratio))
@@ -111,6 +142,17 @@ def split_files(files: list[Path], test_ratio: float) -> tuple[list[Path], list[
 
 
 def write_manifest(name: str, files: list[Path]) -> None:
+    """
+    기능:
+    - 주어진 파일 목록을 manifest jsonl로 기록한다.
+    
+    입력:
+    - `name`: manifest나 출력 그룹 이름.
+    - `files`: 처리 대상 파일 목록.
+    
+    반환:
+    - 없음.
+    """
     out = MANIFEST_DIR / f"{name}.jsonl"
     with out.open("w", encoding="utf-8") as f:
         for path in files:
@@ -118,6 +160,16 @@ def write_manifest(name: str, files: list[Path]) -> None:
 
 
 def load_pcm16(path: Path) -> np.ndarray:
+    """
+    기능:
+    - 오디오 파일을 16kHz PCM16 입력 형태로 정규화한다.
+    
+    입력:
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 읽어 온 데이터 또는 객체를 반환한다.
+    """
     audio, sr = sf.read(str(path), always_2d=False)
     audio = np.asarray(audio, dtype=np.float32)
     if audio.ndim == 2:
@@ -135,6 +187,16 @@ def load_pcm16(path: Path) -> np.ndarray:
 
 
 def ensure_openwakeword_models() -> tuple[str, str]:
+    """
+    기능:
+    - openWakeWord feature 추출에 필요한 ONNX 모델 파일을 준비한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     OWW_MODEL_DIR.mkdir(parents=True, exist_ok=True)
     melspec_path = OWW_MODEL_DIR / "melspectrogram.onnx"
     embedding_path = OWW_MODEL_DIR / "embedding_model.onnx"
@@ -150,6 +212,20 @@ def extract_features(
     batch_size: int,
     progress_interval_sec: int,
 ) -> None:
+    """
+    기능:
+    - 파일 목록에 대해 embedding feature를 추출해 NPY로 저장한다.
+    
+    입력:
+    - `files`: 처리 대상 파일 목록.
+    - `output_file`: 추출 feature를 저장할 출력 파일 경로.
+    - `device`: 실행에 사용할 장치 또는 장치 식별자.
+    - `batch_size`: 한 번에 처리할 배치 크기.
+    - `progress_interval_sec`: 진행 로그를 출력할 간격(초).
+    
+    반환:
+    - 없음.
+    """
     if output_file.exists():
         output_file.unlink()
 
@@ -173,6 +249,16 @@ def extract_features(
     last_report_time = start_time
 
     def maybe_report_progress(force: bool = False) -> None:
+        """
+        기능:
+        - 조건이 맞으면 현재 진행률과 ETA를 출력한다.
+        
+        입력:
+        - `force`: 함수에서 사용할 `force` 값.
+        
+        반환:
+        - 함수 실행 결과를 반환한다.
+        """
         nonlocal last_report_time
         now = time.monotonic()
         if not force and now - last_report_time < progress_interval_sec:
@@ -224,6 +310,16 @@ def extract_features(
 
 
 def main() -> None:
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     args = parse_args()
 
     positive_files = collect_files(POSITIVE_SOURCES)

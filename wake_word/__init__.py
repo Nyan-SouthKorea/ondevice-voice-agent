@@ -1,3 +1,3 @@
-from .wake_word import HiPopoWakeWordONNX
+from .detector import HiPopoWakeWordONNX, HiPopoWakeWordRealtime, StreamingPrediction
 
-__all__ = ["HiPopoWakeWordONNX"]
+__all__ = ["HiPopoWakeWordONNX", "HiPopoWakeWordRealtime", "StreamingPrediction"]

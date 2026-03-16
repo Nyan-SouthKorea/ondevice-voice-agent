@@ -66,10 +66,31 @@ np.random.seed(SEED)
 
 # ── 유틸 ──────────────────────────────────────────────────────────────────────
 def save_wav(y: np.ndarray, path: Path) -> None:
+    """
+    기능:
+    - 오디오 배열을 공통 스펙 WAV 파일로 저장한다.
+    
+    입력:
+    - `y`: 처리할 오디오 파형 배열.
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 없음.
+    """
     sf.write(str(path), y, TARGET_SR, subtype="PCM_16")
 
 
 def load_audio(path: Path) -> tuple[np.ndarray, int]:
+    """
+    기능:
+    - 오디오 파일을 읽어 mono 16kHz 기준 배열로 정리한다.
+    
+    입력:
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 읽어 온 데이터 또는 객체를 반환한다.
+    """
     y, sr = sf.read(str(path), always_2d=False)
     y = np.asarray(y, dtype=np.float32)
 
@@ -85,8 +106,14 @@ def load_audio(path: Path) -> tuple[np.ndarray, int]:
 
 def iter_fixed_chunks(y: np.ndarray) -> list[np.ndarray]:
     """
-    3초 고정 길이 클립만 생성한다.
-    마지막 조각이 0.5초 미만이면 버리고, 0.5초 이상이면 zero-pad 한다.
+    기능:
+    - 입력 오디오를 3초 고정 길이 청크 목록으로 나눈다.
+    
+    입력:
+    - `y`: 처리할 오디오 파형 배열.
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
     """
     chunks: list[np.ndarray] = []
     for start in range(0, len(y), CLIP_SAMPLES):
@@ -103,17 +130,48 @@ def iter_fixed_chunks(y: np.ndarray) -> list[np.ndarray]:
 
 
 def sample_indices(total: int, count: int) -> list[int]:
+    """
+    기능:
+    - 전체 인덱스 중에서 필요한 개수만 무작위로 고른다.
+    
+    입력:
+    - `total`: 전체 개수.
+    - `count`: 선택하거나 저장할 개수.
+    
+    반환:
+    - 계산된 결과 목록 또는 배열을 반환한다.
+    """
     if total <= count:
         return list(range(total))
     return random.sample(range(total), count)
 
 
 def ensure_dir(path: Path) -> None:
+    """
+    기능:
+    - 대상 디렉토리가 없으면 생성한다.
+    
+    입력:
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 없음.
+    """
     path.mkdir(parents=True, exist_ok=True)
 
 
 # ── MUSAN ─────────────────────────────────────────────────────────────────────
 def collect_musan_chunk_refs(limit_input_files: int | None = None) -> list[tuple[Path, int]]:
+    """
+    기능:
+    - MUSAN 원본에서 저장 가능한 청크 위치 정보를 수집한다.
+    
+    입력:
+    - `limit_input_files`: 입력 파일 개수 제한값.
+    
+    반환:
+    - 수집한 목록 또는 그룹 정보를 반환한다.
+    """
     if not MUSAN_DIR.exists():
         raise FileNotFoundError(
             f"MUSAN 디렉토리가 없습니다: {MUSAN_DIR}\n"
@@ -144,6 +202,18 @@ def prepare_musan(
     limit_input_files: int | None = None,
     limit_output_count: int | None = None,
 ) -> list[Path]:
+    """
+    기능:
+    - MUSAN 원본을 읽어 negative 학습용 WAV 샘플로 저장한다.
+    
+    입력:
+    - `cleanup_source`: 전처리 후 원본 폴더를 삭제할지 여부.
+    - `limit_input_files`: 입력 파일 개수 제한값.
+    - `limit_output_count`: 출력 샘플 개수 제한값.
+    
+    반환:
+    - 준비해 저장한 결과 파일 목록을 반환한다.
+    """
     out_dir = NEG_DIR / "musan"
     ensure_dir(out_dir)
 
@@ -181,6 +251,16 @@ def prepare_musan(
 
 # ── 자리만 잡아두는 소스들 ───────────────────────────────────────────────────
 def prepare_fsd50k() -> list[Path]:
+    """
+    기능:
+    - FSD50K 원본을 읽어 negative 학습용 WAV 샘플로 저장한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 준비해 저장한 결과 파일 목록을 반환한다.
+    """
     audio_dir = FSD50K_DIR / "FSD50K.dev_audio"
     if not audio_dir.exists():
         raise FileNotFoundError(
@@ -233,6 +313,16 @@ def prepare_fsd50k() -> list[Path]:
 
 
 def prepare_aihub() -> list[Path]:
+    """
+    기능:
+    - AI Hub 자유대화 음성을 풀고 negative 학습용 WAV 샘플로 저장한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 준비해 저장한 결과 파일 목록을 반환한다.
+    """
     if not AIHUB_ARCHIVE_DIR.exists():
         raise FileNotFoundError(
             f"AI Hub Training 디렉토리가 없습니다: {AIHUB_ARCHIVE_DIR}\n"
@@ -296,6 +386,16 @@ def prepare_aihub() -> list[Path]:
 
 # ── 메인 ──────────────────────────────────────────────────────────────────────
 def parse_args() -> argparse.Namespace:
+    """
+    기능:
+    - 명령행 인자를 정의하고 파싱한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 파싱된 명령행 인자 객체를 반환한다.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--sources",
@@ -325,6 +425,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     args = parse_args()
 
     print(f"Negative 목표: {TOTAL_NEGATIVE:,}개 (Positive {POSITIVE_COUNT:,} × {RATIO})")

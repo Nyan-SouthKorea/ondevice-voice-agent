@@ -33,11 +33,32 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_16k_mono(path: Path) -> np.ndarray:
+    """
+    기능:
+    - 오디오 파일을 16kHz 모노 신호로 읽는다.
+    
+    입력:
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 읽어 온 데이터 또는 객체를 반환한다.
+    """
     y, sr = librosa.load(str(path), sr=TARGET_SR, mono=True)
     return y
 
 
 def add_white_noise(y: np.ndarray, snr_db: float) -> np.ndarray:
+    """
+    기능:
+    - 지정한 SNR에 맞춰 화이트 노이즈를 섞는다.
+    
+    입력:
+    - `y`: 처리할 오디오 파형 배열.
+    - `snr_db`: 혼합 시 적용할 SNR 값(dB).
+    
+    반환:
+    - 함수 실행 결과를 반환한다.
+    """
     signal_power = np.mean(y ** 2)
     noise_power  = signal_power / (10 ** (snr_db / 10))
     noise = np.random.normal(0, np.sqrt(noise_power), len(y))
@@ -45,10 +66,31 @@ def add_white_noise(y: np.ndarray, snr_db: float) -> np.ndarray:
 
 
 def save(y: np.ndarray, path: Path):
+    """
+    기능:
+    - 증강된 오디오를 WAV 파일로 저장한다.
+    
+    입력:
+    - `y`: 처리할 오디오 파형 배열.
+    - `path`: 처리할 파일 경로.
+    
+    반환:
+    - 없음.
+    """
     sf.write(str(path), y, TARGET_SR, subtype="PCM_16")
 
 
 def augment_file(src: Path):
+    """
+    기능:
+    - 원본 positive 파일 하나에 대해 clean 증강본들을 생성한다.
+    
+    입력:
+    - `src`: 원본 입력 파일 경로.
+    
+    반환:
+    - 없음.
+    """
     stem = src.stem
     y = load_16k_mono(src)
 
@@ -79,6 +121,16 @@ def augment_file(src: Path):
 
 
 def main():
+    """
+    기능:
+    - 스크립트 또는 데모의 전체 실행 흐름을 시작한다.
+    
+    입력:
+    - 없음.
+    
+    반환:
+    - 없음.
+    """
     src_files = []
     for d in INPUT_DIRS:
         if d.exists():
