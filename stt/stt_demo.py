@@ -84,6 +84,11 @@ def parse_args():
         default=None,
         help="STT 힌트 프롬프트",
     )
+    parser.add_argument(
+        "--usage-purpose",
+        default=None,
+        help="API STT 사용 목적 기록용 문자열",
+    )
     return parser.parse_args()
 
 
@@ -176,6 +181,7 @@ def main():
         device=args.device,
         download_root=args.download_root,
         prompt=args.prompt,
+        usage_purpose=args.usage_purpose,
     )
 
     if args.audio is not None:

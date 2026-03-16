@@ -2,7 +2,9 @@
 API 기반 STT 백엔드.
 """
 
+from datetime import datetime
 import io
+from pathlib import Path
 import time
 import wave
 
@@ -16,6 +18,7 @@ class OpenAIAPISTTModel:
         language="ko",
         api_key=None,
         prompt=None,
+        usage_purpose=None,
     ):
         """
         기능:
@@ -26,6 +29,7 @@ class OpenAIAPISTTModel:
         - `language`: 기본 언어 코드.
         - `api_key`: OpenAI API 키.
         - `prompt`: 전사 힌트 프롬프트.
+        - `usage_purpose`: API 사용 목적 기록용 문자열.
 
         반환:
         - 없음.
@@ -40,10 +44,22 @@ class OpenAIAPISTTModel:
         self.model_name = model_name
         self.language = language
         self.prompt = prompt
-        self.client = OpenAI(api_key=api_key)
+        self.usage_purpose = usage_purpose or "stt_api_unspecified"
+        self.secrets_dir = Path(__file__).resolve().parents[1] / "secrets"
+        self.usage_log_path = self.secrets_dir / "api_usage_log.md"
+        resolved_api_key = api_key or self._read_local_api_key()
         self.last_text = ""
         self.last_result = None
         self.last_duration_sec = 0.0
+        self.last_usage = None
+        self.last_usage_unit = ""
+        self.last_usage_amount = 0.0
+        self.last_error = ""
+
+        if not resolved_api_key:
+            raise RuntimeError("OpenAI API 키를 찾을 수 없습니다. secrets/api_key.txt를 확인하세요.")
+
+        self.client = OpenAI(api_key=resolved_api_key)
 
     def transcribe(self, audio):
         """
@@ -58,16 +74,44 @@ class OpenAIAPISTTModel:
         """
         started_at = time.perf_counter()
         audio_buffer = self._build_wav_buffer(audio)
-        result = self.client.audio.transcriptions.create(
-            model=self.model_name,
-            file=audio_buffer,
-            language=self.language,
-            prompt=self.prompt,
-            response_format="text",
-        )
+        audio_sec = float(len(audio)) / 16000.0
+
+        try:
+            result = self.client.audio.transcriptions.create(
+                model=self.model_name,
+                file=audio_buffer,
+                language=self.language,
+                prompt=self.prompt,
+            )
+        except Exception as exc:
+            self.last_duration_sec = time.perf_counter() - started_at
+            self.last_result = None
+            self.last_text = ""
+            self.last_usage = None
+            self.last_usage_unit = ""
+            self.last_usage_amount = 0.0
+            self.last_error = str(exc)
+            self._append_usage_log(
+                audio_sec=audio_sec,
+                request_sec=self.last_duration_sec,
+                success=False,
+                error_text=self.last_error,
+            )
+            raise
+
         self.last_duration_sec = time.perf_counter() - started_at
         self.last_result = result
-        self.last_text = str(result).strip()
+        self.last_text = self._extract_text(result)
+        self.last_usage = self._extract_usage(result)
+        self.last_usage_unit = self.last_usage["unit"]
+        self.last_usage_amount = self.last_usage["amount"]
+        self.last_error = ""
+        self._append_usage_log(
+            audio_sec=audio_sec,
+            request_sec=self.last_duration_sec,
+            success=True,
+            error_text="",
+        )
         return self.last_text
 
     def reset(self):
@@ -84,6 +128,10 @@ class OpenAIAPISTTModel:
         self.last_text = ""
         self.last_result = None
         self.last_duration_sec = 0.0
+        self.last_usage = None
+        self.last_usage_unit = ""
+        self.last_usage_amount = 0.0
+        self.last_error = ""
 
     def _build_wav_buffer(self, audio):
         """
@@ -107,3 +155,104 @@ class OpenAIAPISTTModel:
         buffer.name = "audio.wav"
         buffer.seek(0)
         return buffer
+
+    def _read_local_api_key(self):
+        """
+        기능:
+        - 로컬 secrets 디렉토리의 api_key.txt에서 OpenAI API 키를 읽는다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - API 키 문자열을 반환한다.
+        """
+        key_path = self.secrets_dir / "api_key.txt"
+        if not key_path.exists():
+            return None
+        api_key = key_path.read_text(encoding="utf-8").strip()
+        return api_key or None
+
+    def _extract_text(self, result):
+        """
+        기능:
+        - OpenAI 전사 응답에서 텍스트를 안정적으로 추출한다.
+
+        입력:
+        - `result`: OpenAI 전사 응답 객체.
+
+        반환:
+        - 전사 텍스트 문자열을 반환한다.
+        """
+        if hasattr(result, "text"):
+            return str(result.text).strip()
+        return str(result).strip()
+
+    def _extract_usage(self, result):
+        """
+        기능:
+        - OpenAI 전사 응답에서 과금 기준 usage 정보를 추출한다.
+
+        입력:
+        - `result`: OpenAI 전사 응답 객체.
+
+        반환:
+        - 단위와 값을 담은 usage 사전을 반환한다.
+        """
+        usage = getattr(result, "usage", None)
+        if usage is None:
+            return {"unit": "", "amount": 0.0}
+
+        usage_type = getattr(usage, "type", "") or ""
+        usage_seconds = float(getattr(usage, "seconds", 0.0) or 0.0)
+        return {"unit": usage_type, "amount": usage_seconds}
+
+    def _append_usage_log(self, audio_sec, request_sec, success, error_text):
+        """
+        기능:
+        - API 사용 이력을 로컬 secrets 문서에 한 줄씩 추가한다.
+
+        입력:
+        - `audio_sec`: 업로드한 오디오 길이.
+        - `request_sec`: 실제 요청 처리 시간.
+        - `success`: 성공 여부.
+        - `error_text`: 실패 시 오류 문자열.
+
+        반환:
+        - 없음.
+        """
+        self.secrets_dir.mkdir(parents=True, exist_ok=True)
+        if not self.usage_log_path.exists():
+            self.usage_log_path.write_text(
+                "# API Usage Log\n\n"
+                "이 문서는 로컬 전용 API 사용 기록이다.\n\n",
+                encoding="utf-8",
+            )
+
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        status_text = "success" if success else "failed"
+        usage_text = "-"
+        if self.last_usage_unit:
+            usage_text = f"{self.last_usage_unit}={self.last_usage_amount:.3f}"
+
+        lines = [
+            f"## {timestamp}",
+            f"- purpose: {self.usage_purpose}",
+            f"- model: {self.model_name}",
+            f"- language: {self.language}",
+            f"- status: {status_text}",
+            f"- audio_sec: {audio_sec:.3f}",
+            f"- request_sec: {request_sec:.3f}",
+            f"- usage: {usage_text}",
+        ]
+
+        if success and self.last_text:
+            preview = self.last_text.replace("\n", " ").strip()
+            preview = preview[:120]
+            lines.append(f"- text_preview: {preview}")
+        if error_text:
+            lines.append(f"- error: {error_text}")
+
+        lines.append("")
+        with self.usage_log_path.open("a", encoding="utf-8") as log_file:
+            log_file.write("\n".join(lines) + "\n")

@@ -109,6 +109,12 @@ python stt/stt_benchmark.py \
 
 평가 결과는 `stt/eval_results/` 아래에 저장한다.
 
+API STT 실행 메모:
+
+- `--api-key`를 주지 않으면 로컬 `secrets/api_key.txt`를 먼저 찾는다.
+- API를 실제 호출하면 로컬 `secrets/api_usage_log.md`에 사용 목적, 모델, 오디오 길이, 요청 시간, API가 보고한 usage 값이 자동으로 기록된다.
+- 현재 Audio Transcriptions API는 일반 텍스트 토큰 수 대신 `usage.seconds` 형태의 사용량을 보고한다.
+
 현재 참고 기준:
 
 - [`../docs/개발방침.md`](../docs/개발방침.md)

@@ -24,6 +24,7 @@ class STTTranscriber:
         download_root=None,
         api_key=None,
         prompt=None,
+        usage_purpose=None,
     ):
         """
         기능:
@@ -37,6 +38,7 @@ class STTTranscriber:
         - `download_root`: Whisper 모델 다운로드 경로.
         - `api_key`: API STT용 키.
         - `prompt`: STT 힌트 프롬프트.
+        - `usage_purpose`: API 사용 목적 기록용 문자열.
 
         반환:
         - 없음.
@@ -56,6 +58,7 @@ class STTTranscriber:
                 language=language,
                 api_key=api_key,
                 prompt=prompt,
+                usage_purpose=usage_purpose,
             )
         else:
             raise ValueError(f"지원하지 않는 STT 모델입니다: {model}")
@@ -64,6 +67,7 @@ class STTTranscriber:
         self.last_text = ""
         self.last_result = None
         self.last_duration_sec = 0.0
+        self.last_usage = None
 
     def load_audio(self, audio):
         """
@@ -107,6 +111,7 @@ class STTTranscriber:
         self.last_text = str(text).strip()
         self.last_result = self.backend.last_result
         self.last_duration_sec = float(self.backend.last_duration_sec)
+        self.last_usage = getattr(self.backend, "last_usage", None)
         return self.last_text
 
     def reset(self):
@@ -124,6 +129,7 @@ class STTTranscriber:
         self.last_text = ""
         self.last_result = None
         self.last_duration_sec = 0.0
+        self.last_usage = None
 
     def _load_wav_file(self, audio_path):
         """

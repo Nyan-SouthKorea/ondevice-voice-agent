@@ -73,6 +73,11 @@ def parse_args():
         default=Path(__file__).resolve().parent / "eval_results",
         help="평가 결과를 저장할 상위 디렉토리",
     )
+    parser.add_argument(
+        "--usage-purpose",
+        default=None,
+        help="API STT 사용 목적 기록용 문자열",
+    )
     return parser.parse_args()
 
 
@@ -264,6 +269,7 @@ def evaluate_config(entries, config, args):
         download_root=args.download_root,
         api_key=args.api_key,
         prompt=args.prompt,
+        usage_purpose=args.usage_purpose or f"stt_benchmark:{args.dataset_dir.name}:{build_run_name(config)}",
     )
 
     run_name = build_run_name(config)
