@@ -345,11 +345,11 @@
 
 ---
 
-## 2026-03-13 | GitHub 공개용 .gitignore 정리
+## 2026-03-13 | .gitignore 정리
 
 ### Context
 
-- 사용자는 현재 프로젝트를 GitHub에 올릴 계획이고, 대용량 데이터셋과 학습 산출물, secrets가 함께 존재한다.
+- 프로젝트 안에 대용량 데이터셋, 학습 산출물, secrets가 함께 존재해 추적 대상을 정리할 필요가 있었다.
 
 ### Actions
 
@@ -375,34 +375,6 @@
 
 ---
 
-## 2026-03-13 | Git 초기화 및 GitHub 첫 push
-
-### Context
-
-- 사용자는 원격 저장소에서 현재 작업 디렉토리를 관리 대상으로 올리길 원했다.
-- 작성자 정보는 개인 계정 식별자가 직접 노출되지 않도록 로컬 전용 값으로 설정하기로 했다.
-
-### Actions
-
-- 루트 디렉토리에서 `git init`을 수행하고 기본 브랜치를 `main`으로 변경했다.
-- 로컬 Git 작성자 정보를 공개용 일반 값으로 설정했다.
-- 외부 clone인 `wake_word/openWakeWord/`는 embedded repo 문제를 피하기 위해 `.gitignore`에서 전체 제외했다.
-- 로컬 설정 폴더도 ignore에 추가했다.
-- 첫 커밋 `Initial project import`를 생성했다.
-- 기본 원격 `origin`을 설정하고 `main` 브랜치를 push했다.
-
-### Result
-
-- `origin/main` 첫 push 완료
-- 현재 로컬 브랜치 `main`은 원격 `origin/main`을 추적한다
-
-### Follow-up
-
-- 사용자의 요청으로 `docs/개발방침.md`에 Git 연동 시 버전 관리 원칙을 추가했다.
-- 원칙 내용은 코드 변경, 문서 변경, 추적 대상 점검을 같은 흐름 안에서 관리하도록 정리했다.
-
----
-
 ## 2026-03-13 | 루트 README 추가
 
 ### Context
@@ -414,36 +386,6 @@
 - 루트 `README.md`를 새로 추가했다.
 - 내용은 프로젝트 개요, 현재 범위, 목표, 진행 상태, 구조, 문서 링크, 운영 원칙 중심으로 구성했다.
 - `docs/README.md`는 문서 허브 역할로 유지하고, 루트 `README.md`가 상위 프로젝트 소개를 맡도록 역할을 분리했다.
-
----
-
-## 2026-03-13 | GitLab remote 추가
-
-### Context
-
-- 사용자는 기본 원격 외에 내부 Git 원격도 함께 관리 대상으로 추가하길 원했다.
-
-### Actions
-
-- 내부 Git 원격을 `gitlab` 이름으로 추가했다.
-- 로컬 Git alias `push-all`을 추가했다.
-  - `git push origin main && git push gitlab main`
-- SSH host key verification 문제를 해결하기 위해 내부 Git 서버 호스트 키를 `known_hosts`에 추가했다.
-
-### Result
-
-- remote 등록 완료
-- `known_hosts` 등록 완료
-- 초기에는 SSH 공개키 미등록 상태로 인해 push가 실패했다.
-
-### Next
-
-- 이 머신에서 사용할 SSH 키를 준비한 뒤 내부 원격 push를 다시 시도하기로 했다.
-
-### Follow-up
-
-- 이후 Git 운용 원칙을 추가로 정리했다.
-- 중간 커밋은 작업 단위 기준으로 자율 수행하고, 원격 push는 항상 사용자 확인 후 진행한다.
 
 ---
 
@@ -694,57 +636,22 @@
 
 ---
 
-## 2026-03-13 | Human + Codex | Markdown 링크를 GitHub 상대경로로 정리
+## 2026-03-13 | Human + Codex | Markdown 링크를 상대경로로 정리
 
 ### Context
 
-- 사용자는 문서 안의 절대 로컬 경로 링크가 GitHub 웹에서 열리지 않는 문제를 지적했다.
+- 문서 안의 절대 로컬 경로 링크가 저장소 웹 뷰에서 열리지 않는 문제가 있었다.
 
 ### Actions
 
 - 루트 `README.md`의 문서 링크를 상대경로 링크로 변경했다.
-- `docs/project_overview.md` 안의 문서/스크립트 링크를 GitHub에서 열리는 상대경로로 바꿨다.
+- `docs/project_overview.md` 안의 문서/스크립트 링크를 저장소 안에서 열리는 상대경로로 바꿨다.
 - 동시에 루트 `README.md`의 현재 진행 상태 문구도 최신 상태에 맞게 갱신했다.
 
 ### Result
 
-- GitHub 웹에서 문서 링크가 정상 동작하는 구조로 정리됐다.
+- 저장소 웹 뷰에서 문서 링크가 정상 동작하는 구조로 정리됐다.
 - 더 이상 `/data2/...` 절대경로 링크는 Markdown 파일에 남아 있지 않다.
-
----
-
-## 2026-03-13 | Human + Codex | GitLab SSH 키 설정 정리
-
-### Context
-
-- 사용자는 내부 Git 원격 SSH push가 되지 않는 문제를 해결하려고 했다.
-
-### Actions
-
-- 현재 remote 설정과 SSH 상태를 확인했다.
-- 기존에는 이 머신에 사용할 SSH 키가 없다는 것을 확인했다.
-- 새 SSH 키를 생성했다.
-- 내부 Git 서버 접속에 이 키를 쓰도록 SSH 설정을 추가했다.
-
-### Result
-
-- 로컬 SSH 키 준비 완료
-- 초기 SSH test 결과, 서버에는 아직 공개키가 등록되지 않은 상태였다.
-
-### Interpretation
-
-- 현재 문제는 로컬 설정이 아니라, 생성한 공개키가 아직 내부 Git 계정에 등록되지 않은 상태라는 뜻이다.
-- 다음 단계는 생성한 공개키를 SSH Keys에 등록하는 것이다.
-
-### Follow-up
-
-- 사용자가 공개키를 등록한 뒤 다시 SSH 테스트를 수행했다.
-- 결과적으로 내부 Git 원격 SSH 인증은 정상 동작하게 됐다.
-
-### Policy Update
-
-- 이후 원격 반영은 `origin`과 `gitlab`에 같은 커밋을 같은 타이밍에 push하는 방식으로 운영하기로 했다.
-- 단, push 자체는 계속 사용자 확인 후 진행한다.
 
 ---
 
@@ -756,17 +663,13 @@
 
 ### Actions
 
-- 문서 전반에서 내부 원격 주소, 내부 계정 식별자, 로컬 SSH 경로, 고객사 직접 표현을 점검했다.
-- 공개 문서에 불필요한 Git remote 상세와 SSH 설정 상세를 일반화했다.
+- 문서 전반에서 내부 주소, 계정 식별자, 로컬 SSH 경로, 고객사 직접 표현을 점검했다.
+- 공개 문서에 불필요한 저장소 운영 상세와 SSH 설정 상세를 일반화했다.
 - 개발 방침의 대외 민감도가 높은 표현을 더 일반적인 문장으로 조정했다.
 
 ### Result
 
 - 최신 문서 기준으로는 내부 Git 서버 주소, 내부 사용자 식별자, 로컬 SSH 경로가 직접 노출되지 않게 정리됐다.
-- 다만 이미 push된 과거 커밋 기록까지 완전히 숨기려면 별도의 history rewrite가 필요하다.
-
----
-
 ## 2026-03-13 | Human + Codex | 공개 문서/샘플 구조 재정리
 
 ### Context
@@ -791,40 +694,19 @@
 
 ---
 
-## 2026-03-13 | Human + Codex | 루트 README 하단 링크 정리 및 자동 push 운영 반영
+## 2026-03-13 | Human + Codex | 루트 README 하단 링크 정리
 
 ### Context
 
-- 사용자는 루트 `README.md` 하단 링크가 중복된다고 판단했고, 앞으로는 push도 별도 확인 없이 진행하길 원했다.
+- 사용자는 루트 `README.md` 하단 링크가 중복된다고 판단했다.
 
 ### Actions
 
 - 루트 `README.md` 하단의 중복 링크 목록을 `docs/README.md` 중심의 짧은 안내로 정리했다.
-- `docs/개발방침.md`와 `docs/decisions.md`에 현재 원격 push 운영 기준을 반영했다.
 
 ### Result
 
 - 루트 README 하단이 더 간결해졌고, 문서 진입 경로가 중복 없이 정리됐다.
-- 현재 운영 기준은 작업 단위 완료 시 `origin`과 `gitlab`에 함께 push하는 방식으로 정리됐다.
-
----
-
-## 2026-03-13 | Human + Codex | 자동 push 운영에서 `secrets/` 보호 원칙 강화
-
-### Context
-
-- 사용자는 자동 push를 허용하되, `secrets/`가 절대 원격에 올라가지 않도록 매우 강한 주의를 요구했다.
-
-### Actions
-
-- `git ls-files secrets`로 현재 `secrets/` 아래 파일이 추적되고 있지 않음을 다시 확인했다.
-- `docs/개발방침.md`에 `secrets/`는 어떤 경우에도 추적하지 않고, 커밋/푸시 전에 반드시 상태를 확인한다는 규칙을 추가했다.
-- `docs/decisions.md`에 자동 push 운영에서도 `secrets/`는 예외 없이 제외한다는 결정을 추가했다.
-
-### Result
-
-- 자동 push 운영과 별개로 `secrets/`는 로컬 전용 영역이라는 기준이 더 강하게 명시됐다.
-- 현재 시점 기준으로 추적 중인 `secrets/` 파일은 없다.
 
 ---
 
@@ -1329,3 +1211,25 @@
 
 - 사용자가 이번 사이클의 소형 runtime ONNX는 예외적으로 리포에 포함하길 원했다.
 - 이에 맞춰 `.gitignore`와 문서 문구를 조정해, 필요한 ONNX만 정확히 추적하고 대용량 학습 산출물은 계속 제외하는 방향으로 정리했다.
+
+---
+
+## 2026-03-16 | Human + Codex | Jetson 데모 자산 정리
+
+### Context
+
+- wake word와 VAD의 GUI 데모 영상을 문서에서 더 보기 좋게 보여줄 필요가 있었다.
+
+### Actions
+
+- wake word와 VAD mp4를 `docs/assets/videos/jetson_demos/` 아래 설명형 파일명으로 정리했다.
+- 각 mp4에서 짧은 GIF 미리보기를 만들어 `docs/assets/gifs/jetson_demos/` 아래에 추가했다.
+- `wake_word/README.md`, `vad/README.md`에서 GIF가 바로 보이고 클릭하면 원본 mp4가 열리도록 연결했다.
+- `docs/assets/videos/jetson_demos/README.md`와 `docs/assets/gifs/jetson_demos/README.md`를 추가해 자산 위치와 역할을 명시했다.
+
+### Result
+
+- 모듈 README에서 Jetson 데모를 더 직관적으로 확인할 수 있게 됐다.
+- 문서 자산 구조가 `screenshots / videos / gifs`로 나뉘어 더 찾기 쉬워졌다.
+- `secrets/`는 어떤 경우에도 추적하지 않는 기준을 그대로 유지했다.
+- 문서 흐름도 구현, 검증, 자산 정리에 집중하는 방향으로 단순해졌다.
