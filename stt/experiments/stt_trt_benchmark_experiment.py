@@ -11,7 +11,6 @@ import wave
 import numpy as np
 import torch
 import whisper
-import whisper_trt.model as wm
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 STT_ROOT = Path(__file__).resolve().parents[1]
@@ -29,7 +28,7 @@ from stt.tools.stt_benchmark import write_rows_csv
 from stt.tools.stt_benchmark import write_summary_csv
 from stt.tools.stt_benchmark import write_summary_json
 from stt.tools.stt_benchmark import write_summary_markdown
-from stt.experiments.stt_trt_builder_experiment import prepare_builder
+from stt.experiments.stt_trt_builder_experiment import load_checkpoint_model
 
 
 def parse_args():
@@ -110,16 +109,14 @@ class WhisperTRTTranscriber:
 
     def __init__(self, checkpoint_path, model_name, language, workspace_mb, max_text_ctx):
         self.last_duration_sec = 0.0
-        builder = prepare_builder(
-            wm=wm,
-            whisper=whisper,
+        self.model = load_checkpoint_model(
+            checkpoint_path=checkpoint_path,
             model_name=model_name,
             language=language,
             workspace_mb=workspace_mb,
             max_text_ctx=max_text_ctx,
             verbose=False,
         )
-        self.model = builder.load(str(checkpoint_path))
 
     def load_audio(self, wav_path):
         """

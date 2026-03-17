@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from stt.experiments.stt_trt_builder_experiment import prepare_builder
+from stt.experiments.stt_trt_builder_experiment import load_checkpoint_model
 
 
 class WhisperTRTSTTModel:
@@ -55,16 +55,14 @@ class WhisperTRTSTTModel:
         self._whisper = whisper
         self._wm = wm
 
-        builder = prepare_builder(
-            wm=wm,
-            whisper=whisper,
+        self.model = load_checkpoint_model(
+            checkpoint_path=checkpoint,
             model_name=model_name,
             language=language,
             workspace_mb=workspace_mb,
             max_text_ctx=max_text_ctx,
             verbose=False,
         )
-        self.model = builder.load(str(checkpoint))
         self.last_text = ""
         self.last_result = None
         self.last_duration_sec = 0.0

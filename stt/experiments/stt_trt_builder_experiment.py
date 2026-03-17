@@ -60,6 +60,18 @@ def parse_args():
         help="decoder 엔진 빌드 시 사용할 최대 text context 길이",
     )
     parser.add_argument(
+        "--decoder-chunk-size",
+        type=int,
+        default=0,
+        help="decoder block을 나눠 빌드할 chunk 크기. 0이면 전체 block을 한 번에 빌드",
+    )
+    parser.add_argument(
+        "--encoder-chunk-size",
+        type=int,
+        default=0,
+        help="encoder block을 나눠 빌드할 chunk 크기. 0이면 전체 block을 한 번에 빌드",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="TensorRT verbose 로그 사용 여부",
@@ -86,6 +98,10 @@ def prepare_dirs(work_dir):
     return {
         "root": root,
         "cache_dir": cache_dir,
+        "decoder_engines_dir": root / "decoder_engines",
+        "decoder_chunk_meta": root / "decoder_chunk_meta.json",
+        "encoder_engines_dir": root / "encoder_engines",
+        "encoder_chunk_meta": root / "encoder_chunk_meta.json",
         "decoder_engine": root / "decoder_engine.pt",
         "decoder_extra": root / "decoder_extra.pt",
         "encoder_engine": root / "encoder_engine.pt",
@@ -131,6 +147,114 @@ def load_model_for_trt_build(wm, whisper, model_name):
         if isinstance(module, whisper.model.LayerNorm):
             module.float()
     return model.cuda().eval()
+
+
+def get_decoder_chunk_ranges(total_blocks, chunk_size):
+    """
+    기능:
+    - decoder block 수와 chunk 크기를 받아 빌드 범위를 계산한다.
+
+    입력:
+    - `total_blocks`: decoder block 총 개수.
+    - `chunk_size`: 한 chunk에 넣을 block 개수. 0이면 전체 block을 한 번에 사용한다.
+
+    반환:
+    - `(start, end)` 튜플 목록을 반환한다.
+    """
+    if int(chunk_size) <= 0 or int(chunk_size) >= int(total_blocks):
+        return [(0, int(total_blocks))]
+
+    ranges = []
+    start = 0
+    total_blocks = int(total_blocks)
+    chunk_size = int(chunk_size)
+    while start < total_blocks:
+        end = min(start + chunk_size, total_blocks)
+        ranges.append((start, end))
+        start = end
+    return ranges
+
+
+def build_chunked_text_decoder_class(torch, wm):
+    """
+    기능:
+    - 여러 TRT decoder 엔진을 순차 실행하는 decoder 클래스를 만든다.
+
+    입력:
+    - `torch`: torch 모듈.
+    - `wm`: whisper_trt.model 모듈.
+
+    반환:
+    - chunked decoder 클래스 객체를 반환한다.
+    """
+
+    class ChunkedTextDecoderTRT(torch.nn.Module):
+        def __init__(
+            self,
+            engines,
+            token_embedding,
+            positional_embedding,
+            ln,
+            mask,
+        ):
+            super().__init__()
+            self.engines = torch.nn.ModuleList(engines)
+            self.token_embedding = token_embedding
+            self.positional_embedding = positional_embedding
+            self.ln = ln
+            self.register_buffer("mask", mask, persistent=False)
+
+        @torch.no_grad()
+        def forward(self, x, xa):
+            offset = 0
+            x = (
+                self.token_embedding(x)
+                + self.positional_embedding[offset : offset + x.shape[-1]]
+            )
+            x = x.to(xa.dtype)
+
+            for engine in self.engines:
+                x = engine(x, xa, self.mask)
+
+            x = self.ln(x)
+            logits = (
+                x @ torch.transpose(self.token_embedding.weight.to(x.dtype), 0, 1)
+            ).float()
+            return logits
+
+    return ChunkedTextDecoderTRT
+
+
+def build_audio_encoder_chunk_runtime_class(torch, wm):
+    """
+    기능:
+    - 여러 TRT encoder 엔진을 순차 실행하는 encoder 클래스를 만든다.
+
+    입력:
+    - `torch`: torch 모듈.
+    - `wm`: whisper_trt.model 모듈.
+
+    반환:
+    - chunked audio encoder 클래스 객체를 반환한다.
+    """
+
+    class ChunkedAudioEncoderTRT(torch.nn.Module):
+        def __init__(self, first_engine, later_engines, positional_embedding):
+            super().__init__()
+            self.first_engine = first_engine
+            self.later_engines = torch.nn.ModuleList(later_engines)
+            self.register_buffer("positional_embedding", positional_embedding)
+
+        @torch.no_grad()
+        def forward(self, x):
+            n_audio_ctx = int(x.shape[2] // 2)
+            pos_embed = self.positional_embedding[-n_audio_ctx:, :]
+            x = self.first_engine(x, pos_embed)
+            for engine in self.later_engines:
+                x = engine(x)
+            return x
+
+    return ChunkedAudioEncoderTRT
 
 
 def prepare_builder(
@@ -190,7 +314,7 @@ def prepare_builder(
 
     @classmethod
     @wm.torch.no_grad()
-    def build_text_decoder_engine(cls):
+    def build_text_decoder_engine(cls, block_start=0, block_end=None):
         model = load_model_for_trt_build(wm, whisper, cls.model)
         dims = model.dims
 
@@ -198,14 +322,24 @@ def prepare_builder(
             8,
             min(int(getattr(cls, "max_text_ctx", dims.n_text_ctx)), dims.n_text_ctx),
         )
+        total_blocks = len(model.decoder.blocks)
+        block_start = max(0, int(block_start))
+        block_end = total_blocks if block_end is None else min(int(block_end), total_blocks)
+        if block_end <= block_start:
+            raise ValueError(
+                f"decoder block 범위가 잘못되었습니다: {block_start}..{block_end}"
+            )
 
-        decoder_blocks_module = wm._TextDecoderEngine(model.decoder.blocks)
+        decoder_blocks_module = wm._TextDecoderEngine(
+            model.decoder.blocks[block_start:block_end]
+        )
 
         x = wm.torch.randn(1, 1, dims.n_text_state).cuda()
         xa = wm.torch.randn(1, dims.n_audio_ctx, dims.n_audio_state).cuda()
         mask = wm.torch.randn(capped_text_ctx, capped_text_ctx).cuda()
 
-        engine = wm.torch2trt.torch2trt(
+        engine = build_torch2trt_with_lowmem_export(
+            wm,
             decoder_blocks_module,
             [x, xa, mask],
             use_onnx=True,
@@ -237,49 +371,249 @@ def prepare_builder(
 
     @classmethod
     @wm.torch.no_grad()
-    def build_audio_encoder_engine(cls):
+    def build_audio_encoder_engine(cls, block_start=0, block_end=None):
         model = load_model_for_trt_build(wm, whisper, cls.model)
         dims = model.dims
+        total_blocks = len(model.encoder.blocks)
+        block_start = max(0, int(block_start))
+        block_end = total_blocks if block_end is None else min(int(block_end), total_blocks)
+        if block_end <= block_start:
+            raise ValueError(
+                f"encoder block 범위가 잘못되었습니다: {block_start}..{block_end}"
+            )
 
-        encoder_module = wm._AudioEncoderEngine(
-            model.encoder.conv1,
-            model.encoder.conv2,
-            model.encoder.blocks,
-            model.encoder.ln_post,
-        )
+        class AudioEncoderFirstChunkEngine(wm.nn.Module):
+            def __init__(self, conv1, conv2, blocks):
+                super().__init__()
+                self.conv1 = conv1
+                self.conv2 = conv2
+                self.blocks = blocks
+
+            @wm.torch.no_grad()
+            def forward(self, x, positional_embedding):
+                x = wm.F.gelu(self.conv1(x))
+                x = wm.F.gelu(self.conv2(x))
+                x = x.permute(0, 2, 1)
+                x = (x + positional_embedding).to(x.dtype)
+                for block in self.blocks:
+                    x = block(x)
+                return x
+
+        class AudioEncoderLaterChunkEngine(wm.nn.Module):
+            def __init__(self, blocks, ln_post=None):
+                super().__init__()
+                self.blocks = blocks
+                self.ln_post = ln_post
+
+            @wm.torch.no_grad()
+            def forward(self, x):
+                for block in self.blocks:
+                    x = block(x)
+                if self.ln_post is not None:
+                    x = self.ln_post(x)
+                return x
+
+        is_first = block_start == 0
+        is_last = block_end >= total_blocks
+        encoder_blocks = model.encoder.blocks[block_start:block_end]
+        if is_first:
+            encoder_module = AudioEncoderFirstChunkEngine(
+                model.encoder.conv1,
+                model.encoder.conv2,
+                encoder_blocks,
+            )
+        else:
+            encoder_module = AudioEncoderLaterChunkEngine(
+                encoder_blocks,
+                model.encoder.ln_post if is_last else None,
+            )
 
         n_frames = dims.n_audio_ctx * 2
-
-        x = wm.torch.randn(1, dims.n_mels, n_frames).cuda()
-        positional_embedding = model.encoder.positional_embedding.cuda().detach()
-
-        engine = wm.torch2trt.torch2trt(
-            encoder_module,
-            [x, positional_embedding],
-            use_onnx=True,
-            min_shapes=[
-                (1, dims.n_mels, 1),
-                (1, dims.n_audio_state),
-            ],
-            opt_shapes=[
-                (1, dims.n_mels, n_frames),
-                (dims.n_audio_ctx, dims.n_audio_state),
-            ],
-            max_shapes=[
-                (1, dims.n_mels, n_frames),
-                (dims.n_audio_ctx, dims.n_audio_state),
-            ],
-            input_names=["x", "positional_embedding"],
-            output_names=["output"],
-            max_workspace_size=cls.max_workspace_size,
-            fp16_mode=cls.fp16_mode,
-            log_level=wm.tensorrt.Logger.VERBOSE if cls.verbose else wm.tensorrt.Logger.ERROR,
-        )
+        if is_first:
+            x = wm.torch.randn(1, dims.n_mels, n_frames).cuda()
+            positional_embedding = model.encoder.positional_embedding.cuda().detach()
+            engine = build_torch2trt_with_lowmem_export(
+                wm,
+                encoder_module,
+                [x, positional_embedding],
+                use_onnx=True,
+                min_shapes=[
+                    (1, dims.n_mels, 1),
+                    (1, dims.n_audio_state),
+                ],
+                opt_shapes=[
+                    (1, dims.n_mels, n_frames),
+                    (dims.n_audio_ctx, dims.n_audio_state),
+                ],
+                max_shapes=[
+                    (1, dims.n_mels, n_frames),
+                    (dims.n_audio_ctx, dims.n_audio_state),
+                ],
+                input_names=["x", "positional_embedding"],
+                output_names=["output"],
+                max_workspace_size=cls.max_workspace_size,
+                fp16_mode=cls.fp16_mode,
+                log_level=wm.tensorrt.Logger.VERBOSE if cls.verbose else wm.tensorrt.Logger.ERROR,
+            )
+        else:
+            x = wm.torch.randn(1, dims.n_audio_ctx, dims.n_audio_state).cuda()
+            engine = build_torch2trt_with_lowmem_export(
+                wm,
+                encoder_module,
+                [x],
+                use_onnx=True,
+                min_shapes=[
+                    (1, dims.n_audio_ctx, dims.n_audio_state),
+                ],
+                opt_shapes=[
+                    (1, dims.n_audio_ctx, dims.n_audio_state),
+                ],
+                max_shapes=[
+                    (1, dims.n_audio_ctx, dims.n_audio_state),
+                ],
+                input_names=["x"],
+                output_names=["output"],
+                max_workspace_size=cls.max_workspace_size,
+                fp16_mode=cls.fp16_mode,
+                log_level=wm.tensorrt.Logger.VERBOSE if cls.verbose else wm.tensorrt.Logger.ERROR,
+            )
 
         return engine
 
     builder.build_audio_encoder_engine = build_audio_encoder_engine
     return builder
+
+
+def load_checkpoint_model(
+    checkpoint_path,
+    model_name,
+    language,
+    workspace_mb,
+    max_text_ctx,
+    verbose=False,
+):
+    """
+    기능:
+    - single-engine 또는 chunked WhisperTRT checkpoint를 로드한다.
+
+    입력:
+    - `checkpoint_path`: WhisperTRT checkpoint 파일 경로.
+    - `model_name`: tokenizer 생성을 위한 Whisper 모델 이름.
+    - `language`: tokenizer 언어 코드.
+    - `workspace_mb`: builder 기록용 workspace 크기(MB).
+    - `max_text_ctx`: checkpoint 빌드 시 사용한 최대 text context 길이.
+    - `verbose`: verbose 로그 사용 여부.
+
+    반환:
+    - 로드된 WhisperTRT 모델 객체를 반환한다.
+    """
+    torch, whisper, wm = load_runtime_modules()
+    import torch.nn as nn
+
+    builder = prepare_builder(
+        wm=wm,
+        whisper=whisper,
+        model_name=model_name,
+        language=language,
+        workspace_mb=workspace_mb,
+        max_text_ctx=max_text_ctx,
+        verbose=verbose,
+    )
+
+    checkpoint = torch.load(str(checkpoint_path), map_location="cpu")
+    dims = wm.ModelDimensions(**checkpoint["dims"])
+
+    aes = checkpoint["audio_encoder_extra_state"]
+    if "audio_encoder_engines" in checkpoint:
+        chunked_audio_cls = build_audio_encoder_chunk_runtime_class(torch, wm)
+        first_engine = wm.torch2trt.TRTModule()
+        first_engine.load_state_dict(checkpoint["audio_encoder_engines"][0])
+        later_engines = []
+        for engine_state in checkpoint["audio_encoder_engines"][1:]:
+            engine = wm.torch2trt.TRTModule()
+            engine.load_state_dict(engine_state)
+            later_engines.append(engine)
+        encoder = chunked_audio_cls(
+            first_engine,
+            later_engines,
+            aes["positional_embedding"],
+        )
+    else:
+        audio_encoder_engine = wm.torch2trt.TRTModule()
+        audio_encoder_engine.load_state_dict(checkpoint["audio_encoder_engine"])
+        encoder = wm.AudioEncoderTRT(audio_encoder_engine, aes["positional_embedding"])
+
+    tes = checkpoint["text_decoder_extra_state"]
+    token_embedding = nn.Embedding(dims.n_vocab, dims.n_text_state)
+    token_embedding.load_state_dict(tes["token_embedding"])
+    positional_embedding = nn.Parameter(tes["positional_embedding"])
+    text_ln = wm.LayerNorm(dims.n_text_state)
+    text_ln.load_state_dict(tes["ln"])
+    text_mask = tes["mask"]
+
+    if "text_decoder_engines" in checkpoint:
+        chunked_cls = build_chunked_text_decoder_class(torch, wm)
+        decoder_engines = []
+        for engine_state in checkpoint["text_decoder_engines"]:
+            engine = wm.torch2trt.TRTModule()
+            engine.load_state_dict(engine_state)
+            decoder_engines.append(engine)
+        decoder = chunked_cls(
+            decoder_engines,
+            token_embedding,
+            positional_embedding,
+            text_ln,
+            text_mask,
+        )
+    else:
+        text_decoder_engine = wm.torch2trt.TRTModule()
+        text_decoder_engine.load_state_dict(checkpoint["text_decoder_engine"])
+        decoder = wm.TextDecoderTRT(
+            text_decoder_engine,
+            token_embedding,
+            positional_embedding,
+            text_ln,
+            text_mask,
+        )
+
+    model = wm.WhisperTRT(dims, encoder, decoder, builder.get_tokenizer())
+    model = model.cuda().eval()
+    return model
+
+
+def build_torch2trt_with_lowmem_export(wm, module, inputs, **kwargs):
+    """
+    기능:
+    - ONNX export와 graph folding의 메모리 피크를 낮춘 상태로 torch2trt를 호출한다.
+
+    입력:
+    - `wm`: whisper_trt.model 모듈.
+    - `module`: TRT로 변환할 torch 모듈.
+    - `inputs`: 예시 입력 목록.
+    - `kwargs`: torch2trt 호출 인자.
+
+    반환:
+    - 생성된 TRT engine을 반환한다.
+    """
+    import onnx_graphsurgeon as gs
+
+    original_export = wm.torch.onnx.export
+    original_fold_constants = gs.Graph.fold_constants
+
+    def export_without_constant_folding(*args, **export_kwargs):
+        export_kwargs.setdefault("do_constant_folding", False)
+        return original_export(*args, **export_kwargs)
+
+    def fold_constants_noop(self, *args, **kwargs):
+        return self
+
+    wm.torch.onnx.export = export_without_constant_folding
+    gs.Graph.fold_constants = fold_constants_noop
+    try:
+        return wm.torch2trt.torch2trt(module, inputs, **kwargs)
+    finally:
+        wm.torch.onnx.export = original_export
+        gs.Graph.fold_constants = original_fold_constants
 
 
 def write_dims(paths, model_name, max_text_ctx):
@@ -320,7 +654,15 @@ def cleanup_cuda(torch):
         torch.cuda.empty_cache()
 
 
-def build_decoder(paths, model_name, language, workspace_mb, max_text_ctx, verbose):
+def build_decoder(
+    paths,
+    model_name,
+    language,
+    workspace_mb,
+    max_text_ctx,
+    decoder_chunk_size,
+    verbose,
+):
     """
     기능:
     - decoder 엔진과 decoder extra state를 별도 파일로 저장한다.
@@ -346,11 +688,41 @@ def build_decoder(paths, model_name, language, workspace_mb, max_text_ctx, verbo
     )
     write_dims(paths, model_name, max_text_ctx)
 
+    base_model = whisper.load_model(model_name, device="cpu")
+    chunk_ranges = get_decoder_chunk_ranges(
+        total_blocks=len(base_model.decoder.blocks),
+        chunk_size=decoder_chunk_size,
+    )
+    del base_model
+
+    paths["decoder_engines_dir"].mkdir(parents=True, exist_ok=True)
+
     started_at = time.perf_counter()
-    engine = builder.build_text_decoder_engine()
-    torch.save(engine.state_dict(), paths["decoder_engine"])
-    del engine
-    cleanup_cuda(torch)
+    saved_chunk_paths = []
+    for chunk_index, (block_start, block_end) in enumerate(chunk_ranges):
+        engine = builder.build_text_decoder_engine(block_start, block_end)
+        if len(chunk_ranges) == 1:
+            chunk_path = paths["decoder_engine"]
+        else:
+            chunk_path = (
+                paths["decoder_engines_dir"] / f"decoder_engine_{chunk_index:02d}.pt"
+            )
+        torch.save(engine.state_dict(), chunk_path)
+        saved_chunk_paths.append(chunk_path.name)
+        del engine
+        cleanup_cuda(torch)
+
+    with paths["decoder_chunk_meta"].open("w", encoding="utf-8") as file:
+        json.dump(
+            {
+                "chunk_ranges": chunk_ranges,
+                "chunk_size": int(decoder_chunk_size),
+                "files": saved_chunk_paths,
+            },
+            file,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     capped_text_ctx = max(8, min(int(max_text_ctx), int(builder.max_text_ctx)))
     model = whisper.load_model(model_name, device="cpu").eval()
@@ -371,7 +743,15 @@ def build_decoder(paths, model_name, language, workspace_mb, max_text_ctx, verbo
     cleanup_cuda(torch)
 
 
-def build_encoder(paths, model_name, language, workspace_mb, max_text_ctx, verbose):
+def build_encoder(
+    paths,
+    model_name,
+    language,
+    workspace_mb,
+    max_text_ctx,
+    encoder_chunk_size,
+    verbose,
+):
     """
     기능:
     - encoder 엔진과 encoder extra state를 별도 파일로 저장한다.
@@ -397,11 +777,41 @@ def build_encoder(paths, model_name, language, workspace_mb, max_text_ctx, verbo
     )
     write_dims(paths, model_name, max_text_ctx)
 
+    base_model = whisper.load_model(model_name, device="cpu")
+    chunk_ranges = get_decoder_chunk_ranges(
+        total_blocks=len(base_model.encoder.blocks),
+        chunk_size=encoder_chunk_size,
+    )
+    del base_model
+
+    paths["encoder_engines_dir"].mkdir(parents=True, exist_ok=True)
+
     started_at = time.perf_counter()
-    engine = builder.build_audio_encoder_engine()
-    torch.save(engine.state_dict(), paths["encoder_engine"])
-    del engine
-    cleanup_cuda(torch)
+    saved_chunk_paths = []
+    for chunk_index, (block_start, block_end) in enumerate(chunk_ranges):
+        engine = builder.build_audio_encoder_engine(block_start, block_end)
+        if len(chunk_ranges) == 1:
+            chunk_path = paths["encoder_engine"]
+        else:
+            chunk_path = (
+                paths["encoder_engines_dir"] / f"encoder_engine_{chunk_index:02d}.pt"
+            )
+        torch.save(engine.state_dict(), chunk_path)
+        saved_chunk_paths.append(chunk_path.name)
+        del engine
+        cleanup_cuda(torch)
+
+    with paths["encoder_chunk_meta"].open("w", encoding="utf-8") as file:
+        json.dump(
+            {
+                "chunk_ranges": chunk_ranges,
+                "chunk_size": int(encoder_chunk_size),
+                "files": saved_chunk_paths,
+            },
+            file,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     model = whisper.load_model(model_name, device="cpu").eval()
     extra_state = {
@@ -433,18 +843,57 @@ def combine_checkpoint(paths):
     with paths["dims"].open("r", encoding="utf-8") as file:
         dims = json.load(file)
 
+    chunk_meta = None
+    if paths["decoder_chunk_meta"].exists():
+        with paths["decoder_chunk_meta"].open("r", encoding="utf-8") as file:
+            chunk_meta = json.load(file)
+    encoder_chunk_meta = None
+    if paths["encoder_chunk_meta"].exists():
+        with paths["encoder_chunk_meta"].open("r", encoding="utf-8") as file:
+            encoder_chunk_meta = json.load(file)
+
+    text_decoder_engines = None
+    text_decoder_engine = None
+    if chunk_meta and len(chunk_meta.get("files", [])) > 1:
+        text_decoder_engines = []
+        for file_name in chunk_meta["files"]:
+            text_decoder_engines.append(
+                torch.load(paths["decoder_engines_dir"] / file_name, map_location="cpu")
+            )
+    else:
+        text_decoder_engine = torch.load(paths["decoder_engine"], map_location="cpu")
+
+    audio_encoder_engines = None
+    audio_encoder_engine = None
+    if encoder_chunk_meta and len(encoder_chunk_meta.get("files", [])) > 1:
+        audio_encoder_engines = []
+        for file_name in encoder_chunk_meta["files"]:
+            audio_encoder_engines.append(
+                torch.load(paths["encoder_engines_dir"] / file_name, map_location="cpu")
+            )
+    else:
+        audio_encoder_engine = torch.load(paths["encoder_engine"], map_location="cpu")
+
     checkpoint = {
         "whisper_trt_version": whisper_trt.__version__,
         "dims": dims,
-        "text_decoder_engine": torch.load(paths["decoder_engine"], map_location="cpu"),
         "text_decoder_extra_state": torch.load(
             paths["decoder_extra"], map_location="cpu"
         ),
-        "audio_encoder_engine": torch.load(paths["encoder_engine"], map_location="cpu"),
         "audio_encoder_extra_state": torch.load(
             paths["encoder_extra"], map_location="cpu"
         ),
     }
+    if text_decoder_engines is not None:
+        checkpoint["text_decoder_engines"] = text_decoder_engines
+        checkpoint["text_decoder_chunk_ranges"] = chunk_meta["chunk_ranges"]
+    else:
+        checkpoint["text_decoder_engine"] = text_decoder_engine
+    if audio_encoder_engines is not None:
+        checkpoint["audio_encoder_engines"] = audio_encoder_engines
+        checkpoint["audio_encoder_chunk_ranges"] = encoder_chunk_meta["chunk_ranges"]
+    else:
+        checkpoint["audio_encoder_engine"] = audio_encoder_engine
     torch.save(checkpoint, paths["checkpoint"])
     print("STEP=combine", flush=True)
     print(f"CHECKPOINT={paths['checkpoint']}", flush=True)
@@ -464,18 +913,16 @@ def load_check(paths, model_name, language, workspace_mb, max_text_ctx, verbose)
     반환:
     - 없음.
     """
-    torch, whisper, wm = load_runtime_modules()
-    builder = prepare_builder(
-        wm,
-        whisper,
-        model_name,
-        language,
-        workspace_mb,
-        max_text_ctx,
-        verbose,
-    )
+    torch, _, _ = load_runtime_modules()
     started_at = time.perf_counter()
-    model = builder.load(str(paths["checkpoint"]))
+    model = load_checkpoint_model(
+        checkpoint_path=paths["checkpoint"],
+        model_name=model_name,
+        language=language,
+        workspace_mb=workspace_mb,
+        max_text_ctx=max_text_ctx,
+        verbose=verbose,
+    )
     print("STEP=load-check", flush=True)
     print(f"MODEL={type(model).__name__}", flush=True)
     print(f"ELAPSED_SEC={time.perf_counter() - started_at:.3f}", flush=True)
@@ -510,6 +957,10 @@ def run_subprocess(step, args):
         str(args.workspace_mb),
         "--max-text-ctx",
         str(args.max_text_ctx),
+        "--decoder-chunk-size",
+        str(args.decoder_chunk_size),
+        "--encoder-chunk-size",
+        str(args.encoder_chunk_size),
     ]
     if args.verbose:
         command.append("--verbose")
@@ -538,6 +989,7 @@ def main():
             args.language,
             args.workspace_mb,
             args.max_text_ctx,
+            args.decoder_chunk_size,
             args.verbose,
         )
         return
@@ -549,6 +1001,7 @@ def main():
             args.language,
             args.workspace_mb,
             args.max_text_ctx,
+            args.encoder_chunk_size,
             args.verbose,
         )
         return

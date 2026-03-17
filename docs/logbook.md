@@ -2,6 +2,30 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-17 | Human + Codex | WhisperTRT small 장기 시도 진행 중
+
+### Context
+
+- 사용자가 다국어 `WhisperTRT small`을 Jetson에서 실제로 변환 성공할 때까지 체계적으로 계속 시도하길 원했다.
+- 단일 decoder/encoder 빌드로는 `small`이 메모리와 allocator 문제로 통과하지 못했다.
+
+### Actions
+
+- `stt/experiments/stt_trt_builder_experiment.py`를 확장해 `decoder_chunk_size`, `encoder_chunk_size`를 받아 block 단위 chunk 빌드를 지원하도록 바꿨다.
+- ONNX export 단계의 메모리 피크를 줄이기 위해 `torch.onnx.export(do_constant_folding=False)`와 ONNX graph folding 비활성 경로를 추가했다.
+- 그 결과 `small ko / ctx64 / ws64MB`에서 다음을 확인했다.
+  - `decoder 2-block chunk`는 전체 6개 chunk를 모두 저장하고 checkpoint/load-check까지 통과했다.
+  - 다만 이 checkpoint는 50문장 benchmark에서 모든 예측이 `[�]`로 나와, 속도는 확보됐지만 전사 품질은 실패했다.
+  - 추가 진단 결과 `decoder 2-block` 경로는 첫 decoder chunk 출력부터 `NaN`으로 무너졌다.
+- 그래서 현재는 `decoder 1-block` 경로로 다시 시도 중이며, decoder 전체 12개 chunk는 실제로 저장까지 성공한 상태다.
+- 이어서 encoder도 `6-block`, 필요 시 `3-block`까지 더 잘게 나눠 재시도하고 있다.
+
+### Next
+
+- `decoder 1-block` + 더 작은 encoder chunk 조합으로 checkpoint 생성과 load-check를 다시 끝낸다.
+- 그 다음 1~3번 smoke로 `[�]` 문제가 사라졌는지 확인한다.
+- smoke가 정상일 때만 50문장 benchmark를 다시 돌린다.
+
 ## 2026-03-17 | Human + Codex | STT GUI 데모 1차 구현 시작
 
 ### Context

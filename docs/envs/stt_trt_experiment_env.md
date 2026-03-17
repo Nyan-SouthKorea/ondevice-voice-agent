@@ -282,11 +282,27 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
   - `autotuning: User allocator error allocating 30031872-byte buffer`
   - `Could not find any implementation for node ...`
 
+이후 추가 진행:
+
+- builder에 `decoder_chunk_size`, `encoder_chunk_size`를 넣어 block 단위 chunk 빌드를 지원하도록 확장했다.
+- `torch.onnx.export(do_constant_folding=False)`와 ONNX graph folding 비활성 경로를 넣어 export 메모리 피크를 더 낮췄다.
+
+추가 확인 결과:
+
+- `small ko / ctx64 / ws64MB / decoder 2-block chunk`는 decoder 전체 6개 chunk와 encoder 2개 chunk까지 저장하고 checkpoint 생성, load-check까지 통과했다.
+- 하지만 이 checkpoint는 50문장 benchmark에서 모든 예측이 `[�]`로 나와 전사 품질은 실패했다.
+- 원인 진단 결과, `decoder 2-block chunk` 경로는 첫 decoder chunk 출력부터 `NaN`으로 무너졌다.
+
+현재 진행 중인 다음 단계:
+
+- `decoder 1-block chunk`로 decoder를 더 잘게 나눠 NaN 문제를 줄이는 시도
+- encoder도 `6-block`에서 막히면 `3-block`으로 더 잘게 나누는 시도
+
 현재 해석:
 
-- `small`은 메모리 최적화를 조금 더 하면 가능성이 완전히 0은 아니다.
-- 다만 현 시점 Jetson Orin Nano 8GB 조건에서는 `base`처럼 바로 실용 경로로 가져가기는 아직 어렵다.
-- 즉, 지금은 `base` TRT 경로를 먼저 활용하는 편이 맞다.
+- `small`은 이제 "빌드 자체가 절대 불가능한 상태"는 아니다.
+- 다만 `decoder`와 `encoder`를 separately 메모리 절감하는 것만으로는 부족하고, **전사 품질이 유지되는 chunk 크기**를 찾는 단계로 들어갔다.
+- 즉, 현 시점 Jetson Orin Nano 8GB 조건에서는 `small`을 단순히 변환 성공시키는 것보다, **의미 있는 한국어 전사를 유지한 채 성공시키는 것**이 핵심 문제다.
 
 ## 현재 결론
 
