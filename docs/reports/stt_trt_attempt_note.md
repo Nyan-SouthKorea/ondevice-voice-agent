@@ -12,7 +12,7 @@
 - 기존 STT 공식 평가 문서와 기존 benchmark 결과는 변경하지 않았다.
 - 이번 시도는 정식 비교 평가가 아니라, TensorRT 경로가 실제로 성립하는지 확인하는 탐색 실험이었다.
 
-## 확인된 실패 원인
+## 초기 실패 원인
 
 - 1차 시도
   - `onnx_graphsurgeon` 모듈 누락으로 `base` 경로가 중단됐다.
@@ -24,12 +24,30 @@
 - 별도 확인
   - PyTorch `small (cuda)`는 메모리 정리 후 fresh process로 다시 시도했지만, `NVML_SUCCESS == r` / `CUDACachingAllocator` / `NvMapMemAlloc ... error 12` 계열 오류로 다시 실패했다.
 
-## 결론
+## 이후 정리와 최종 상태
 
-- 이번 사이클에서는 WhisperTRT 경로로 유효한 속도/정확도 수치를 만들지 못했다.
-- 따라서 현재 로컬 기본 STT 후보는 기존 비교 결과가 이미 확보된 `whisper base (cuda)`로 유지한다.
-- `small`은 정확도 개선 가능성은 남아 있지만, 현재 Jetson 환경에서는 GPU 로드 안정성이 확보되지 않았다.
-- WhisperTRT는 향후 전용 임시 환경과 의존성 버전 고정 조건에서 다시 검토할 수 있지만, 이번 결정에는 반영하지 않는다.
+- split builder로 경로를 바꾼 뒤 `base.en`은 checkpoint 생성과 로드까지 성공했다.
+- 이후 split builder 내부 메모리 점유를 더 줄이고 `max_text_ctx 64`로 좁힌 뒤, 한국어 다국어 `base`도 checkpoint 생성과 load-check까지 성공했다.
+- 한국어 다국어 `base`는 custom 시작 토큰(`sot_sequence_including_notimestamps`)을 쓰는 transcribe 경로로 1~3번 smoke와 50문장 benchmark까지 통과했다.
+
+최종 benchmark 경로:
+
+- `/home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_eval_results/korean_eval_50/20260317_112711`
+
+code-generated summary 기준:
+
+- `mean_stt_sec 0.2115`
+- `p95_stt_sec 0.2946`
+- `mean_rtf 0.0435`
+- `normalized_exact_match_rate 0.1600`
+- `mean_normalized_cer 0.1759`
+
+## 최종 결론
+
+- WhisperTRT 경로는 이제 Jetson에서 실제 한국어 `base` checkpoint 생성과 평가까지 가능한 상태다.
+- 다만 현재 수치 기준으로는 속도는 크게 좋아졌지만, 정확도는 PyTorch `base(cuda)`보다 약간 불리하다.
+- 따라서 현 시점 기본 STT 후보는 계속 `whisper base (cuda)`로 유지한다.
+- WhisperTRT는 실패 탐색 단계는 지났고, 이제는 성능/정확도 균형을 더 다듬을 수 있는 실험 경로로 본다.
 
 ## 정리 원칙
 

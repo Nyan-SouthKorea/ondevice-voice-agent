@@ -151,7 +151,7 @@ SDPA를 끈 뒤에는 실제 TensorRT 엔진 생성 단계까지 진행됐지만
 
 이 단계는 한국어 성능 검증이 아니라, `WhisperTRT base.en` 경로가 실제 로드와 추론까지 이어진다는 기술적 확인용이다.
 
-### 6. 다국어 `base` 한국어 경로 시도
+### 6. 다국어 `base` 한국어 경로 1차 시도
 
 `stt/stt_trt_builder_experiment.py`에 아래 실험 경로를 추가해 다국어 `base`를 한국어 tokenizer 기준으로 다시 시도했다.
 
@@ -163,10 +163,10 @@ SDPA를 끈 뒤에는 실제 TensorRT 엔진 생성 단계까지 진행됐지만
 - `--max-text-ctx 128`, `--workspace-mb 256`
 - `--max-text-ctx 64`, `--workspace-mb 128`
 
-현재 결과:
+1차 결과:
 
-- 다국어 `base`는 split builder 기준으로도 아직 **decoder 단계에서 OOM**이 난다.
-- 즉, 영어 전용 `base.en`은 split build로 통과했지만, 한국어 다국어 `base`는 아직 같은 방식으로 바로 이어지지 않는다.
+- 다국어 `base`는 split builder 기준으로도 처음에는 **decoder 단계에서 OOM**이 났다.
+- 즉, 영어 전용 `base.en`은 split build로 통과했지만, 한국어 다국어 `base`는 처음엔 같은 방식으로 바로 이어지지 않았다.
 
 확인된 OOM 메시지 예:
 
@@ -177,23 +177,89 @@ SDPA를 끈 뒤에는 실제 TensorRT 엔진 생성 단계까지 진행됐지만
 해석:
 
 - 다국어 `base`는 영어 전용 `base.en`보다 decoder 빌드 피크 메모리 요구량이 더 크다.
-- `max_text_ctx`와 workspace를 줄여도 현재 Jetson Orin Nano 8GB 조건에서는 decoder 빌드가 아직 안정적으로 통과하지 않는다.
+- 처음에는 `max_text_ctx`와 workspace를 줄여도 현재 Jetson Orin Nano 8GB 조건에서 decoder 빌드가 통과하지 않았다.
+
+### 7. 다국어 `base` 한국어 경로 2차 시도
+
+split builder 내부에서 아래 두 지점을 추가로 줄였다.
+
+- `write_dims()`와 tokenizer 판별용 `whisper.load_model()`을 CPU로만 로드
+- decoder 빌드 직후 엔진을 저장하고 바로 해제한 뒤, extra state는 CPU 모델로 다시 읽음
+- decoder `mask` 입력 shape를 `dims.n_text_ctx` 전체가 아니라 `max_text_ctx` 기준으로 실제 축소
+- 최종 checkpoint의 `dims.n_text_ctx`, `positional_embedding`, `mask`도 `max_text_ctx`에 맞춰 함께 축소
+
+이후 재부팅 직후 조건에서 아래 설정으로 다시 시도했다.
+
+- `--model-name base`
+- `--language ko`
+- `--workspace-mb 128`
+- `--max-text-ctx 64`
+
+2차 결과:
+
+- `decoder` 성공
+  - 약 `85.672 sec`
+- `encoder` 성공
+  - 약 `152.262 sec`
+- `combine` 성공
+- `load-check` 성공
+  - `WhisperTRT`
+  - 약 `2.176 sec`
+
+생성된 checkpoint 예:
+
+- `/home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128_patch2/whisper_trt_split.pth`
+
+### 8. 한국어 smoke / benchmark
+
+다국어 `base`는 upstream `WhisperTRT.transcribe()`를 그대로 쓰면 `sot` 하나만 넣고 시작해서, `<|translate|>` 토큰이 섞이거나 번역 경로로 빠지는 문제가 있었다.
+
+그래서 한국어 평가에서는 아래 시작 토큰을 직접 넣는 custom transcribe 경로를 썼다.
+
+- `tokenizer.sot_sequence_including_notimestamps`
+
+1~3번 smoke 결과:
+
+- load: `2.1037 sec`
+- sample `001`: `0.4259 sec`
+- sample `002`: `0.2809 sec`
+- sample `003`: `0.2101 sec`
+
+50문장 전체 benchmark 결과:
+
+- 결과 디렉토리:
+  - `/home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_eval_results/korean_eval_50/20260317_112711`
+- code-generated summary 기준:
+  - `mean_stt_sec 0.2115`
+  - `p95_stt_sec 0.2946`
+  - `mean_rtf 0.0435`
+  - `normalized_exact_match_rate 0.1600`
+  - `mean_normalized_cer 0.1759`
 
 ## 현재 결론
 
 - `WhisperTRT` 실험 환경 자체는 구성됐다.
 - `base.en` 공식 경로는 기본 builder 그대로는 OOM이 났지만, 분리 빌드 방식으로는 checkpoint 생성과 로드까지 성공했다.
 - 즉, 현재 핵심은 TensorRT 자체 지원 여부가 아니라 **빌드 전략**이다.
-- 다만 현재 성공한 것은 영어 전용 `base.en` 경로이며, 한국어 다국어 `base` 모델 경로는 아직 decoder OOM 때문에 추가 최적화가 필요하다.
+- 한국어 다국어 `base` 경로도 현재는 split builder + `max_text_ctx 64` 기준으로 checkpoint 생성과 benchmark까지 성공했다.
 
 ## 현재 판단
 
 - 현 시점의 STT 기본 경로는 계속 `Whisper base (PyTorch + CUDA)`로 유지하는 편이 안전하다.
 - 이유:
-  - 현재 실제 한국어 평가와 직접 연결된 경로는 아직 PyTorch `base` 쪽이다.
-  - 이번 TRT 성공은 영어 전용 `base.en` 경로 기준이다.
-- 다만 `WhisperTRT`는 이제 Jetson에서 완전히 막힌 경로가 아니라, 공식 `.en` 모델 기준으로는 성립 가능한 경로로 본다.
+  - 한국어 `WhisperTRT base`는 속도는 확실히 빨라졌지만, 현재 code-generated 수치 기준으로는 정확도가 PyTorch `base(cuda)`보다 약간 불리하다.
+  - `Whisper base (PyTorch + CUDA)`
+    - `mean_stt_sec 0.7428`
+    - `mean_rtf 0.1526`
+    - `normalized_exact_match_rate 0.1800`
+    - `mean_normalized_cer 0.1653`
+  - `WhisperTRT base`
+    - `mean_stt_sec 0.2115`
+    - `mean_rtf 0.0435`
+    - `normalized_exact_match_rate 0.1600`
+    - `mean_normalized_cer 0.1759`
+- 다만 `WhisperTRT`는 이제 Jetson에서 영어 전용 경로뿐 아니라, 한국어 `base` 경로도 실제 checkpoint 생성과 benchmark까지 되는 경로로 본다.
 - 이후 다시 시도한다면 아래부터 검토한다.
-  1. split builder를 기준 구현으로 다듬기
-  2. `tiny.en / base.en` 속도 비교 정리
-  3. 다국어 `base` decoder의 추가 메모리 절감 방법을 찾기
+  1. custom transcribe 시작 토큰 처리를 실험 코드가 아니라 공식 래퍼 형태로 옮기기
+  2. default stream 경고를 없애는 CUDA stream 경로 검토
+  3. `max_text_ctx 64`가 긴 문장에서 주는 영향 확인

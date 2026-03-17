@@ -142,7 +142,7 @@ def prepare_builder(
     if model_name in wm.MODEL_BUILDERS:
         builder = wm.MODEL_BUILDERS[model_name]
     else:
-        model = whisper.load_model(model_name)
+        model = whisper.load_model(model_name, device="cpu")
         is_multilingual = bool(model.is_multilingual)
         num_languages = int(model.num_languages)
         del model
@@ -174,13 +174,16 @@ def prepare_builder(
         model = wm.load_model(cls.model).cuda().eval()
         dims = model.dims
 
+        capped_text_ctx = max(
+            8,
+            min(int(getattr(cls, "max_text_ctx", dims.n_text_ctx)), dims.n_text_ctx),
+        )
+
         decoder_blocks_module = wm._TextDecoderEngine(model.decoder.blocks)
 
         x = wm.torch.randn(1, 1, dims.n_text_state).cuda()
         xa = wm.torch.randn(1, dims.n_audio_ctx, dims.n_audio_state).cuda()
-        mask = wm.torch.randn(dims.n_text_ctx, dims.n_text_ctx).cuda()
-
-        capped_text_ctx = max(8, min(int(getattr(cls, "max_text_ctx", dims.n_text_ctx)), dims.n_text_ctx))
+        mask = wm.torch.randn(capped_text_ctx, capped_text_ctx).cuda()
 
         engine = wm.torch2trt.torch2trt(
             decoder_blocks_module,
@@ -189,17 +192,17 @@ def prepare_builder(
             min_shapes=[
                 (1, 1, dims.n_text_state),
                 (1, 1, dims.n_audio_state),
-                (dims.n_text_ctx, dims.n_text_ctx),
+                (8, 8),
             ],
             opt_shapes=[
                 (1, min(capped_text_ctx, 32), dims.n_text_state),
                 (1, dims.n_audio_ctx, dims.n_audio_state),
-                (dims.n_text_ctx, dims.n_text_ctx),
+                (min(capped_text_ctx, 32), min(capped_text_ctx, 32)),
             ],
             max_shapes=[
                 (1, capped_text_ctx, dims.n_text_state),
                 (1, dims.n_audio_ctx, dims.n_audio_state),
-                (dims.n_text_ctx, dims.n_text_ctx),
+                (capped_text_ctx, capped_text_ctx),
             ],
             input_names=["x", "xa", "mask"],
             output_names=["output"],
@@ -214,7 +217,7 @@ def prepare_builder(
     return builder
 
 
-def write_dims(paths, model_name):
+def write_dims(paths, model_name, max_text_ctx):
     """
     기능:
     - 최종 checkpoint에 필요한 dims 메타데이터를 저장한다.
@@ -222,15 +225,18 @@ def write_dims(paths, model_name):
     입력:
     - `paths`: prepare_dirs가 만든 경로 딕셔너리.
     - `model_name`: Whisper 모델 이름.
+    - `max_text_ctx`: 저장할 최대 text context 길이.
 
     반환:
     - 없음.
     """
     _, whisper, _ = load_runtime_modules()
-    model = whisper.load_model(model_name)
+    model = whisper.load_model(model_name, device="cpu")
     dims = vars(model.dims)
+    dims["n_text_ctx"] = max(8, min(int(max_text_ctx), int(dims["n_text_ctx"])))
     with paths["dims"].open("w", encoding="utf-8") as file:
         json.dump(dims, file, ensure_ascii=False, indent=2)
+    del model
 
 
 def cleanup_cuda(torch):
@@ -273,18 +279,23 @@ def build_decoder(paths, model_name, language, workspace_mb, max_text_ctx, verbo
         max_text_ctx,
         verbose,
     )
-    write_dims(paths, model_name)
+    write_dims(paths, model_name, max_text_ctx)
 
     started_at = time.perf_counter()
     engine = builder.build_text_decoder_engine()
     torch.save(engine.state_dict(), paths["decoder_engine"])
+    del engine
+    cleanup_cuda(torch)
 
-    model = whisper.load_model(model_name).cuda().eval()
+    capped_text_ctx = max(8, min(int(max_text_ctx), int(builder.max_text_ctx)))
+    model = whisper.load_model(model_name, device="cpu").eval()
     extra_state = {
         "token_embedding": model.decoder.token_embedding.state_dict(),
-        "positional_embedding": model.decoder.positional_embedding.detach().cpu(),
+        "positional_embedding": model.decoder.positional_embedding[:capped_text_ctx]
+        .detach()
+        .cpu(),
         "ln": model.decoder.ln.state_dict(),
-        "mask": model.decoder.mask.detach().cpu(),
+        "mask": model.decoder.mask[:capped_text_ctx, :capped_text_ctx].detach().cpu(),
     }
     torch.save(extra_state, paths["decoder_extra"])
 
@@ -292,7 +303,6 @@ def build_decoder(paths, model_name, language, workspace_mb, max_text_ctx, verbo
     print(f"ELAPSED_SEC={time.perf_counter() - started_at:.3f}", flush=True)
 
     del model
-    del engine
     cleanup_cuda(torch)
 
 
@@ -320,13 +330,15 @@ def build_encoder(paths, model_name, language, workspace_mb, max_text_ctx, verbo
         max_text_ctx,
         verbose,
     )
-    write_dims(paths, model_name)
+    write_dims(paths, model_name, max_text_ctx)
 
     started_at = time.perf_counter()
     engine = builder.build_audio_encoder_engine()
     torch.save(engine.state_dict(), paths["encoder_engine"])
+    del engine
+    cleanup_cuda(torch)
 
-    model = whisper.load_model(model_name).cuda().eval()
+    model = whisper.load_model(model_name, device="cpu").eval()
     extra_state = {
         "positional_embedding": model.encoder.positional_embedding.detach().cpu(),
     }
@@ -336,7 +348,6 @@ def build_encoder(paths, model_name, language, workspace_mb, max_text_ctx, verbo
     print(f"ELAPSED_SEC={time.perf_counter() - started_at:.3f}", flush=True)
 
     del model
-    del engine
     cleanup_cuda(torch)
 
 

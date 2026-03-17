@@ -28,6 +28,10 @@
   - 기준 문장 50개를 순서대로 녹음하는 GUI
 - `stt_benchmark.py`
   - 같은 데이터셋으로 여러 STT 설정을 비교하는 평가 스크립트
+- `stt_trt_builder_experiment.py`
+  - WhisperTRT split builder 실험 스크립트
+- `stt_trt_benchmark_experiment.py`
+  - WhisperTRT 한국어 checkpoint를 50문장 세트로 평가하는 실험 스크립트
 - `datasets/korean_eval_50/`
   - txt와 wav를 같은 파일명으로 관리하는 평가 세트
 
@@ -50,6 +54,7 @@ print(transcriber.last_duration_sec)
 - 입력은 `16kHz mono` wav 또는 float32 mono 배열 기준
 - 현재 단계의 목적은 `짧은 utterance -> text` 기본 경로 확보와 비교 평가 기준 마련이다
 - 기본 모델값은 감으로 정하지 않고, 직접 녹음한 50문장 세트로 속도와 정확도를 비교한 뒤 정한다
+- 현재 기본 후보는 `Whisper base (PyTorch + CUDA)`이며, `WhisperTRT base` 한국어 경로는 별도 실험 중이다
 
 ## 평가 데이터셋
 
@@ -178,6 +183,40 @@ API는 과금이 발생하므로 꼭 필요한 횟수만 실행한다.
   - `summary.csv`
   - `summary.json`
   - `<run_name>_per_sample.csv`
+
+### 7. WhisperTRT 한국어 실험
+
+WhisperTRT 실험은 기존 smoke env가 아니라 별도 env에서 돌린다.
+
+- env: `/home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment`
+- builder 실험:
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+python stt/stt_trt_builder_experiment.py \
+  --step run \
+  --model-name base \
+  --language ko \
+  --workspace-mb 128 \
+  --max-text-ctx 64 \
+  --work-dir /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128
+```
+
+- benchmark:
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+python stt/stt_trt_benchmark_experiment.py \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128/whisper_trt_split.pth \
+  --model-name base \
+  --language ko \
+  --workspace-mb 128 \
+  --max-text-ctx 64
+```
+
+현재 이 실험 경로는 한국어 `base` TRT checkpoint를 만들고 50문장 세트까지 평가할 수 있다. 다만 현 시점 수치 기준으로는 속도는 더 빠르지만 정확도는 PyTorch `base(cuda)`보다 약간 불리해, 기본값 전환은 아직 하지 않았다.
 
 ### 6. API 사용 로그 확인
 
