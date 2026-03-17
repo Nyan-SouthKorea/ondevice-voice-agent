@@ -1,0 +1,30 @@
+{
+  "dataset_dir": "/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/datasets/korean_eval_50",
+  "summaries": [
+    {
+      "run_name": "whisper_trt_base_ko_ctx64",
+      "model": "whisper_trt",
+      "model_name": "base",
+      "device": "cuda_trt",
+      "sample_count": 50,
+      "load_time_sec": 3.3325,
+      "warmup_enabled": 1,
+      "warmup_sample_id": "001",
+      "warmup_time_sec": 0.4147,
+      "total_audio_sec": 243.2946,
+      "total_stt_sec": 10.5761,
+      "mean_stt_sec": 0.2115,
+      "p50_stt_sec": 0.2057,
+      "p95_stt_sec": 0.2946,
+      "max_stt_sec": 0.3502,
+      "mean_rtf": 0.0435,
+      "p50_rtf": 0.0426,
+      "p95_rtf": 0.0581,
+      "max_rtf": 0.0667,
+      "exact_match_rate": 0.14,
+      "normalized_exact_match_rate": 0.16,
+      "mean_cer": 0.1816,
+      "mean_normalized_cer": 0.1759
+    }
+  ]
+}

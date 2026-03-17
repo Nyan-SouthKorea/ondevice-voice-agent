@@ -34,6 +34,8 @@
   - WhisperTRT 한국어 checkpoint를 50문장 세트로 평가하는 실험 스크립트
 - `datasets/korean_eval_50/`
   - txt와 wav를 같은 파일명으로 관리하는 평가 세트
+- `models/whisper_trt_base_ko_ctx64/`
+  - 현재 승격된 한국어 WhisperTRT base checkpoint와 평가 스냅샷
 
 공통 사용 방식:
 
@@ -209,14 +211,52 @@ python stt/stt_trt_builder_experiment.py \
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
 python stt/stt_trt_benchmark_experiment.py \
-  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128/whisper_trt_split.pth \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
   --max-text-ctx 64
 ```
 
-현재 이 실험 경로는 한국어 `base` TRT checkpoint를 만들고 50문장 세트까지 평가할 수 있다. 다만 현 시점 수치 기준으로는 속도는 더 빠르지만 정확도는 PyTorch `base(cuda)`보다 약간 불리해, 기본값 전환은 아직 하지 않았다.
+현재 승격 경로는 아래다.
+
+- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`
+
+다만 이 `.pth`는 파일 크기 때문에 git에 올리지 않고, 로컬에서만 생성/보관한다. 이 경로를 다시 만들고 싶으면 아래 순서대로 재현하면 된다.
+
+1. split builder로 checkpoint 생성
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+python stt/stt_trt_builder_experiment.py \
+  --step run \
+  --model-name base \
+  --language ko \
+  --workspace-mb 128 \
+  --max-text-ctx 64 \
+  --work-dir /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128
+```
+
+2. 생성한 checkpoint를 메인 로컬 경로로 복사
+```bash
+mkdir -p /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64
+cp /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128/whisper_trt_split.pth \
+  /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth
+```
+
+3. benchmark 재실행
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+python stt/stt_trt_benchmark_experiment.py \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth \
+  --model-name base \
+  --language ko \
+  --workspace-mb 128 \
+  --max-text-ctx 64
+```
+
+즉 레포에는 재현 코드와 요약 스냅샷만 남기고, 대용량 checkpoint는 각 개발 환경에서 다시 만든다. 현 시점 수치 기준으로는 속도는 더 빠르지만 정확도는 PyTorch `base(cuda)`보다 약간 불리해, 기본값 전환은 아직 하지 않았다.
 
 ### 6. API 사용 로그 확인
 

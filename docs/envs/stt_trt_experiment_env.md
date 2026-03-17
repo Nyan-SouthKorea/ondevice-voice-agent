@@ -206,9 +206,14 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
   - `WhisperTRT`
   - 약 `2.176 sec`
 
-생성된 checkpoint 예:
+생성된 checkpoint는 이후 메인 모델 자산으로 승격 이동했다.
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128_patch2/whisper_trt_split.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`
+
+주의:
+
+- 이 `.pth`는 약 240MB라서 git 원격에는 올리지 않는다.
+- 대신 builder 스크립트와 benchmark 스크립트만 추적하고, 각 개발 환경에서 같은 절차로 다시 만든다.
 
 ### 8. 한국어 smoke / benchmark
 
