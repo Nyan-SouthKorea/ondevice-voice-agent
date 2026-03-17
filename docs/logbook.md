@@ -2,6 +2,24 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-17 | Human + Codex | AGX Orin TRT handoff 문서화
+
+### Context
+
+- 사용자가 AGX Orin 장비에 SSH로 접속해, 현재 Jetson 기준 실험 내용을 그대로 참고하면서 WhisperTRT 빌드를 다시 시도하려고 했다.
+- 장비가 바뀌면 JetPack, TensorRT, 메모리, power mode 차이 때문에 기존 Nano 기준 값만으로는 반복 재현성이 떨어질 수 있었다.
+
+### Actions
+
+- `stt/experiments/stt_trt_collect_jetson_profile.py`를 추가해 Jetson 장비 프로파일을 JSON으로 저장할 수 있게 했다.
+- `docs/envs/jetson/stt_trt_agx_orin_experiment.md`를 추가해 AGX Orin에서 Codex가 따라야 할 순서와 빌드/검증 기준을 정리했다.
+- `docs/envs/stt_trt_experiment_env.md`, `docs/jetson_transition_plan.md`, `stt/README.md`, `stt/models/whisper_trt_base_ko_ctx64/README.md`에 새 handoff 경로를 연결했다.
+
+### Next
+
+- AGX Orin에서 먼저 장비 프로파일을 저장한다.
+- 저장된 프로파일을 기준으로 `workspace`, `max_text_ctx`, chunk 크기를 조정해 TRT build를 재시도한다.
+
 ## 2026-03-17 | Human + Codex | WhisperTRT small 장기 시도 진행 중
 
 ### Context

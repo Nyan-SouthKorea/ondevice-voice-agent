@@ -39,6 +39,9 @@
   - 현재 runtime 기준 threshold: `0.80`
 - Jetson runtime과 smoke 학습 환경은 각각 `docs/envs/jetson_wake_word_env.md`, `docs/envs/wake_word_train_smoke_env.md`에 정리돼 있다.
 - STT 50문장 직접 녹음 평가 세트와 benchmark 파이프라인은 준비돼 있다.
+- AGX Orin에서 TRT 빌드를 다시 시도할 때는 장비 프로파일 수집 스크립트와 AGX 전용 handoff 문서를 먼저 사용한다.
+  - `stt/experiments/stt_trt_collect_jetson_profile.py`
+  - `docs/envs/jetson/stt_trt_agx_orin_experiment.md`
 - STT 자동 생성 결과물은 `stt/eval_results/` 아래에 두고, 사람이 읽는 요약은 `docs/reports/stt_korean_eval50_overview.md`를 기준으로 본다.
 - 현재 STT 기본 후보는 `Whisper base (PyTorch + CUDA)`다.
   - 코드가 계산한 기존 평가 수치 기준:

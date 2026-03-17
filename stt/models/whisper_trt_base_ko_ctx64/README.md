@@ -34,3 +34,8 @@
 1. `stt/experiments/stt_trt_builder_experiment.py`로 split build 수행
 2. 생성된 `whisper_trt_split.pth`를 이 디렉토리로 복사
 3. `stt/experiments/stt_trt_benchmark_experiment.py`로 benchmark 재실행
+
+AGX Orin에서 새로 빌드할 경우 먼저 장비 스펙을 수집하고 아래 가이드를 따른다.
+
+- `stt/experiments/stt_trt_collect_jetson_profile.py`
+- `docs/envs/jetson/stt_trt_agx_orin_experiment.md`

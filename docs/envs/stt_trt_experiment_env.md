@@ -19,6 +19,10 @@
 - cuDNN: `9.3`
 - TensorRT: `10.3.0`
 
+> AGX Orin에서 Codex로 원격 작업할 경우, 이 값은 기준 예시다.  
+> 실제 장비에서는 먼저 `stt/experiments/stt_trt_collect_jetson_profile.py`로 스펙을 저장하고,  
+> `docs/envs/jetson/stt_trt_agx_orin_experiment.md`의 장비별 권장값으로 빌드 옵션을 조정한다.
+
 ## 구성 방식
 
 새 env는 완전 재설치 대신 아래 두 경로를 `.pth` 브리지로 읽는다.

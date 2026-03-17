@@ -235,6 +235,7 @@ API는 과금이 발생하므로 꼭 필요한 횟수만 실행한다.
 WhisperTRT 실험은 기존 smoke env가 아니라 별도 env에서 돌린다.
 
 - env: `/home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment`
+- AGX Orin에서 codex로 동일 작업할 때는 [`docs/envs/jetson/stt_trt_agx_orin_experiment.md`](../docs/envs/jetson/stt_trt_agx_orin_experiment.md) 우선 참조
 - builder 실험:
 
 ```bash

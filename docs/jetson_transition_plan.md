@@ -18,6 +18,7 @@
 - TTS 사용법: [../tts/README.md](../tts/README.md)
 - Jetson runtime env: [envs/jetson_wake_word_env.md](envs/jetson_wake_word_env.md)
 - Jetson smoke train env: [envs/wake_word_train_smoke_env.md](envs/wake_word_train_smoke_env.md)
+- STT TRT 실험 env (AGX 대응): [envs/jetson/stt_trt_agx_orin_experiment.md](envs/jetson/stt_trt_agx_orin_experiment.md)
 
 ## 완료된 항목
 
