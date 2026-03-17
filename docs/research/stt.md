@@ -27,11 +27,11 @@
   - 온디바이스 Whisper
 - `stt/stt_api.py`
   - API STT
-- `stt/stt_demo.py`
+- `stt/tools/stt_demo.py`
   - wav 또는 짧은 마이크 녹음 기준 최소 데모
-- `stt/stt_dataset_recorder.py`
+- `stt/tools/stt_dataset_recorder.py`
   - 고정 문장 50개 녹음 GUI
-- `stt/stt_benchmark.py`
+- `stt/tools/stt_benchmark.py`
   - 같은 데이터셋 기준 다중 STT 비교
 - `stt/datasets/korean_eval_50/`
   - txt/wav 같은 파일명 기준 평가 세트

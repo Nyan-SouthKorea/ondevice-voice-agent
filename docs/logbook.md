@@ -2,6 +2,21 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-17 | Human + Codex | STT 디렉토리 역할 기준 재정리
+
+### Context
+
+- `stt/` 루트에 런타임 코드와 실험/도구 스크립트가 함께 있어 구조가 빠르게 읽히지 않았다.
+
+### Actions
+
+- 실제 런타임 코드는 `stt/` 루트에 남기고, 반복 실행 도구는 `stt/tools/`, 실험성 TRT 코드는 `stt/experiments/`로 분리했다.
+- 실행 명령과 환경 문서, STT README를 새 경로 기준으로 다시 맞췄다.
+
+### Next
+
+- 이후 새 STT 관련 파일은 처음부터 `런타임 / tools / experiments / models / datasets / eval_results` 역할을 구분해 추가한다.
+
 ## 2026-03-17 | Human + Codex | TTS 초기 구조와 개발 계획 시작
 
 ### Context

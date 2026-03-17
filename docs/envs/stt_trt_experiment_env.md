@@ -53,7 +53,7 @@
 ## 실험용 코드
 
 - 분리 빌드 스크립트:
-  - `stt/stt_trt_builder_experiment.py`
+  - `stt/experiments/stt_trt_builder_experiment.py`
 
 이 스크립트는 아래 순서로 동작한다.
 
@@ -113,7 +113,7 @@ SDPA를 끈 뒤에는 실제 TensorRT 엔진 생성 단계까지 진행됐지만
 
 ### 4. 분리 빌드 결과
 
-단일 builder 대신 `stt/stt_trt_builder_experiment.py`로 `decoder -> encoder -> combine -> load-check`를 분리한 뒤에는 `base.en` 공식 경로가 실제로 통과했다.
+단일 builder 대신 `stt/experiments/stt_trt_builder_experiment.py`로 `decoder -> encoder -> combine -> load-check`를 분리한 뒤에는 `base.en` 공식 경로가 실제로 통과했다.
 
 확인된 결과:
 
@@ -153,7 +153,7 @@ SDPA를 끈 뒤에는 실제 TensorRT 엔진 생성 단계까지 진행됐지만
 
 ### 6. 다국어 `base` 한국어 경로 1차 시도
 
-`stt/stt_trt_builder_experiment.py`에 아래 실험 경로를 추가해 다국어 `base`를 한국어 tokenizer 기준으로 다시 시도했다.
+`stt/experiments/stt_trt_builder_experiment.py`에 아래 실험 경로를 추가해 다국어 `base`를 한국어 tokenizer 기준으로 다시 시도했다.
 
 - `--model-name base`
 - `--language ko`

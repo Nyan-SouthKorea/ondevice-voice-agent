@@ -25,7 +25,7 @@
 
 ### Normalized Exact Match는 어떻게 정규화하나
 
-- 현재 평가는 `stt_benchmark.py`의 `normalize_text()` 기준을 그대로 사용한다.
+- 현재 평가는 `stt/tools/stt_benchmark.py`의 `normalize_text()` 기준을 그대로 사용한다.
 - 정규화 순서는 다음과 같다.
   - 문자열 앞뒤 공백 제거
   - 영문 소문자 변환

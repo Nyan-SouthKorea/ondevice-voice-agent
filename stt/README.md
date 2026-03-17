@@ -22,20 +22,22 @@
   - OpenAI Whisper 기반 온디바이스 백엔드
 - `stt_api.py`
   - OpenAI Audio Transcriptions API 백엔드
-- `stt_demo.py`
+- `tools/stt_demo.py`
   - 기본 마이크 또는 wav 파일을 받아 텍스트를 출력하는 최소 데모
-- `stt_dataset_recorder.py`
+- `tools/stt_dataset_recorder.py`
   - 기준 문장 50개를 순서대로 녹음하는 GUI
-- `stt_benchmark.py`
+- `tools/stt_benchmark.py`
   - 같은 데이터셋으로 여러 STT 설정을 비교하는 평가 스크립트
-- `stt_trt_builder_experiment.py`
+- `tools/stt_eval_overview.py`
+  - 평가 결과 디렉토리에서 overview 문서를 다시 생성하는 스크립트
+- `experiments/stt_trt_builder_experiment.py`
   - WhisperTRT split builder 실험 스크립트
-- `stt_trt_benchmark_experiment.py`
+- `experiments/stt_trt_benchmark_experiment.py`
   - WhisperTRT 한국어 checkpoint를 50문장 세트로 평가하는 실험 스크립트
 - `datasets/korean_eval_50/`
   - txt와 wav를 같은 파일명으로 관리하는 평가 세트
 - `models/whisper_trt_base_ko_ctx64/`
-  - 현재 승격된 한국어 WhisperTRT base checkpoint와 평가 스냅샷
+  - 현재 승격된 한국어 WhisperTRT base 로컬 artifact 경로와 평가 스냅샷
 
 공통 사용 방식:
 
@@ -57,6 +59,21 @@ print(transcriber.last_duration_sec)
 - 현재 단계의 목적은 `짧은 utterance -> text` 기본 경로 확보와 비교 평가 기준 마련이다
 - 기본 모델값은 감으로 정하지 않고, 직접 녹음한 50문장 세트로 속도와 정확도를 비교한 뒤 정한다
 - 현재 기본 후보는 `Whisper base (PyTorch + CUDA)`이며, `WhisperTRT base` 한국어 경로는 별도 실험 중이다
+
+## 디렉토리 역할
+
+- 루트 `stt/`
+  - 실제 런타임 코드
+- `stt/tools/`
+  - 반복 실행하는 데모, 녹음기, benchmark, overview 재생성 도구
+- `stt/experiments/`
+  - TRT처럼 실험성 경로를 확인하는 코드
+- `stt/datasets/`
+  - 평가 기준 데이터셋
+- `stt/eval_results/`
+  - code-generated 평가 산출물
+- `stt/models/`
+  - 메인 모델 자산 또는 로컬 재현용 artifact 경로
 
 ## 평가 데이터셋
 
@@ -89,7 +106,7 @@ print(transcriber.last_duration_sec)
 ```bash
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
-python stt/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50
+python stt/tools/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50
 ```
 
 현재 지원 버튼:
@@ -126,13 +143,13 @@ source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train
 ### 2. 녹음 데이터셋 만들기
 
 ```bash
-python stt/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50
+python stt/tools/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50
 ```
 
 필요 시 시작 문장을 지정할 수 있다.
 
 ```bash
-python stt/stt_dataset_recorder.py \
+python stt/tools/stt_dataset_recorder.py \
   --dataset-dir stt/datasets/korean_eval_50 \
   --start-index 21
 ```
@@ -140,7 +157,7 @@ python stt/stt_dataset_recorder.py \
 오디오 장치를 먼저 보고 싶으면:
 
 ```bash
-python stt/stt_dataset_recorder.py --list-devices
+python stt/tools/stt_dataset_recorder.py --list-devices
 ```
 
 ### 3. 로컬 Whisper 비교 평가
@@ -148,7 +165,7 @@ python stt/stt_dataset_recorder.py --list-devices
 Jetson GPU 기준 기본 비교:
 
 ```bash
-python stt/stt_benchmark.py \
+python stt/tools/stt_benchmark.py \
   --dataset-dir stt/datasets/korean_eval_50 \
   --config whisper:tiny \
   --config whisper:base \
@@ -159,7 +176,7 @@ python stt/stt_benchmark.py \
 CPU로만 보고 싶으면:
 
 ```bash
-python stt/stt_benchmark.py \
+python stt/tools/stt_benchmark.py \
   --dataset-dir stt/datasets/korean_eval_50 \
   --config whisper:tiny \
   --device cpu
@@ -170,7 +187,7 @@ python stt/stt_benchmark.py \
 `secrets/api_key.txt`가 있으면 별도 `--api-key` 없이 실행할 수 있다.
 
 ```bash
-python stt/stt_benchmark.py \
+python stt/tools/stt_benchmark.py \
   --dataset-dir stt/datasets/korean_eval_50 \
   --config api:gpt-4o-mini-transcribe \
   --usage-purpose stt_eval_korean50_gpt4o_mini
@@ -196,7 +213,7 @@ WhisperTRT 실험은 기존 smoke env가 아니라 별도 env에서 돌린다.
 ```bash
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
-python stt/stt_trt_builder_experiment.py \
+python stt/experiments/stt_trt_builder_experiment.py \
   --step run \
   --model-name base \
   --language ko \
@@ -210,7 +227,7 @@ python stt/stt_trt_builder_experiment.py \
 ```bash
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
-python stt/stt_trt_benchmark_experiment.py \
+python stt/experiments/stt_trt_benchmark_experiment.py \
   --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth \
   --model-name base \
   --language ko \
@@ -228,7 +245,7 @@ python stt/stt_trt_benchmark_experiment.py \
 ```bash
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
-python stt/stt_trt_builder_experiment.py \
+python stt/experiments/stt_trt_builder_experiment.py \
   --step run \
   --model-name base \
   --language ko \
@@ -248,7 +265,7 @@ cp /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_b
 ```bash
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
-python stt/stt_trt_benchmark_experiment.py \
+python stt/experiments/stt_trt_benchmark_experiment.py \
   --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth \
   --model-name base \
   --language ko \
@@ -278,7 +295,7 @@ API를 실제 호출하면 아래 항목이 자동으로 남는다.
 ```bash
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
-python stt/stt_benchmark.py \
+python stt/tools/stt_benchmark.py \
   --dataset-dir stt/datasets/korean_eval_50 \
   --config whisper:tiny \
   --config whisper:base \

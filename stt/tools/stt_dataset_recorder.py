@@ -15,6 +15,7 @@ from tkinter import ttk
 
 
 SAMPLE_RATE = 16000
+STT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def parse_args():
@@ -32,7 +33,7 @@ def parse_args():
     parser.add_argument(
         "--dataset-dir",
         type=Path,
-        default=Path(__file__).resolve().parent / "datasets" / "korean_eval_50",
+        default=STT_ROOT / "datasets" / "korean_eval_50",
         help="기준 txt와 녹음 wav를 같이 둘 데이터셋 디렉토리",
     )
     parser.add_argument(

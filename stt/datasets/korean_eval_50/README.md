@@ -11,9 +11,9 @@
 
 사용 흐름:
 
-1. `python stt/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50`
+1. `python stt/tools/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50`
 2. 1번부터 50번까지 순서대로 녹음
-3. `python stt/stt_benchmark.py --dataset-dir stt/datasets/korean_eval_50 --config whisper:tiny`
+3. `python stt/tools/stt_benchmark.py --dataset-dir stt/datasets/korean_eval_50 --config whisper:tiny`
 4. 같은 데이터셋으로 다른 STT 모델도 같은 방식으로 비교
 
 파일 예:

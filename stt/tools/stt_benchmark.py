@@ -11,7 +11,8 @@ import string
 import sys
 import time
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
+STT_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
@@ -33,7 +34,7 @@ def parse_args():
     parser.add_argument(
         "--dataset-dir",
         type=Path,
-        default=Path(__file__).resolve().parent / "datasets" / "korean_eval_50",
+        default=STT_ROOT / "datasets" / "korean_eval_50",
         help="기준 txt와 wav가 같이 들어 있는 데이터셋 디렉토리",
     )
     parser.add_argument(
@@ -71,7 +72,7 @@ def parse_args():
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path(__file__).resolve().parent / "eval_results",
+        default=STT_ROOT / "eval_results",
         help="평가 결과를 저장할 상위 디렉토리",
     )
     parser.add_argument(

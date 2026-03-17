@@ -31,6 +31,6 @@
 
 재현 절차:
 
-1. `stt/stt_trt_builder_experiment.py`로 split build 수행
+1. `stt/experiments/stt_trt_builder_experiment.py`로 split build 수행
 2. 생성된 `whisper_trt_split.pth`를 이 디렉토리로 복사
-3. `stt/stt_trt_benchmark_experiment.py`로 benchmark 재실행
+3. `stt/experiments/stt_trt_benchmark_experiment.py`로 benchmark 재실행

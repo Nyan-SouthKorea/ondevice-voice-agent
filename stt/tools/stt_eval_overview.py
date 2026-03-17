@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 
+STT_ROOT = Path(__file__).resolve().parents[1]
 
 DEFAULT_EXPECTS = [
     "whisper:tiny:cuda",
@@ -35,7 +36,7 @@ def parse_args():
     parser = ArgumentParser(description="STT benchmark summary를 통합해 overview 표를 생성한다.")
     parser.add_argument(
         "--results-dir",
-        default=Path(__file__).resolve().parent / "eval_results" / "korean_eval_50",
+        default=STT_ROOT / "eval_results" / "korean_eval_50",
         type=Path,
         help="summary.json이 들어 있는 평가 결과 루트 디렉토리",
     )
@@ -279,7 +280,7 @@ def render_markdown(results_dir, rows, winners):
         "",
         "### Normalized Exact Match는 어떻게 정규화하나",
         "",
-        "- 현재 평가는 `stt_benchmark.py`의 `normalize_text()` 기준을 그대로 사용한다.",
+        "- 현재 평가는 `stt/tools/stt_benchmark.py`의 `normalize_text()` 기준을 그대로 사용한다.",
         "- 정규화 순서는 다음과 같다.",
         "  - 문자열 앞뒤 공백 제거",
         "  - 영문 소문자 변환",

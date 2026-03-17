@@ -13,22 +13,23 @@ import torch
 import whisper
 import whisper_trt.model as wm
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
+STT_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from stt.stt_benchmark import compute_cer
-from stt.stt_benchmark import compute_percentile
-from stt.stt_benchmark import ensure_output_dir
-from stt.stt_benchmark import list_dataset_entries
-from stt.stt_benchmark import normalize_text
-from stt.stt_benchmark import read_text_file
-from stt.stt_benchmark import write_readable_markdown
-from stt.stt_benchmark import write_rows_csv
-from stt.stt_benchmark import write_summary_csv
-from stt.stt_benchmark import write_summary_json
-from stt.stt_benchmark import write_summary_markdown
-from stt.stt_trt_builder_experiment import prepare_builder
+from stt.tools.stt_benchmark import compute_cer
+from stt.tools.stt_benchmark import compute_percentile
+from stt.tools.stt_benchmark import ensure_output_dir
+from stt.tools.stt_benchmark import list_dataset_entries
+from stt.tools.stt_benchmark import normalize_text
+from stt.tools.stt_benchmark import read_text_file
+from stt.tools.stt_benchmark import write_readable_markdown
+from stt.tools.stt_benchmark import write_rows_csv
+from stt.tools.stt_benchmark import write_summary_csv
+from stt.tools.stt_benchmark import write_summary_json
+from stt.tools.stt_benchmark import write_summary_markdown
+from stt.experiments.stt_trt_builder_experiment import prepare_builder
 
 
 def parse_args():
@@ -46,7 +47,7 @@ def parse_args():
     parser.add_argument(
         "--dataset-dir",
         type=Path,
-        default=Path(__file__).resolve().parent / "datasets" / "korean_eval_50",
+        default=STT_ROOT / "datasets" / "korean_eval_50",
         help="평가용 txt/wav 쌍이 들어 있는 디렉토리",
     )
     parser.add_argument(
