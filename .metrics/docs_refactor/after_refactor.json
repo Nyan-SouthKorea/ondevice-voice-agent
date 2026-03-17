@@ -1,0 +1,519 @@
+{
+  "label": "after_refactor_worktree",
+  "commit": "f91482dffdf2479e0ac5557e32739a8d16340570-dirty",
+  "repo_root": "/home/everybot/workspace/ondevice-voice-agent/project/repo",
+  "group_rules": {
+    "active_docs": "all *.md except docs/archive/**, stt/eval_results/**, and secrets/**",
+    "archive_docs": "docs/archive/**/*.md",
+    "generated_artifacts": "stt/eval_results/**/*.md",
+    "local_private_docs": "secrets/**/*.md"
+  },
+  "totals": {
+    "file_count": 49,
+    "chars": 225237,
+    "lines": 9620,
+    "top_files_by_chars": [
+      {
+        "path": "docs/archive/logbook_2026_03_full_before_refactor.md",
+        "chars": 40812,
+        "lines": 1327
+      },
+      {
+        "path": "secrets/api_usage_log.md",
+        "chars": 24297,
+        "lines": 1021
+      },
+      {
+        "path": "docs/archive/decisions_2026_03_full_before_refactor.md",
+        "chars": 12395,
+        "lines": 535
+      },
+      {
+        "path": "stt/eval_results/korean_eval_50/20260316_180025/whisper_tiny_readable.md",
+        "chars": 10653,
+        "lines": 527
+      },
+      {
+        "path": "stt/eval_results/korean_eval_50/20260316_172443/whisper_tiny_readable.md",
+        "chars": 10650,
+        "lines": 527
+      },
+      {
+        "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_tiny_readable.md",
+        "chars": 10644,
+        "lines": 527
+      },
+      {
+        "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_base_readable.md",
+        "chars": 10433,
+        "lines": 527
+      },
+      {
+        "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_small_readable.md",
+        "chars": 10433,
+        "lines": 527
+      },
+      {
+        "path": "stt/eval_results/korean_eval_50/20260316_172552/whisper_base_readable.md",
+        "chars": 10414,
+        "lines": 527
+      },
+      {
+        "path": "stt/eval_results/korean_eval_50/20260316_180115/api_gpt-4o-mini-transcribe_readable.md",
+        "chars": 10314,
+        "lines": 527
+      }
+    ]
+  },
+  "groups": {
+    "active_docs": {
+      "file_count": 34,
+      "chars": 70602,
+      "lines": 2963,
+      "top_files_by_chars": [
+        {
+          "path": "wake_word/README.md",
+          "chars": 7298,
+          "lines": 269
+        },
+        {
+          "path": "docs/envs/jetson_wake_word_env.md",
+          "chars": 5898,
+          "lines": 246
+        },
+        {
+          "path": "docs/envs/wake_word_train_smoke_env.md",
+          "chars": 5755,
+          "lines": 238
+        },
+        {
+          "path": "stt/README.md",
+          "chars": 4903,
+          "lines": 232
+        },
+        {
+          "path": "vad/README.md",
+          "chars": 3751,
+          "lines": 149
+        },
+        {
+          "path": "docs/research/wake_word.md",
+          "chars": 3577,
+          "lines": 148
+        },
+        {
+          "path": "docs/research/openwakeword_reference.md",
+          "chars": 3553,
+          "lines": 185
+        },
+        {
+          "path": "docs/reports/stt_korean_eval50_overview.md",
+          "chars": 3256,
+          "lines": 81
+        },
+        {
+          "path": "docs/개발방침.md",
+          "chars": 3224,
+          "lines": 125
+        },
+        {
+          "path": "docs/research/tts.md",
+          "chars": 2563,
+          "lines": 151
+        }
+      ]
+    },
+    "archive_docs": {
+      "file_count": 3,
+      "chars": 53581,
+      "lines": 1877,
+      "top_files_by_chars": [
+        {
+          "path": "docs/archive/logbook_2026_03_full_before_refactor.md",
+          "chars": 40812,
+          "lines": 1327
+        },
+        {
+          "path": "docs/archive/decisions_2026_03_full_before_refactor.md",
+          "chars": 12395,
+          "lines": 535
+        },
+        {
+          "path": "docs/archive/README.md",
+          "chars": 374,
+          "lines": 15
+        }
+      ]
+    },
+    "generated_artifacts": {
+      "file_count": 10,
+      "chars": 76217,
+      "lines": 3731,
+      "top_files_by_chars": [
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_180025/whisper_tiny_readable.md",
+          "chars": 10653,
+          "lines": 527
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_172443/whisper_tiny_readable.md",
+          "chars": 10650,
+          "lines": 527
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_tiny_readable.md",
+          "chars": 10644,
+          "lines": 527
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_base_readable.md",
+          "chars": 10433,
+          "lines": 527
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_small_readable.md",
+          "chars": 10433,
+          "lines": 527
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_172552/whisper_base_readable.md",
+          "chars": 10414,
+          "lines": 527
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_180115/api_gpt-4o-mini-transcribe_readable.md",
+          "chars": 10314,
+          "lines": 527
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/overview.md",
+          "chars": 1857,
+          "lines": 30
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_180115/summary.md",
+          "chars": 423,
+          "lines": 6
+        },
+        {
+          "path": "stt/eval_results/korean_eval_50/20260316_180025/summary.md",
+          "chars": 396,
+          "lines": 6
+        }
+      ]
+    },
+    "local_private_docs": {
+      "file_count": 2,
+      "chars": 24837,
+      "lines": 1049,
+      "top_files_by_chars": [
+        {
+          "path": "secrets/api_usage_log.md",
+          "chars": 24297,
+          "lines": 1021
+        },
+        {
+          "path": "secrets/README.local.md",
+          "chars": 540,
+          "lines": 28
+        }
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "group": "active_docs",
+      "chars": 1632,
+      "lines": 60
+    },
+    {
+      "path": "docs/README.md",
+      "group": "active_docs",
+      "chars": 2164,
+      "lines": 79
+    },
+    {
+      "path": "docs/archive/README.md",
+      "group": "archive_docs",
+      "chars": 374,
+      "lines": 15
+    },
+    {
+      "path": "docs/archive/decisions_2026_03_full_before_refactor.md",
+      "group": "archive_docs",
+      "chars": 12395,
+      "lines": 535
+    },
+    {
+      "path": "docs/archive/logbook_2026_03_full_before_refactor.md",
+      "group": "archive_docs",
+      "chars": 40812,
+      "lines": 1327
+    },
+    {
+      "path": "docs/assets/gifs/jetson_demos/README.md",
+      "group": "active_docs",
+      "chars": 341,
+      "lines": 18
+    },
+    {
+      "path": "docs/assets/screenshots/jetson_demos/README.md",
+      "group": "active_docs",
+      "chars": 538,
+      "lines": 25
+    },
+    {
+      "path": "docs/assets/screenshots/stt/README.md",
+      "group": "active_docs",
+      "chars": 222,
+      "lines": 11
+    },
+    {
+      "path": "docs/assets/videos/jetson_demos/README.md",
+      "group": "active_docs",
+      "chars": 376,
+      "lines": 19
+    },
+    {
+      "path": "docs/decisions.md",
+      "group": "active_docs",
+      "chars": 1762,
+      "lines": 54
+    },
+    {
+      "path": "docs/envs/jetson_wake_word_env.md",
+      "group": "active_docs",
+      "chars": 5898,
+      "lines": 246
+    },
+    {
+      "path": "docs/envs/wake_word_env.md",
+      "group": "active_docs",
+      "chars": 1096,
+      "lines": 64
+    },
+    {
+      "path": "docs/envs/wake_word_train_smoke_env.md",
+      "group": "active_docs",
+      "chars": 5755,
+      "lines": 238
+    },
+    {
+      "path": "docs/jetson_transition_plan.md",
+      "group": "active_docs",
+      "chars": 1506,
+      "lines": 53
+    },
+    {
+      "path": "docs/logbook.md",
+      "group": "active_docs",
+      "chars": 1498,
+      "lines": 70
+    },
+    {
+      "path": "docs/project_overview.md",
+      "group": "active_docs",
+      "chars": 1052,
+      "lines": 49
+    },
+    {
+      "path": "docs/reports/stt_korean_eval50_overview.md",
+      "group": "active_docs",
+      "chars": 3256,
+      "lines": 81
+    },
+    {
+      "path": "docs/reports/stt_trt_attempt_note.md",
+      "group": "active_docs",
+      "chars": 1275,
+      "lines": 39
+    },
+    {
+      "path": "docs/research/negative_datasets.md",
+      "group": "active_docs",
+      "chars": 2472,
+      "lines": 141
+    },
+    {
+      "path": "docs/research/openwakeword_reference.md",
+      "group": "active_docs",
+      "chars": 3553,
+      "lines": 185
+    },
+    {
+      "path": "docs/research/stt.md",
+      "group": "active_docs",
+      "chars": 1761,
+      "lines": 65
+    },
+    {
+      "path": "docs/research/tts.md",
+      "group": "active_docs",
+      "chars": 2563,
+      "lines": 151
+    },
+    {
+      "path": "docs/research/tts_korean.md",
+      "group": "active_docs",
+      "chars": 1790,
+      "lines": 83
+    },
+    {
+      "path": "docs/research/wake_word.md",
+      "group": "active_docs",
+      "chars": 3577,
+      "lines": 148
+    },
+    {
+      "path": "docs/status.md",
+      "group": "active_docs",
+      "chars": 1902,
+      "lines": 58
+    },
+    {
+      "path": "docs/개발방침.md",
+      "group": "active_docs",
+      "chars": 3224,
+      "lines": 125
+    },
+    {
+      "path": "llm/README.md",
+      "group": "active_docs",
+      "chars": 304,
+      "lines": 20
+    },
+    {
+      "path": "secrets/README.local.md",
+      "group": "local_private_docs",
+      "chars": 540,
+      "lines": 28
+    },
+    {
+      "path": "secrets/api_usage_log.md",
+      "group": "local_private_docs",
+      "chars": 24297,
+      "lines": 1021
+    },
+    {
+      "path": "stt/README.md",
+      "group": "active_docs",
+      "chars": 4903,
+      "lines": 232
+    },
+    {
+      "path": "stt/datasets/korean_eval_50/README.md",
+      "group": "active_docs",
+      "chars": 571,
+      "lines": 25
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_172443/whisper_tiny_readable.md",
+      "group": "generated_artifacts",
+      "chars": 10650,
+      "lines": 527
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_172552/whisper_base_readable.md",
+      "group": "generated_artifacts",
+      "chars": 10414,
+      "lines": 527
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_base_readable.md",
+      "group": "generated_artifacts",
+      "chars": 10433,
+      "lines": 527
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_small_readable.md",
+      "group": "generated_artifacts",
+      "chars": 10433,
+      "lines": 527
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_172715/whisper_tiny_readable.md",
+      "group": "generated_artifacts",
+      "chars": 10644,
+      "lines": 527
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_180025/summary.md",
+      "group": "generated_artifacts",
+      "chars": 396,
+      "lines": 6
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_180025/whisper_tiny_readable.md",
+      "group": "generated_artifacts",
+      "chars": 10653,
+      "lines": 527
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_180115/api_gpt-4o-mini-transcribe_readable.md",
+      "group": "generated_artifacts",
+      "chars": 10314,
+      "lines": 527
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/20260316_180115/summary.md",
+      "group": "generated_artifacts",
+      "chars": 423,
+      "lines": 6
+    },
+    {
+      "path": "stt/eval_results/korean_eval_50/overview.md",
+      "group": "generated_artifacts",
+      "chars": 1857,
+      "lines": 30
+    },
+    {
+      "path": "tts/README.md",
+      "group": "active_docs",
+      "chars": 1469,
+      "lines": 78
+    },
+    {
+      "path": "vad/README.md",
+      "group": "active_docs",
+      "chars": 3751,
+      "lines": 149
+    },
+    {
+      "path": "vad/models/README.md",
+      "group": "active_docs",
+      "chars": 650,
+      "lines": 32
+    },
+    {
+      "path": "wake_word/README.md",
+      "group": "active_docs",
+      "chars": 7298,
+      "lines": 269
+    },
+    {
+      "path": "wake_word/assets/feature_models/README.md",
+      "group": "active_docs",
+      "chars": 624,
+      "lines": 22
+    },
+    {
+      "path": "wake_word/examples/README.md",
+      "group": "active_docs",
+      "chars": 242,
+      "lines": 14
+    },
+    {
+      "path": "wake_word/examples/audio_samples/README.md",
+      "group": "active_docs",
+      "chars": 573,
+      "lines": 21
+    },
+    {
+      "path": "wake_word/models/hi_popo/README.md",
+      "group": "active_docs",
+      "chars": 1004,
+      "lines": 39
+    }
+  ]
+}

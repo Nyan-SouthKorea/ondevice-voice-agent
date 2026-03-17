@@ -1,0 +1,297 @@
+{
+  "before_label": "before_refactor",
+  "after_label": "after_refactor_worktree",
+  "before_commit": "f91482dffdf2479e0ac5557e32739a8d16340570",
+  "after_commit": "f91482dffdf2479e0ac5557e32739a8d16340570-dirty",
+  "totals": {
+    "chars": {
+      "before": 251428,
+      "after": 225237,
+      "delta": -26191,
+      "delta_pct": -10.42
+    },
+    "lines": {
+      "before": 10537,
+      "after": 9620,
+      "delta": -917,
+      "delta_pct": -8.7
+    },
+    "file_count": {
+      "before": 46,
+      "after": 49,
+      "delta": 3,
+      "delta_pct": 6.52
+    }
+  },
+  "groups": {
+    "active_docs": {
+      "chars": {
+        "before": 150374,
+        "after": 70602,
+        "delta": -79772,
+        "delta_pct": -53.05
+      },
+      "lines": {
+        "before": 5757,
+        "after": 2963,
+        "delta": -2794,
+        "delta_pct": -48.53
+      },
+      "file_count": {
+        "before": 34,
+        "after": 34,
+        "delta": 0,
+        "delta_pct": 0.0
+      }
+    },
+    "archive_docs": {
+      "chars": {
+        "before": 0,
+        "after": 53581,
+        "delta": 53581,
+        "delta_pct": null
+      },
+      "lines": {
+        "before": 0,
+        "after": 1877,
+        "delta": 1877,
+        "delta_pct": null
+      },
+      "file_count": {
+        "before": 0,
+        "after": 3,
+        "delta": 3,
+        "delta_pct": null
+      }
+    },
+    "generated_artifacts": {
+      "chars": {
+        "before": 76217,
+        "after": 76217,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "lines": {
+        "before": 3731,
+        "after": 3731,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "file_count": {
+        "before": 10,
+        "after": 10,
+        "delta": 0,
+        "delta_pct": 0.0
+      }
+    },
+    "local_private_docs": {
+      "chars": {
+        "before": 24837,
+        "after": 24837,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "lines": {
+        "before": 1049,
+        "after": 1049,
+        "delta": 0,
+        "delta_pct": 0.0
+      },
+      "file_count": {
+        "before": 2,
+        "after": 2,
+        "delta": 0,
+        "delta_pct": 0.0
+      }
+    }
+  },
+  "changed_files": [
+    {
+      "path": "docs/logbook.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 40812,
+        "after": 1498,
+        "delta": -39314,
+        "delta_pct": -96.33
+      },
+      "lines": {
+        "before": 1327,
+        "after": 70,
+        "delta": -1257,
+        "delta_pct": -94.72
+      }
+    },
+    {
+      "path": "docs/decisions.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 12395,
+        "after": 1762,
+        "delta": -10633,
+        "delta_pct": -85.78
+      },
+      "lines": {
+        "before": 535,
+        "after": 54,
+        "delta": -481,
+        "delta_pct": -89.91
+      }
+    },
+    {
+      "path": "docs/project_overview.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 9476,
+        "after": 1052,
+        "delta": -8424,
+        "delta_pct": -88.9
+      },
+      "lines": {
+        "before": 432,
+        "after": 49,
+        "delta": -383,
+        "delta_pct": -88.66
+      }
+    },
+    {
+      "path": "docs/개발방침.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 9415,
+        "after": 3224,
+        "delta": -6191,
+        "delta_pct": -65.76
+      },
+      "lines": {
+        "before": 273,
+        "after": 125,
+        "delta": -148,
+        "delta_pct": -54.21
+      }
+    },
+    {
+      "path": "docs/jetson_transition_plan.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 7527,
+        "after": 1506,
+        "delta": -6021,
+        "delta_pct": -79.99
+      },
+      "lines": {
+        "before": 328,
+        "after": 53,
+        "delta": -275,
+        "delta_pct": -83.84
+      }
+    },
+    {
+      "path": "docs/status.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 7547,
+        "after": 1902,
+        "delta": -5645,
+        "delta_pct": -74.8
+      },
+      "lines": {
+        "before": 207,
+        "after": 58,
+        "delta": -149,
+        "delta_pct": -71.98
+      }
+    },
+    {
+      "path": "README.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 4168,
+        "after": 1632,
+        "delta": -2536,
+        "delta_pct": -60.84
+      },
+      "lines": {
+        "before": 137,
+        "after": 60,
+        "delta": -77,
+        "delta_pct": -56.2
+      }
+    },
+    {
+      "path": "docs/README.md",
+      "before_group": "active_docs",
+      "after_group": "active_docs",
+      "chars": {
+        "before": 3172,
+        "after": 2164,
+        "delta": -1008,
+        "delta_pct": -31.78
+      },
+      "lines": {
+        "before": 103,
+        "after": 79,
+        "delta": -24,
+        "delta_pct": -23.3
+      }
+    },
+    {
+      "path": "docs/archive/README.md",
+      "before_group": null,
+      "after_group": "archive_docs",
+      "chars": {
+        "before": 0,
+        "after": 374,
+        "delta": 374,
+        "delta_pct": null
+      },
+      "lines": {
+        "before": 0,
+        "after": 15,
+        "delta": 15,
+        "delta_pct": null
+      }
+    },
+    {
+      "path": "docs/archive/decisions_2026_03_full_before_refactor.md",
+      "before_group": null,
+      "after_group": "archive_docs",
+      "chars": {
+        "before": 0,
+        "after": 12395,
+        "delta": 12395,
+        "delta_pct": null
+      },
+      "lines": {
+        "before": 0,
+        "after": 535,
+        "delta": 535,
+        "delta_pct": null
+      }
+    },
+    {
+      "path": "docs/archive/logbook_2026_03_full_before_refactor.md",
+      "before_group": null,
+      "after_group": "archive_docs",
+      "chars": {
+        "before": 0,
+        "after": 40812,
+        "delta": 40812,
+        "delta_pct": null
+      },
+      "lines": {
+        "before": 0,
+        "after": 1327,
+        "delta": 1327,
+        "delta_pct": null
+      }
+    }
+  ]
+}
