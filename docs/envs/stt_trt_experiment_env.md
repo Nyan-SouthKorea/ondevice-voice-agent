@@ -39,6 +39,8 @@
 - `numpy==1.26.4`
 - `packaging`
 - `psutil`
+- `sounddevice`
+- `pydantic`
 - `onnx>=1.17,<1.20`
 - `onnx_graphsurgeon`
 - NVIDIA 공식 `torch2trt`

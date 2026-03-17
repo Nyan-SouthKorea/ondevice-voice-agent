@@ -3,6 +3,7 @@
 """
 
 import time
+import gc
 
 
 class WhisperSTTModel:
@@ -43,6 +44,7 @@ class WhisperSTTModel:
         self.language = language
         self.device = device
         self.prompt = prompt
+        self._torch = torch
         self._whisper = whisper
         self.model = whisper.load_model(
             model_name,
@@ -94,3 +96,19 @@ class WhisperSTTModel:
         self.last_text = ""
         self.last_result = None
         self.last_duration_sec = 0.0
+
+    def close(self):
+        """
+        기능:
+        - Whisper 모델을 정리하고 CUDA 캐시를 비운다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        self.model = None
+        gc.collect()
+        if self.device == "cuda":
+            self._torch.cuda.empty_cache()

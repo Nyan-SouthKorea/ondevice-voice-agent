@@ -30,6 +30,8 @@
   - 같은 데이터셋으로 여러 STT 설정을 비교하는 평가 스크립트
 - `tools/stt_eval_overview.py`
   - 평가 결과 디렉토리에서 overview 문서를 다시 생성하는 스크립트
+- `tools/stt_gui_demo.py`
+  - 녹음 시작 / 정지와 모델 전환을 GUI로 확인하는 STT 시연 도구
 - `experiments/stt_trt_builder_experiment.py`
   - WhisperTRT split builder 실험 스크립트
 - `experiments/stt_trt_benchmark_experiment.py`
@@ -140,6 +142,10 @@ cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
 ```
 
+STT GUI에서 `tiny/base(cuda)`, `base(trt)`, `api`를 한 번에 다루려면 아래 env를 권장한다.
+
+- `/home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment`
+
 ### 2. 녹음 데이터셋 만들기
 
 ```bash
@@ -159,6 +165,26 @@ python stt/tools/stt_dataset_recorder.py \
 ```bash
 python stt/tools/stt_dataset_recorder.py --list-devices
 ```
+
+### 2-1. STT GUI 데모
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+python stt/tools/stt_gui_demo.py
+```
+
+현재 GUI 데모 특징:
+
+- `녹음 시작 / 녹음 정지 / 기록 지우기`
+- 모델 선택 드롭다운
+  - `whisper tiny (cuda)`
+  - `whisper base (cuda)`
+  - `whisper base (trt)`
+  - `gpt-4o-mini-transcribe (api)`
+- 모델 전환은 백그라운드 로딩으로 처리
+- 전사 결과는 스크롤 가능한 히스토리로 저장
+- API는 경고 문구와 세션 호출 횟수를 표시
 
 ### 3. 로컬 Whisper 비교 평가
 

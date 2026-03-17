@@ -133,6 +133,19 @@ class OpenAIAPISTTModel:
         self.last_usage_amount = 0.0
         self.last_error = ""
 
+    def close(self):
+        """
+        기능:
+        - API 백엔드가 잡고 있는 클라이언트 참조를 정리한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        self.client = None
+
     def _build_wav_buffer(self, audio):
         """
         기능:

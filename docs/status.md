@@ -9,6 +9,7 @@
 - 동시에 `WhisperTRT base` 한국어 경로를 실험 상태로 유지하며, 속도/정확도 균형이 더 나아지는지 추가 확인한다.
 - TTS는 API 최소 경로를 유지한 채 Jetson에서 `MeloTTS` 온디바이스 가능성을 검증한다.
 - 상위 음성 파이프라인을 SDK형 인터페이스로 연결할 준비를 한다.
+- STT 전용 GUI 데모를 먼저 만들고, 그 다음 wake word + VAD + STT 통합 GUI 데모로 확장한다.
 
 ## 현재 고정 기준
 
@@ -54,6 +55,7 @@
   - 즉 속도는 더 빠르지만, 현재 정확도는 PyTorch `base(cuda)`보다 약간 불리하다.
   - 그래서 현 시점 기본값은 계속 `Whisper base (PyTorch + CUDA)`로 유지한다.
 - TTS는 현재 `OpenAI Audio Speech API`로 최소 합성 경로를 열어 두었고, 다음 검증 대상은 `MeloTTS`다.
+- 데모 구현 계획 문서는 `docs/reports/stt_demo_plan.md`에 둔다.
 
 ## 다음 작업
 
@@ -63,6 +65,7 @@
 4. wake word + VAD + STT를 실제 utterance 단위로 연결한다.
 5. `WhisperTRT base` 한국어 경로에서 custom transcribe 시작 토큰과 default stream 최적화를 더 정리할지 판단한다.
 6. Jetson에서 `MeloTTS` 설치와 한국어 합성 smoke를 검증한다.
+7. STT GUI 데모를 먼저 시연 가능한 수준으로 만들고, 그 다음 통합 GUI 데모를 구현한다.
 
 ## 참조 문서
 

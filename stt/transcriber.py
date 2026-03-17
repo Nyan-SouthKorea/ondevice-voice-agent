@@ -11,6 +11,7 @@ import wave
 import numpy as np
 
 from .stt_api import OpenAIAPISTTModel
+from .stt_whisper_trt import WhisperTRTSTTModel
 from .stt_whisper import WhisperSTTModel
 
 
@@ -25,6 +26,9 @@ class STTTranscriber:
         api_key=None,
         prompt=None,
         usage_purpose=None,
+        checkpoint_path=None,
+        workspace_mb=128,
+        max_text_ctx=64,
     ):
         """
         기능:
@@ -39,6 +43,9 @@ class STTTranscriber:
         - `api_key`: API STT용 키.
         - `prompt`: STT 힌트 프롬프트.
         - `usage_purpose`: API 사용 목적 기록용 문자열.
+        - `checkpoint_path`: WhisperTRT checkpoint 경로.
+        - `workspace_mb`: WhisperTRT 기록용 workspace 크기.
+        - `max_text_ctx`: WhisperTRT 기록용 최대 text context 길이.
 
         반환:
         - 없음.
@@ -51,6 +58,20 @@ class STTTranscriber:
                 device=device,
                 download_root=download_root,
                 prompt=prompt,
+            )
+        elif model == "whisper_trt":
+            resolved_checkpoint = checkpoint_path or (
+                Path(__file__).resolve().parent
+                / "models"
+                / "whisper_trt_base_ko_ctx64"
+                / "whisper_trt_split.pth"
+            )
+            self.backend = WhisperTRTSTTModel(
+                checkpoint_path=resolved_checkpoint,
+                model_name=model_name or "base",
+                language=language,
+                workspace_mb=workspace_mb,
+                max_text_ctx=max_text_ctx,
             )
         elif model == "api":
             self.backend = OpenAIAPISTTModel(
@@ -68,6 +89,21 @@ class STTTranscriber:
         self.last_result = None
         self.last_duration_sec = 0.0
         self.last_usage = None
+
+    def close(self):
+        """
+        기능:
+        - 현재 STT 백엔드가 잡고 있는 자원을 정리한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        close_fn = getattr(self.backend, "close", None)
+        if callable(close_fn):
+            close_fn()
 
     def load_audio(self, audio):
         """

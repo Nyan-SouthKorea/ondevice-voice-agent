@@ -2,6 +2,23 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-17 | Human + Codex | STT GUI 데모 1차 구현 시작
+
+### Context
+
+- wake word / VAD / STT 통합 데모로 바로 가기 전에, STT 단독 GUI에서 녹음과 모델 전환 UX를 먼저 확인하기로 했다.
+
+### Actions
+
+- `docs/reports/stt_demo_plan.md`에 STT GUI 데모와 통합 GUI 데모의 2단계 계획을 정리했다.
+- `whisper base (trt)`를 STT 백엔드로 직접 부를 수 있도록 `stt_whisper_trt.py`를 추가했다.
+- `tools/stt_gui_demo.py`를 추가해 `녹음 시작 / 정지`, 백그라운드 모델 로딩, 전사 히스토리, API 경고/호출 횟수 표시를 넣었다.
+
+### Next
+
+- STT GUI 데모를 직접 시연한 뒤 UI와 파라미터 보완점을 반영한다.
+- 그 다음 wake word + VAD + STT 통합 GUI 데모로 확장한다.
+
 ## 2026-03-17 | Human + Codex | STT 50문장 최종 비교 재실행
 
 ### Context
