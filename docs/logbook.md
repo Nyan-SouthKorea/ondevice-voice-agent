@@ -14,6 +14,7 @@
 - `voice_pipeline_gui_demo.py`를 추가해 `Wake Word 대기 -> 듣는 중 -> STT 처리 중 -> 출력 완료` 단계를 하나의 GUI로 연결했다.
 - 통합 GUI는 `stt_trt_experiment` env를 기준으로 실행하고, Jetson ORT는 `.pth` 브리지로 재사용하게 맞췄다.
 - 스크린샷 4장을 `docs/assets/screenshots/stt/` 아래로 옮기고, `stt/README.md`에 통합 GUI 설명과 화면 예시를 추가했다.
+- STT 통합 GUI 시연 MP4 2개를 `docs/assets/videos/jetson_demos/` 아래로 정리하고, GIF 썸네일을 생성해 `stt/README.md`에서 클릭 가능한 형태로 연결했다.
 - 현재 상태와 다음 작업은 `docs/status.md`에서 통합 GUI 기준으로 짧게 갱신했다.
 
 ### Next

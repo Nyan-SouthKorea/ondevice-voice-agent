@@ -250,6 +250,15 @@ python voice_pipeline_gui_demo.py
 |---|---|
 | ![Voice pipeline stt processing](../docs/assets/screenshots/stt/voice_pipeline_gui_03_stt_processing.png) | ![Voice pipeline result displayed](../docs/assets/screenshots/stt/voice_pipeline_gui_04_result_displayed.png) |
 
+시연 영상은 아래 GIF 썸네일을 클릭해서 본다.
+
+| Demo 1 | Demo 2 |
+|---|---|
+| [![Voice pipeline demo 1](../docs/assets/gifs/jetson_demos/voice_pipeline_demo_01_giraffe_question.gif)](../docs/assets/videos/jetson_demos/voice_pipeline_demo_01_giraffe_question.mp4) | [![Voice pipeline demo 2](../docs/assets/gifs/jetson_demos/voice_pipeline_demo_02_lunch_recommendation.gif)](../docs/assets/videos/jetson_demos/voice_pipeline_demo_02_lunch_recommendation.mp4) |
+
+- Demo 1 발화: `내가 그린 기린 그림은 잘 그린 기린 그림이냐`
+- Demo 2 발화: `배고픈데 점심 메뉴 추천해줘`
+
 이 데모에서 확인할 수 있는 점:
 
 - wake word threshold 기준으로 호출어가 감지되는지
