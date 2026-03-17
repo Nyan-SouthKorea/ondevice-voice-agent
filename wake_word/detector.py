@@ -154,7 +154,7 @@ class HiPopoWakeWordONNX:
             metadata = json.loads(self.metadata_path.read_text(encoding="utf-8"))
             metadata_threshold = metadata.get("threshold")
 
-        self.threshold = float(threshold if threshold is not None else (metadata_threshold or 0.8))
+        self.threshold = float(threshold if threshold is not None else (metadata_threshold or 0.9))
 
     def _predict_window_scores(self, features):
         """
