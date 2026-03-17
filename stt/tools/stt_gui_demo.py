@@ -204,6 +204,7 @@ class STTGuiDemo:
         self.level_var = tk.DoubleVar(value=0.0)
         self.record_sec_var = tk.StringVar(value="0.00초")
         self.api_count_var = tk.StringVar(value="API 호출 0회")
+        self.compare_all_var = tk.BooleanVar(value=False)
 
         self.stream = None
 
@@ -249,6 +250,14 @@ class STTGuiDemo:
 
         self.reload_button = ttk.Button(model_frame, text="다시 로드", command=self._on_reload_clicked)
         self.reload_button.pack(side="left", padx=(8, 0))
+
+        self.compare_check = ttk.Checkbutton(
+            model_frame,
+            text="정지 후 4개 모델 전체 비교",
+            variable=self.compare_all_var,
+            command=self._on_compare_mode_changed,
+        )
+        self.compare_check.pack(side="left", padx=(12, 0))
 
         ttk.Label(model_frame, textvariable=self.model_state_var).pack(side="left", padx=(16, 0))
 
@@ -337,6 +346,20 @@ class STTGuiDemo:
             return
         self._request_model_load(selected_key, force=True)
 
+    def _on_compare_mode_changed(self):
+        """
+        기능:
+        - 전체 비교 모드 변경 시 API 경고 문구를 다시 갱신한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        current_key = self.active_model_key or self._find_model_key_by_label(self.model_combo.get())
+        self._update_api_notice(current_key)
+
     def _find_model_key_by_label(self, label):
         """
         기능:
@@ -407,19 +430,7 @@ class STTGuiDemo:
                 old_transcriber.close()
             gc.collect()
 
-            kwargs = {
-                "model": model_info["model"],
-                "model_name": model_info["model_name"],
-                "language": "ko",
-                "device": model_info["device"],
-                "usage_purpose": "stt_gui_demo",
-            }
-            if model_key == "whisper_base_trt":
-                kwargs["checkpoint_path"] = self.args.trt_checkpoint
-                kwargs["workspace_mb"] = 128
-                kwargs["max_text_ctx"] = 64
-
-            transcriber = STTTranscriber(**kwargs)
+            transcriber = self._build_transcriber_for_key(model_key)
             self.gui_queue.put(
                 {
                     "type": "model_loaded",
@@ -435,6 +446,31 @@ class STTGuiDemo:
                     "error": str(exc),
                 }
             )
+
+    def _build_transcriber_for_key(self, model_key):
+        """
+        기능:
+        - 모델 키에 대응하는 STTTranscriber를 생성한다.
+
+        입력:
+        - `model_key`: 생성할 모델 키.
+
+        반환:
+        - STTTranscriber 인스턴스를 반환한다.
+        """
+        model_info = self.model_options[model_key]
+        kwargs = {
+            "model": model_info["model"],
+            "model_name": model_info["model_name"],
+            "language": "ko",
+            "device": model_info["device"],
+            "usage_purpose": "stt_gui_demo",
+        }
+        if model_key == "whisper_base_trt":
+            kwargs["checkpoint_path"] = self.args.trt_checkpoint
+            kwargs["workspace_mb"] = 128
+            kwargs["max_text_ctx"] = 64
+        return STTTranscriber(**kwargs)
 
     def _start_recording(self):
         """
@@ -463,6 +499,7 @@ class STTGuiDemo:
         self.stop_button.state(["!disabled"])
         self.model_combo.state(["disabled"])
         self.reload_button.state(["disabled"])
+        self.compare_check.state(["disabled"])
 
         self.stream = sd.InputStream(
             samplerate=TARGET_SR,
@@ -534,12 +571,20 @@ class STTGuiDemo:
             return
 
         self.transcribing = True
-        self._set_status("STT 분석 중", f"{self.active_model_label} | 길이 {audio_sec:.2f}s")
-        worker = threading.Thread(
-            target=self._transcribe_worker,
-            args=(audio, audio_sec, self.active_model_key, self.active_model_label, self.active_transcriber),
-            daemon=True,
-        )
+        if self.compare_all_var.get():
+            self._set_status("전체 모델 비교 중", f"4개 모델 순차 실행 | 길이 {audio_sec:.2f}s")
+            worker = threading.Thread(
+                target=self._compare_all_worker,
+                args=(audio, audio_sec),
+                daemon=True,
+            )
+        else:
+            self._set_status("STT 분석 중", f"{self.active_model_label} | 길이 {audio_sec:.2f}s")
+            worker = threading.Thread(
+                target=self._transcribe_worker,
+                args=(audio, audio_sec, self.active_model_key, self.active_model_label, self.active_transcriber),
+                daemon=True,
+            )
         worker.start()
 
     def _transcribe_worker(self, audio, audio_sec, model_key, model_label, transcriber):
@@ -578,6 +623,68 @@ class STTGuiDemo:
                 }
             )
 
+    def _compare_all_worker(self, audio, audio_sec):
+        """
+        기능:
+        - 하나의 녹음에 대해 4개 STT 모델을 모두 순차 실행한다.
+
+        입력:
+        - `audio`: 녹음된 float32 mono 오디오.
+        - `audio_sec`: 오디오 길이.
+
+        반환:
+        - 없음.
+        """
+        results = []
+        for item in MODEL_OPTIONS:
+            model_key = item["key"]
+            model_label = item["label"]
+            transcriber = None
+            close_after = False
+            try:
+                self.gui_queue.put(
+                    {
+                        "type": "compare_progress",
+                        "message": f"{model_label} 실행 중",
+                    }
+                )
+                if model_key == self.active_model_key and self.active_transcriber is not None:
+                    transcriber = self.active_transcriber
+                else:
+                    transcriber = self._build_transcriber_for_key(model_key)
+                    close_after = True
+
+                text = transcriber.transcribe(audio)
+                results.append(
+                    {
+                        "model_key": model_key,
+                        "model_label": model_label,
+                        "text": text,
+                        "stt_sec": float(transcriber.last_duration_sec),
+                    }
+                )
+                if model_key == "api_gpt4o_mini":
+                    self.api_call_count += 1
+            except Exception as exc:
+                results.append(
+                    {
+                        "model_key": model_key,
+                        "model_label": model_label,
+                        "error": str(exc),
+                    }
+                )
+            finally:
+                if close_after and transcriber is not None:
+                    transcriber.close()
+
+        self.gui_queue.put(
+            {
+                "type": "compare_done",
+                "audio_sec": audio_sec,
+                "results": results,
+            }
+        )
+
     def _finish_idle(self, detail_text):
         """
         기능:
@@ -597,6 +704,7 @@ class STTGuiDemo:
         self.stop_button.state(["disabled"])
         self.model_combo.state(["!disabled"])
         self.reload_button.state(["!disabled"])
+        self.compare_check.state(["!disabled"])
         self._set_status("대기 중", detail_text)
 
     def _set_status(self, status_text, detail_text):
@@ -672,7 +780,12 @@ class STTGuiDemo:
         - 없음.
         """
         if model_key == "api_gpt4o_mini":
-            self.api_notice_var.set("주의: API 모델은 실제 과금이 발생합니다. 짧은 녹음은 자동으로 생략됩니다.")
+            if self.compare_all_var.get():
+                self.api_notice_var.set("주의: 전체 비교 모드는 API 1회를 포함해 실제 과금이 발생합니다.")
+            else:
+                self.api_notice_var.set("주의: API 모델은 실제 과금이 발생합니다. 짧은 녹음은 자동으로 생략됩니다.")
+        elif self.compare_all_var.get():
+            self.api_notice_var.set("주의: 전체 비교 모드는 API 1회를 포함해 실제 과금이 발생합니다.")
         else:
             self.api_notice_var.set("")
 
@@ -732,6 +845,23 @@ class STTGuiDemo:
                     f"- error: {item['error']}"
                 )
                 self._finish_idle("전사 실패")
+
+            elif item["type"] == "compare_progress":
+                self._set_status("전체 모델 비교 중", item["message"])
+
+            elif item["type"] == "compare_done":
+                timestamp = time.strftime("%H:%M:%S")
+                self.api_count_var.set(f"API 호출 {self.api_call_count}회")
+                lines = [f"[{timestamp}] 전체 모델 비교", f"- audio_sec: {item['audio_sec']:.2f}"]
+                for result in item["results"]:
+                    if "error" in result:
+                        lines.append(f"- {result['model_label']}: error={result['error']}")
+                    else:
+                        lines.append(
+                            f"- {result['model_label']}: stt_sec={result['stt_sec']:.3f} | text={result['text']}"
+                        )
+                self._append_history("\n".join(lines))
+                self._finish_idle("전체 모델 비교 완료")
 
         if self.recording and self.record_started_at is not None:
             elapsed = time.time() - self.record_started_at

@@ -177,6 +177,7 @@ python stt/tools/stt_gui_demo.py
 현재 GUI 데모 특징:
 
 - `녹음 시작 / 녹음 정지 / 기록 지우기`
+- `정지 후 4개 모델 전체 비교` 체크박스
 - 모델 선택 드롭다운
   - `whisper tiny (cuda)`
   - `whisper base (cuda)`

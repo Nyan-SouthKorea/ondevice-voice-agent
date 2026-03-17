@@ -13,6 +13,7 @@
 - `docs/reports/stt_demo_plan.md`에 STT GUI 데모와 통합 GUI 데모의 2단계 계획을 정리했다.
 - `whisper base (trt)`를 STT 백엔드로 직접 부를 수 있도록 `stt_whisper_trt.py`를 추가했다.
 - `tools/stt_gui_demo.py`를 추가해 `녹음 시작 / 정지`, 백그라운드 모델 로딩, 전사 히스토리, API 경고/호출 횟수 표시를 넣었다.
+- 하나의 녹음에 대해 `tiny / base(cuda) / base(trt) / api`를 모두 순차 실행하는 전체 비교 모드도 추가했다.
 
 ### Next
 
