@@ -230,11 +230,56 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
 - 결과 디렉토리:
   - `/home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_eval_results/korean_eval_50/20260317_112711`
 - code-generated summary 기준:
-  - `mean_stt_sec 0.2115`
-  - `p95_stt_sec 0.2946`
-  - `mean_rtf 0.0435`
-  - `normalized_exact_match_rate 0.1600`
-  - `mean_normalized_cer 0.1759`
+- `mean_stt_sec 0.2115`
+- `p95_stt_sec 0.2946`
+- `mean_rtf 0.0435`
+- `normalized_exact_match_rate 0.1600`
+- `mean_normalized_cer 0.1759`
+
+### 9. `small` 한국어 경로 가능성 확인
+
+`small`은 같은 split builder를 그대로 쓰면 모델을 GPU에 올리는 단계에서 먼저 실패했다.
+
+그래서 builder 내부를 추가로 조정했다.
+
+- 빌드용 Whisper 모델을 CPU에서 `half()`로 줄인 뒤 GPU에 적재
+- `LayerNorm`만 다시 `float()`로 유지
+
+이후 확인된 점:
+
+- `small` 모델 자체를 GPU에 올리는 단계는 통과했다.
+- 즉, 이전처럼 "모델 로드 자체가 불가능한 상태"는 벗어났다.
+
+하지만 decoder split build는 현재도 통과하지 못했다.
+
+확인한 조건:
+
+- `--model-name small`
+- `--language ko`
+- `--workspace-mb 128`
+- `--max-text-ctx 64`
+
+결과:
+
+- ONNX export / constant folding 단계에서 다시 `CUDACachingAllocator` 계열 오류가 났다.
+
+더 공격적인 조건:
+
+- `--workspace-mb 64`
+- `--max-text-ctx 32`
+
+결과:
+
+- TRT decoder 빌드 단계에서 다시 OOM이 났다.
+- 확인된 메시지 예:
+  - `autotuning: User allocator error allocating 30031872-byte buffer`
+  - `Could not find any implementation for node ...`
+
+현재 해석:
+
+- `small`은 메모리 최적화를 조금 더 하면 가능성이 완전히 0은 아니다.
+- 다만 현 시점 Jetson Orin Nano 8GB 조건에서는 `base`처럼 바로 실용 경로로 가져가기는 아직 어렵다.
+- 즉, 지금은 `base` TRT 경로를 먼저 활용하는 편이 맞다.
 
 ## 현재 결론
 

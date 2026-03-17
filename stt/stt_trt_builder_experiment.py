@@ -113,6 +113,26 @@ def load_runtime_modules():
     return torch, whisper, wm
 
 
+def load_model_for_trt_build(wm, whisper, model_name):
+    """
+    기능:
+    - TRT 빌드용 Whisper 모델을 CPU에서 half로 줄인 뒤 GPU에 올린다.
+
+    입력:
+    - `wm`: whisper_trt.model 모듈.
+    - `whisper`: whisper 모듈.
+    - `model_name`: Whisper 모델 이름.
+
+    반환:
+    - GPU에 적재된 fp16 Whisper 모델을 반환한다.
+    """
+    model = wm.load_model(model_name, device="cpu").half()
+    for module in model.modules():
+        if isinstance(module, whisper.model.LayerNorm):
+            module.float()
+    return model.cuda().eval()
+
+
 def prepare_builder(
     wm,
     whisper,
@@ -171,7 +191,7 @@ def prepare_builder(
     @classmethod
     @wm.torch.no_grad()
     def build_text_decoder_engine(cls):
-        model = wm.load_model(cls.model).cuda().eval()
+        model = load_model_for_trt_build(wm, whisper, cls.model)
         dims = model.dims
 
         capped_text_ctx = max(
@@ -214,6 +234,51 @@ def prepare_builder(
         return engine
 
     builder.build_text_decoder_engine = build_text_decoder_engine
+
+    @classmethod
+    @wm.torch.no_grad()
+    def build_audio_encoder_engine(cls):
+        model = load_model_for_trt_build(wm, whisper, cls.model)
+        dims = model.dims
+
+        encoder_module = wm._AudioEncoderEngine(
+            model.encoder.conv1,
+            model.encoder.conv2,
+            model.encoder.blocks,
+            model.encoder.ln_post,
+        )
+
+        n_frames = dims.n_audio_ctx * 2
+
+        x = wm.torch.randn(1, dims.n_mels, n_frames).cuda()
+        positional_embedding = model.encoder.positional_embedding.cuda().detach()
+
+        engine = wm.torch2trt.torch2trt(
+            encoder_module,
+            [x, positional_embedding],
+            use_onnx=True,
+            min_shapes=[
+                (1, dims.n_mels, 1),
+                (1, dims.n_audio_state),
+            ],
+            opt_shapes=[
+                (1, dims.n_mels, n_frames),
+                (dims.n_audio_ctx, dims.n_audio_state),
+            ],
+            max_shapes=[
+                (1, dims.n_mels, n_frames),
+                (dims.n_audio_ctx, dims.n_audio_state),
+            ],
+            input_names=["x", "positional_embedding"],
+            output_names=["output"],
+            max_workspace_size=cls.max_workspace_size,
+            fp16_mode=cls.fp16_mode,
+            log_level=wm.tensorrt.Logger.VERBOSE if cls.verbose else wm.tensorrt.Logger.ERROR,
+        )
+
+        return engine
+
+    builder.build_audio_encoder_engine = build_audio_encoder_engine
     return builder
 
 
