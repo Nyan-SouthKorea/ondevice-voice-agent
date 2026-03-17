@@ -315,6 +315,43 @@ python stt/tools/stt_benchmark.py \
 - 샘플별 GT/예측 비교는 `<run_name>_readable.md`에 사람이 읽기 쉬운 형태로 저장한다.
 - 실행별 요약 표는 `summary.csv`, `summary.json`, `summary.md`로 함께 저장한다.
 
+## 최종 50문장 비교
+
+기준:
+
+- 데이터셋: `stt/datasets/korean_eval_50/`
+- 로컬 Whisper / API 결과:
+  - `stt/eval_results/korean_eval_50_final_compare/korean_eval_50/`
+- TRT 결과:
+  - `stt/eval_results/korean_eval_50_final_compare_trt/korean_eval_50/`
+
+TRT 비교 시에는 아래 checkpoint를 직접 읽는다.
+
+- `stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`
+
+| 모델 | 장치 | 샘플 수 | Load (s) | Mean STT (s) | P95 STT (s) | Mean RTF | Normalized Exact Match | Normalized CER |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `gpt-4o-mini-transcribe` | `api` | 50 | 1.4970 | 0.9206 | 1.5994 | 0.1892 | 0.6800 | 0.0683 |
+| `whisper tiny` | `cuda` | 50 | 4.6292 | 0.6256 | 0.8169 | 0.1286 | 0.0400 | 0.4753 |
+| `whisper base` | `cuda` | 50 | 3.2445 | 0.6954 | 0.9428 | 0.1429 | 0.1800 | 0.1653 |
+| `whisper base` | `cuda_trt` | 50 | 3.5309 | 0.1883 | 0.2504 | 0.0387 | 0.1600 | 0.1759 |
+
+현재 표 기준으로 보면:
+
+- 정확도는 `API`가 가장 좋다.
+- 로컬 Whisper 중 정확도는 `whisper base (cuda)`가 가장 좋다.
+- 속도는 `whisper base (TRT)`가 가장 빠르다.
+- `whisper base (TRT)`는 `whisper base (cuda)`보다 CER이 약간 불리하지만, 지연 시간은 크게 줄어든다.
+
+원본 결과 경로:
+
+- `whisper tiny / base (cuda)`:
+  - `stt/eval_results/korean_eval_50_final_compare/korean_eval_50/20260317_120234/summary.json`
+- `gpt-4o-mini-transcribe`:
+  - `stt/eval_results/korean_eval_50_final_compare/korean_eval_50/20260317_120359/summary.json`
+- `whisper base (TRT)`:
+  - `stt/eval_results/korean_eval_50_final_compare_trt/korean_eval_50/20260317_120455/summary.json`
+
 API STT 실행 메모:
 
 - `--api-key`를 주지 않으면 로컬 `secrets/api_key.txt`를 먼저 찾는다.

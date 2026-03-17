@@ -2,6 +2,22 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-17 | Human + Codex | STT 50문장 최종 비교 재실행
+
+### Context
+
+- STT 기본 경로를 정하기 전에 `API / whisper tiny(cuda) / whisper base(cuda) / whisper base(TRT)`를 같은 50문장 세트로 다시 비교할 필요가 있었다.
+
+### Actions
+
+- `stt/datasets/korean_eval_50/` 기준으로 네 경로를 다시 실행했다.
+- TRT는 `stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`를 직접 읽어 평가했다.
+- code-generated summary 기준 수치를 `stt/README.md`의 최종 비교 표에 반영했다.
+
+### Next
+
+- STT 기본값을 실제 음성 에이전트 파이프라인에 붙일 때는 `정확도 우선 / 속도 우선` 기준을 한 번 더 정리한다.
+
 ## 2026-03-17 | Human + Codex | STT 디렉토리 역할 기준 재정리
 
 ### Context
