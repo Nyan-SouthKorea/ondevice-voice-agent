@@ -77,7 +77,7 @@ VAD:
 | [vad](vad/README.md) | 발화 구간 감지 모듈 | 요소기술 완료 |
 | [stt](stt/README.md) | 음성 인식 계층 | 초기 구현 + 비교 평가 준비 |
 | [llm](llm/README.md) | 명령 해석 및 응답 생성 계층 | 구조만 확보 |
-| [tts](tts/README.md) | 음성 합성 계층 | 구조만 확보 |
+| [tts](tts/README.md) | 음성 합성 계층 | 초기 구조 시작 |
 
 루트 README는 상위 프로젝트 설명과 모듈 연결을 담당하고, 실제 구현이 진행된 모듈은 각 디렉토리의 README에서 더 자세히 설명한다.
 

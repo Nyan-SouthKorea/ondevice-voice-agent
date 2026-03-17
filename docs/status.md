@@ -1,6 +1,6 @@
 # Status
 
-> 마지막 업데이트: 2026-03-16
+> 마지막 업데이트: 2026-03-17
 
 ## 현재 목표
 
@@ -8,6 +8,7 @@
 - wake word threshold와 input gain 기본값을 현장 기준으로 확정한다.
 - wake word와 VAD를 연결해 STT 입력 구간 절단 기준을 정리한다.
 - STT는 고정 문장 50개 직접 녹음 데이터셋으로 속도와 정확도를 비교한 뒤 기본 경로를 정한다.
+- TTS는 공통 래퍼와 최소 합성 경로를 먼저 열고, 이후 Jetson 온디바이스 기본값을 확정한다.
 
 ## 현재 최종 기준
 
@@ -18,6 +19,7 @@
 - 추론 타깃: Jetson Orin Nano Developer Kit 8GB
 - VAD 기본 backend: `silero`
 - STT 기본 backend 방향: `Whisper`
+- TTS 기본 방향: `MeloTTS` 검증 + API 경로 병행
 
 ## 현재 상태
 
@@ -147,6 +149,20 @@
   - 다음 비교 기준:
     - 사용자가 직접 읽은 50개 고정 문장 기준으로 `tiny / base / small`과 필요 시 API 경로 비교
     - 속도 지표와 normalized exact match, normalized CER를 함께 기록
+- TTS 초기 구조 구현 시작
+  - 공통 진입점: `tts/tts.py`
+  - 백엔드 1: `tts/tts_api.py`
+  - 최소 데모: `tts/tts_demo.py`
+  - 현재 구현 범위:
+    - 텍스트를 오디오 파일로 저장하는 최소 API 경로 확보
+    - `TTSSynthesizer(model="api")` 공통 사용 방식 정리
+    - OpenAI Audio Speech API 호출 결과를 로컬 usage log에 기록
+  - 현재 방향:
+    - 빠른 통합 경로는 `OpenAI API TTS`
+    - 온디바이스 기본 후보는 `MeloTTS`
+  - 다음 단계:
+    - Jetson에서 `MeloTTS` 설치/실행 검증
+    - playback / cache / LLM 연결 추가
 - Jetson synthetic chunk 기준 간단 timing 확인
   - chunk size: `1280 samples = 80 ms`
   - classifier window: `16 frames = 1.28 s`
@@ -187,3 +203,4 @@
 6. 비교 결과를 바탕으로 STT 기본 backend와 모델값을 확정
 7. wake word와 VAD를 연결하고 utterance cut 기준을 먼저 확정
 8. 성능이 충분하면 wake word와 VAD를 상위 SDK 첫 모듈로 정리
+9. TTS 온디바이스 backend 후보를 Jetson에서 검증하고 상위 출력 모듈 구조를 정리

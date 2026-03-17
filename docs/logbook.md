@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-03-17 | Human + Codex | TTS 초기 구조와 개발 계획 시작
+
+### Context
+
+- 사용자는 다른 태스크에서 STT를 계속 진행하는 동안, TTS도 병렬로 개발을 시작하길 원했다.
+- 현재 `tts/`는 README만 있는 빈 자리였고, 상위 파이프라인에서 바로 붙일 수 있는 인터페이스도 없었다.
+
+### Actions
+
+- `tts/tts.py`에 `TTSSynthesizer` 공통 진입점을 추가했다.
+- `tts/tts_api.py`에 OpenAI Audio Speech API 기반 최소 TTS 백엔드를 구현했다.
+- `tts/tts_demo.py`에 텍스트를 오디오 파일로 저장하는 최소 데모를 추가했다.
+- `tts/__init__.py`를 추가해 패키지 진입점을 정리했다.
+- `docs/research/tts.md`를 새로 작성해 TTS v1 방향과 후보 비교를 정리했다.
+- `tts/README.md`, `docs/README.md`, `docs/status.md`, `docs/project_overview.md`, `docs/개발방침.md`, `docs/decisions.md`를 현재 기준으로 동기화했다.
+
+### Findings
+
+- 빠르게 end-to-end를 열기에는 OpenAI Audio Speech API가 가장 단순하다.
+- 다만 장기 제품 방향과 Jetson 제약을 고려하면 온디바이스 기본 후보는 `MeloTTS`가 더 적합하다.
+- 따라서 현재는 `공통 인터페이스 + API 최소 경로`, 다음 단계는 `MeloTTS Jetson 검증` 순서가 가장 실용적이다.
+
+### Next
+
+- Jetson에서 `MeloTTS` 설치와 한국어 합성 smoke를 검증한다.
+- 온디바이스 backend를 `TTSSynthesizer`에 추가한다.
+- 이후 playback, cache, LLM 출력 연결 순서로 확장한다.
+
 ## 2026-03-16 | Human + Codex | STT 50문장 직접 녹음 평가 세트와 비교 파이프라인 추가
 
 ### Context

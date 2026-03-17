@@ -1,0 +1,109 @@
+"""
+TTS 공통 진입점.
+
+동일한 `synthesize_to_file(text, output_path)` 사용법으로
+여러 TTS 백엔드를 갈아끼울 수 있게 한다.
+"""
+
+from pathlib import Path
+
+from .tts_api import OpenAIAPITTSModel
+
+
+class TTSSynthesizer:
+    def __init__(
+        self,
+        model="api",
+        model_name=None,
+        voice=None,
+        instructions=None,
+        response_format="wav",
+        speed=1.0,
+        api_key=None,
+        usage_purpose=None,
+    ):
+        """
+        기능:
+        - 선택한 백엔드에 맞는 TTS 모델을 초기화하고 공통 인터페이스를 제공한다.
+
+        입력:
+        - `model`: 사용할 TTS 백엔드 이름.
+        - `model_name`: 백엔드별 실제 모델 이름.
+        - `voice`: 사용할 음성 이름.
+        - `instructions`: 말투 제어용 추가 지시 문자열.
+        - `response_format`: 출력 오디오 포맷.
+        - `speed`: 합성 속도 배율.
+        - `api_key`: API TTS용 키.
+        - `usage_purpose`: API 사용 목적 기록용 문자열.
+
+        반환:
+        - 없음.
+        """
+        self.model = model
+        if model == "api":
+            self.backend = OpenAIAPITTSModel(
+                model_name=model_name or "gpt-4o-mini-tts",
+                voice=voice or "alloy",
+                instructions=instructions,
+                response_format=response_format,
+                speed=speed,
+                api_key=api_key,
+                usage_purpose=usage_purpose,
+            )
+        else:
+            raise ValueError(f"지원하지 않는 TTS 모델입니다: {model}")
+
+        self.last_duration_sec = 0.0
+        self.last_output_path = None
+        self.last_error = ""
+
+    def synthesize_to_file(self, text, output_path):
+        """
+        기능:
+        - 입력 텍스트를 음성으로 합성해 지정한 파일로 저장한다.
+
+        입력:
+        - `text`: 음성으로 변환할 문자열.
+        - `output_path`: 생성 오디오를 저장할 파일 경로.
+
+        반환:
+        - 저장한 파일 경로를 반환한다.
+        """
+        saved_path = self.backend.synthesize_to_file(text, output_path)
+        self.last_duration_sec = float(self.backend.last_duration_sec)
+        self.last_output_path = Path(saved_path)
+        self.last_error = str(getattr(self.backend, "last_error", ""))
+        return self.last_output_path
+
+    def synthesize_bytes(self, text):
+        """
+        기능:
+        - 입력 텍스트를 음성으로 합성하고 결과 바이트를 반환한다.
+
+        입력:
+        - `text`: 음성으로 변환할 문자열.
+
+        반환:
+        - 생성 오디오의 바이트 데이터를 반환한다.
+        """
+        payload = self.backend.synthesize_bytes(text)
+        self.last_duration_sec = float(self.backend.last_duration_sec)
+        self.last_output_path = getattr(self.backend, "last_output_path", None)
+        self.last_error = str(getattr(self.backend, "last_error", ""))
+        return payload
+
+    def reset(self):
+        """
+        기능:
+        - 마지막 TTS 실행 상태를 초기화한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        self.backend.reset()
+        self.last_duration_sec = 0.0
+        self.last_output_path = None
+        self.last_error = ""

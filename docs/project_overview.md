@@ -1,6 +1,6 @@
 # On-Device Voice Agent Project Overview
 
-> 마지막 업데이트: 2026-03-16
+> 마지막 업데이트: 2026-03-17
 
 ## 1. 프로젝트 목적
 
@@ -39,7 +39,7 @@
 
 ## 3. 현재 시스템 범위
 
-현재 실제로 구현과 검증이 끝난 영역은 wake word와 VAD이며, STT는 초기 구조 구현과 비교 평가 준비까지 진행됐다.
+현재 실제로 구현과 검증이 끝난 영역은 wake word와 VAD이며, STT는 초기 구조 구현과 비교 평가 준비까지 진행됐고, TTS는 초기 구조를 시작했다.
 
 전체 목표 파이프라인은 아래와 같다.
 
@@ -132,6 +132,15 @@
 - 기본 backend: `silero`
 - 공통 인터페이스: `infer(audio_chunk) -> bool`
 - 기본 filtering: `min_speech_frames=3`, `min_silence_frames=10`
+
+### TTS
+
+- 공통 진입점: `tts/tts.py`
+- backend 1: OpenAI Audio Speech API
+- 온디바이스 기본 후보: MeloTTS
+- 현재 목적:
+  - 상위 파이프라인이 바로 붙일 수 있는 공통 TTS 래퍼 확보
+  - API 기반 최소 합성 경로를 먼저 열고, 이후 Jetson에서 온디바이스 경로를 검증
 
 ### Positive 데이터
 
