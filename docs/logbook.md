@@ -2,6 +2,63 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-17 | Human + Codex | STT GUI 6모델 선택지와 2모델 비교 제한 반영
+
+### Context
+
+- 사용자가 STT GUI에서 최종 6개 모델을 모두 선택할 수 있게 하되, 메모리 문제로 전체 동시 비교는 막고 최대 2개만 비교하길 원했다.
+
+### Actions
+
+- `stt/tools/stt_gui_demo.py`의 모델 선택지에 `small nano safe`, `small agx cross-device`를 포함해 6개 모델 구성을 맞췄다.
+- 비교 모드는 `전체 비교` 대신 `선택 모델 비교`로 바꾸고, 최대 2개까지만 체크되도록 제한했다.
+- 비교 대상이 아닌 모델은 메모리에 상주시켜 두지 않고, 임시 로드한 비교 모델은 실행 후 바로 `close()`와 `gc.collect()`로 정리하게 했다.
+- 전사 결과 텍스트 영역 폰트를 줄여, 다중 비교 시 한 화면에 더 많은 텍스트가 보이도록 조정했다.
+
+### Next
+
+- STT GUI의 선택 모델 비교 UX를 실제 시연 기준으로 한 번 더 점검한다.
+- 이후 wake word + VAD + STT 통합 GUI에 같은 선택 구조를 재사용한다.
+
+## 2026-03-17 | Human + Codex | 문서 중복 정리와 TRT 시행착오 산출물 정리
+
+### Context
+
+- 사용자가 상세 내역을 중복되지 않게 다시 정리하고, `docs/README.md` 기준으로 문서 전반을 보완하길 원했다.
+- 동시에 프로젝트 재현에 필요 없는 대용량 TRT 시행착오 산출물은 문서 기록만 남기고 삭제하길 원했다.
+
+### Actions
+
+- `docs/README.md`에 문서 수정 체크리스트와 산출물 정리 규칙을 추가했다.
+- `docs/status.md`는 현재 기준만 남기도록 줄이고, STT 기본 후보와 TRT 대안 경로를 최신 상태로 맞췄다.
+- `stt/README.md`는 STT 구조, 실행 방법, 모델 자산 역할 중심으로 정리하고 상위 상태 설명 중복을 줄였다.
+- AGX Orin 교차 장치 `small` 경로는 checkpoint 상시 보관 대신 문서 기준만 유지하는 방향으로 정리했다.
+- `results/` 아래 TRT 시행착오 산출물은 재현에 필요 없는 항목부터 삭제했다.
+
+### Next
+
+- `small nano safe` 기준 50문장 benchmark를 다시 수행할지 판단한다.
+- STT 단독 GUI 데모를 먼저 보완하고, 이후 wake word + VAD + STT 통합 데모로 확장한다.
+
+## 2026-03-17 | Human + Codex | STT 6모델 50문장 최종 비교 아카이브
+
+### Context
+
+- 사용자가 `tiny-cuda`, `base-cuda`, `base-trt`, `small-trt-safe`, `small-trt-unsafe`, `api` 6개 경로를 같은 50문장 세트로 다시 비교해 한눈에 볼 수 있게 정리하길 원했다.
+
+### Actions
+
+- `stt/tools/stt_benchmark.py`에 config file, variant, label, checkpoint 경로를 설정별로 받을 수 있게 추가했다.
+- 같은 스크립트에서 모델별 자원 정리와 실패 summary 기록을 넣어, 한 경로가 실패해도 전체 실행이 끊기지 않게 했다.
+- AGX Orin의 `small` checkpoint를 다시 가져와 `whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device` 경로를 복원했다.
+- `small nano safe`는 혼합 배치 실행에서 allocator assert가 나와, fresh process 단독 재실행 결과를 최종 6모델 세트에 합쳤다.
+- 최종 아카이브를 `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/`에 정리하고, 사람이 읽는 요약을 `docs/reports/stt_korean_eval50_six_model_overview.md`로 승격했다.
+
+### Next
+
+- 이 6모델 비교 결과를 기준으로 STT 기본값과 TRT 대안 경로를 다시 정리한다.
+- 상위 wake word + VAD + STT 통합 데모에서 어떤 STT 조합을 기본 선택지로 둘지 결정한다.
+
 ## 2026-03-17 | Human + Codex | AGX Orin TRT handoff 문서화
 
 ### Context
@@ -13,36 +70,36 @@
 
 - `stt/experiments/stt_trt_collect_jetson_profile.py`를 추가해 Jetson 장비 프로파일을 JSON으로 저장할 수 있게 했다.
 - `docs/envs/jetson/stt_trt_agx_orin_experiment.md`를 추가해 AGX Orin에서 Codex가 따라야 할 순서와 빌드/검증 기준을 정리했다.
-- `docs/envs/stt_trt_experiment_env.md`, `docs/jetson_transition_plan.md`, `stt/README.md`, `stt/models/whisper_trt_base_ko_ctx64/README.md`에 새 handoff 경로를 연결했다.
+- `docs/envs/stt_trt_experiment_env.md`, `docs/jetson_transition_plan.md`, `stt/README.md`, `stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/README.md`에 새 handoff 경로를 연결했다.
 
 ### Next
 
 - AGX Orin에서 먼저 장비 프로파일을 저장한다.
 - 저장된 프로파일을 기준으로 `workspace`, `max_text_ctx`, chunk 크기를 조정해 TRT build를 재시도한다.
 
-## 2026-03-17 | Human + Codex | WhisperTRT small 장기 시도 진행 중
+## 2026-03-17 | Human + Codex | WhisperTRT small 모델 정리
 
 ### Context
 
-- 사용자가 다국어 `WhisperTRT small`을 Jetson에서 실제로 변환 성공할 때까지 체계적으로 계속 시도하길 원했다.
-- 단일 decoder/encoder 빌드로는 `small`이 메모리와 allocator 문제로 통과하지 못했다.
+- 사용자가 `WhisperTRT small`을 실제 운용 가능한 형태로 정리하길 원했다.
+- 문서에는 시행착오 자체보다, 실제 사용 가능한 모델 기준만 남기길 원했다.
 
 ### Actions
 
-- `stt/experiments/stt_trt_builder_experiment.py`를 확장해 `decoder_chunk_size`, `encoder_chunk_size`를 받아 block 단위 chunk 빌드를 지원하도록 바꿨다.
-- ONNX export 단계의 메모리 피크를 줄이기 위해 `torch.onnx.export(do_constant_folding=False)`와 ONNX graph folding 비활성 경로를 추가했다.
-- 그 결과 `small ko / ctx64 / ws64MB`에서 다음을 확인했다.
-  - `decoder 2-block chunk`는 전체 6개 chunk를 모두 저장하고 checkpoint/load-check까지 통과했다.
-  - 다만 이 checkpoint는 50문장 benchmark에서 모든 예측이 `[�]`로 나와, 속도는 확보됐지만 전사 품질은 실패했다.
-  - 추가 진단 결과 `decoder 2-block` 경로는 첫 decoder chunk 출력부터 `NaN`으로 무너졌다.
-- 그래서 현재는 `decoder 1-block` 경로로 다시 시도 중이며, decoder 전체 12개 chunk는 실제로 저장까지 성공한 상태다.
-- 이어서 encoder도 `6-block`, 필요 시 `3-block`까지 더 잘게 나눠 재시도하고 있다.
+- `stt/experiments/stt_trt_builder_experiment.py`에서 encoder build 경로를 정리해, 필요한 encoder 조각만 GPU에 올리도록 수정했다.
+- 그 결과 `WhisperTRT small`을 아래 두 기준으로 정리했다.
+  - `whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe`
+    - Jetson Orin Nano 기준 safe 모델
+    - GPU 메모리 부족 이슈를 피하기 위해 `decoder chunk 2`, `encoder chunk 1`, `workspace 64MB` 기준으로 생성
+  - `whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device`
+    - AGX Orin에서 빌드한 교차 장치 확인용 모델
+    - Nano에서 로드될 수 있지만 cross-device TensorRT 경고가 날 수 있음
+- 기존 base 모델도 `whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy`로 이름을 바꿔 fp 형식을 드러내도록 정리했다.
 
 ### Next
 
-- `decoder 1-block` + 더 작은 encoder chunk 조합으로 checkpoint 생성과 load-check를 다시 끝낸다.
-- 그 다음 1~3번 smoke로 `[�]` 문제가 사라졌는지 확인한다.
-- smoke가 정상일 때만 50문장 benchmark를 다시 돌린다.
+- `nano_safe` small 모델을 기준으로 50문장 benchmark를 다시 수행한다.
+- STT GUI와 상위 데모에서 사용할 기본 TRT 경로를 필요 시 `small nano safe`로 확장한다.
 
 ## 2026-03-17 | Human + Codex | STT GUI 데모 1차 구현 시작
 
@@ -53,7 +110,7 @@
 ### Actions
 
 - `docs/reports/stt_demo_plan.md`에 STT GUI 데모와 통합 GUI 데모의 2단계 계획을 정리했다.
-- `whisper base (trt)`를 STT 백엔드로 직접 부를 수 있도록 `stt_whisper_trt.py`를 추가했다.
+- `whisper base fp16e_fp16w (trt, legacy)`를 STT 백엔드로 직접 부를 수 있도록 `stt_whisper_trt.py`를 추가했다.
 - `tools/stt_gui_demo.py`를 추가해 `녹음 시작 / 정지`, 백그라운드 모델 로딩, 전사 히스토리, API 경고/호출 횟수 표시를 넣었다.
 - 하나의 녹음에 대해 `tiny / base(cuda) / base(trt) / api`를 모두 순차 실행하는 전체 비교 모드도 추가했다.
 
@@ -71,7 +128,7 @@
 ### Actions
 
 - `stt/datasets/korean_eval_50/` 기준으로 네 경로를 다시 실행했다.
-- TRT는 `stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`를 직접 읽어 평가했다.
+- TRT는 `stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth`를 직접 읽어 평가했다.
 - code-generated summary 기준 수치를 `stt/README.md`의 최종 비교 표에 반영했다.
 
 ### Next

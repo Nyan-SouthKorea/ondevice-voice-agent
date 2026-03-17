@@ -27,28 +27,52 @@ TARGET_SR = 16000
 BLOCK_SIZE = 1600
 GUI_REFRESH_MS = 50
 MIN_RECORD_SEC = 0.4
+MAX_COMPARE_MODELS = 2
 
 MODEL_OPTIONS = [
     {
         "key": "whisper_tiny_cuda",
-        "label": "whisper tiny (cuda)",
+        "label": "whisper tiny fp16 (cuda)",
         "model": "whisper",
         "model_name": "tiny",
         "device": "cuda",
     },
     {
         "key": "whisper_base_cuda",
-        "label": "whisper base (cuda)",
+        "label": "whisper base fp16 (cuda)",
         "model": "whisper",
         "model_name": "base",
         "device": "cuda",
     },
     {
         "key": "whisper_base_trt",
-        "label": "whisper base (trt)",
+        "label": "whisper base fp16e_fp16w (trt, legacy)",
         "model": "whisper_trt",
         "model_name": "base",
         "device": None,
+        "checkpoint_path": Path("stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth"),
+        "workspace_mb": 128,
+        "max_text_ctx": 64,
+    },
+    {
+        "key": "whisper_small_trt_safe",
+        "label": "whisper small fp16e_fp32w (trt, nano safe)",
+        "model": "whisper_trt",
+        "model_name": "small",
+        "device": None,
+        "checkpoint_path": Path("stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/whisper_trt_split.pth"),
+        "workspace_mb": 64,
+        "max_text_ctx": 64,
+    },
+    {
+        "key": "whisper_small_trt_unsafe",
+        "label": "whisper small fp16e_fp32w (trt, agx cross-device)",
+        "model": "whisper_trt",
+        "model_name": "small",
+        "device": None,
+        "checkpoint_path": Path("stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device/whisper_trt_split.pth"),
+        "workspace_mb": 128,
+        "max_text_ctx": 64,
     },
     {
         "key": "api_gpt4o_mini",
@@ -91,7 +115,7 @@ def parse_args():
     parser.add_argument(
         "--trt-checkpoint",
         type=Path,
-        default=Path("stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth"),
+        default=Path("stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth"),
         help="WhisperTRT checkpoint 경로",
     )
     return parser.parse_args()
@@ -205,6 +229,8 @@ class STTGuiDemo:
         self.record_sec_var = tk.StringVar(value="0.00초")
         self.api_count_var = tk.StringVar(value="API 호출 0회")
         self.compare_all_var = tk.BooleanVar(value=False)
+        self.compare_model_vars = {}
+        self.compare_model_checks = []
 
         self.stream = None
 
@@ -242,7 +268,7 @@ class STTGuiDemo:
             model_frame,
             state="readonly",
             values=[item["label"] for item in MODEL_OPTIONS],
-            width=32,
+            width=42,
         )
         self.model_combo.pack(side="left")
         self.model_combo.current([item["key"] for item in MODEL_OPTIONS].index(self.args.default_model))
@@ -253,13 +279,40 @@ class STTGuiDemo:
 
         self.compare_check = ttk.Checkbutton(
             model_frame,
-            text="정지 후 4개 모델 전체 비교",
+            text="정지 후 선택 모델 비교",
             variable=self.compare_all_var,
             command=self._on_compare_mode_changed,
         )
         self.compare_check.pack(side="left", padx=(12, 0))
 
         ttk.Label(model_frame, textvariable=self.model_state_var).pack(side="left", padx=(16, 0))
+
+        compare_frame = ttk.LabelFrame(root_frame, text="비교 모델 선택", padding=12)
+        compare_frame.pack(fill="x", pady=(0, 10))
+
+        compare_hint = ttk.Label(
+            compare_frame,
+            text=f"비교 모드에서는 최대 {MAX_COMPARE_MODELS}개만 선택할 수 있습니다. 체크 해제된 모델은 메모리에 유지하지 않습니다.",
+        )
+        compare_hint.pack(anchor="w")
+
+        compare_grid = ttk.Frame(compare_frame)
+        compare_grid.pack(fill="x", pady=(8, 0))
+
+        for index, item in enumerate(MODEL_OPTIONS):
+            default_selected = item["key"] in self._default_compare_keys()
+            variable = tk.BooleanVar(value=default_selected)
+            self.compare_model_vars[item["key"]] = variable
+            check = ttk.Checkbutton(
+                compare_grid,
+                text=item["label"],
+                variable=variable,
+                command=lambda key=item["key"]: self._on_compare_model_toggled(key),
+            )
+            row = index // 2
+            column = index % 2
+            check.grid(row=row, column=column, sticky="w", padx=(0, 16), pady=2)
+            self.compare_model_checks.append(check)
 
         control_frame = ttk.LabelFrame(root_frame, text="녹음 제어", padding=12)
         control_frame.pack(fill="x", pady=(0, 10))
@@ -299,12 +352,71 @@ class STTGuiDemo:
             history_frame,
             wrap="word",
             state="disabled",
-            font=("NanumGothicCoding", 12),
+            font=("NanumGothicCoding", 10),
         )
         self.history_text.pack(fill="both", expand=True)
 
         self.stop_button.state(["disabled"])
         self.start_button.state(["disabled"])
+
+    def _default_compare_keys(self):
+        """
+        기능:
+        - 시작 시 비교 모드에 기본 선택할 모델 키 목록을 반환한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 기본 비교 모델 키 리스트를 반환한다.
+        """
+        if self.args.default_model != "whisper_base_trt":
+            return [self.args.default_model, "whisper_base_trt"]
+        return [self.args.default_model, "whisper_base_cuda"]
+
+    def _get_selected_compare_keys(self):
+        """
+        기능:
+        - 현재 비교 대상으로 체크된 모델 키 목록을 반환한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 선택된 모델 키 리스트를 반환한다.
+        """
+        selected = []
+        for item in MODEL_OPTIONS:
+            variable = self.compare_model_vars.get(item["key"])
+            if variable is not None and bool(variable.get()):
+                selected.append(item["key"])
+        return selected
+
+    def _on_compare_model_toggled(self, changed_key):
+        """
+        기능:
+        - 비교 모델 체크 상태가 바뀌었을 때 최대 선택 수를 강제한다.
+
+        입력:
+        - `changed_key`: 방금 상태가 바뀐 모델 키.
+
+        반환:
+        - 없음.
+        """
+        selected = self._get_selected_compare_keys()
+        if len(selected) > MAX_COMPARE_MODELS:
+            self.compare_model_vars[changed_key].set(False)
+            self._set_status(
+                "비교 모델 선택 제한",
+                f"비교 모드에서는 최대 {MAX_COMPARE_MODELS}개까지만 선택할 수 있습니다.",
+            )
+            return
+
+        if self.compare_all_var.get() and not selected:
+            self.compare_all_var.set(False)
+            self._set_status("비교 모드 해제", "비교할 모델을 최소 1개 선택해야 합니다.")
+
+        self._update_api_notice(self.active_model_key or self._find_model_key_by_label(self.model_combo.get()))
 
     def _on_model_selected(self, _event=None):
         """
@@ -357,6 +469,9 @@ class STTGuiDemo:
         반환:
         - 없음.
         """
+        if self.compare_all_var.get() and not self._get_selected_compare_keys():
+            self.compare_all_var.set(False)
+            self._set_status("비교 모드 해제", "비교할 모델을 최소 1개 선택해야 합니다.")
         current_key = self.active_model_key or self._find_model_key_by_label(self.model_combo.get())
         self._update_api_notice(current_key)
 
@@ -466,10 +581,10 @@ class STTGuiDemo:
             "device": model_info["device"],
             "usage_purpose": "stt_gui_demo",
         }
-        if model_key == "whisper_base_trt":
-            kwargs["checkpoint_path"] = self.args.trt_checkpoint
-            kwargs["workspace_mb"] = 128
-            kwargs["max_text_ctx"] = 64
+        if model_info["model"] == "whisper_trt":
+            kwargs["checkpoint_path"] = model_info.get("checkpoint_path", self.args.trt_checkpoint)
+            kwargs["workspace_mb"] = model_info.get("workspace_mb", 128)
+            kwargs["max_text_ctx"] = model_info.get("max_text_ctx", 64)
         return STTTranscriber(**kwargs)
 
     def _start_recording(self):
@@ -500,6 +615,8 @@ class STTGuiDemo:
         self.model_combo.state(["disabled"])
         self.reload_button.state(["disabled"])
         self.compare_check.state(["disabled"])
+        for check in self.compare_model_checks:
+            check.state(["disabled"])
 
         self.stream = sd.InputStream(
             samplerate=TARGET_SR,
@@ -572,7 +689,13 @@ class STTGuiDemo:
 
         self.transcribing = True
         if self.compare_all_var.get():
-            self._set_status("전체 모델 비교 중", f"4개 모델 순차 실행 | 길이 {audio_sec:.2f}s")
+            selected_keys = self._get_selected_compare_keys()
+            if not selected_keys:
+                self.transcribing = False
+                self.compare_all_var.set(False)
+                self._finish_idle("비교할 모델을 최소 1개 선택해야 합니다.")
+                return
+            self._set_status("선택 모델 비교 중", f"{len(selected_keys)}개 모델 순차 실행 | 길이 {audio_sec:.2f}s")
             worker = threading.Thread(
                 target=self._compare_all_worker,
                 args=(audio, audio_sec),
@@ -626,7 +749,7 @@ class STTGuiDemo:
     def _compare_all_worker(self, audio, audio_sec):
         """
         기능:
-        - 하나의 녹음에 대해 4개 STT 모델을 모두 순차 실행한다.
+        - 하나의 녹음에 대해 선택된 최대 2개 STT 모델을 순차 실행한다.
 
         입력:
         - `audio`: 녹음된 float32 mono 오디오.
@@ -636,7 +759,9 @@ class STTGuiDemo:
         - 없음.
         """
         results = []
-        for item in MODEL_OPTIONS:
+        selected_keys = set(self._get_selected_compare_keys())
+        compare_items = [item for item in MODEL_OPTIONS if item["key"] in selected_keys]
+        for item in compare_items:
             model_key = item["key"]
             model_label = item["label"]
             transcriber = None
@@ -676,6 +801,7 @@ class STTGuiDemo:
             finally:
                 if close_after and transcriber is not None:
                     transcriber.close()
+                    gc.collect()
 
         self.gui_queue.put(
             {
@@ -705,6 +831,8 @@ class STTGuiDemo:
         self.model_combo.state(["!disabled"])
         self.reload_button.state(["!disabled"])
         self.compare_check.state(["!disabled"])
+        for check in self.compare_model_checks:
+            check.state(["!disabled"])
         self._set_status("대기 중", detail_text)
 
     def _set_status(self, status_text, detail_text):
@@ -779,13 +907,13 @@ class STTGuiDemo:
         반환:
         - 없음.
         """
-        if model_key == "api_gpt4o_mini":
-            if self.compare_all_var.get():
-                self.api_notice_var.set("주의: 전체 비교 모드는 API 1회를 포함해 실제 과금이 발생합니다.")
-            else:
-                self.api_notice_var.set("주의: API 모델은 실제 과금이 발생합니다. 짧은 녹음은 자동으로 생략됩니다.")
-        elif self.compare_all_var.get():
-            self.api_notice_var.set("주의: 전체 비교 모드는 API 1회를 포함해 실제 과금이 발생합니다.")
+        selected_keys = set(self._get_selected_compare_keys())
+        compare_uses_api = self.compare_all_var.get() and ("api_gpt4o_mini" in selected_keys)
+
+        if model_key == "api_gpt4o_mini" and not self.compare_all_var.get():
+            self.api_notice_var.set("주의: API 모델은 실제 과금이 발생합니다. 짧은 녹음은 자동으로 생략됩니다.")
+        elif compare_uses_api:
+            self.api_notice_var.set("주의: 선택 모델 비교에 API가 포함되어 실제 과금이 발생합니다.")
         else:
             self.api_notice_var.set("")
 

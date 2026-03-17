@@ -7,6 +7,7 @@
 - 초기 구현 완료
 - 온디바이스와 API 기반 STT를 같은 사용법으로 갈아끼울 수 있는 구조를 잡았다.
 - 고정 문장 50개 기준 녹음 데이터셋과 비교 평가 흐름을 추가했다.
+- 현재 기본 후보 판단과 상위 진행 상태는 `docs/status.md`를 기준으로 보고, 이 문서는 STT 디렉토리 구조와 재현 절차만 담당한다.
 
 예상 역할:
 
@@ -38,8 +39,12 @@
   - WhisperTRT 한국어 checkpoint를 50문장 세트로 평가하는 실험 스크립트
 - `datasets/korean_eval_50/`
   - txt와 wav를 같은 파일명으로 관리하는 평가 세트
-- `models/whisper_trt_base_ko_ctx64/`
-  - 현재 승격된 한국어 WhisperTRT base 로컬 artifact 경로와 평가 스냅샷
+- `models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/`
+  - 기존 base TRT artifact 경로
+- `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/`
+  - Orin Nano 기준 safe small TRT artifact 경로
+- `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device/`
+  - AGX Orin 기준 교차 장치 확인 메모 경로
 
 공통 사용 방식:
 
@@ -60,7 +65,24 @@ print(transcriber.last_duration_sec)
 - 입력은 `16kHz mono` wav 또는 float32 mono 배열 기준
 - 현재 단계의 목적은 `짧은 utterance -> text` 기본 경로 확보와 비교 평가 기준 마련이다
 - 기본 모델값은 감으로 정하지 않고, 직접 녹음한 50문장 세트로 속도와 정확도를 비교한 뒤 정한다
-- 현재 기본 후보는 `Whisper base (PyTorch + CUDA)`이며, `WhisperTRT base` 한국어 경로는 별도 실험 중이다
+- 현재 추천 판단과 전체 우선순위는 `docs/status.md`, 정량 비교표는 `docs/reports/stt_korean_eval50_overview.md`를 기준으로 본다.
+
+## 모델 자산 역할
+
+| 경로 | 의미 | 보관 정책 |
+|---|---|---|
+| `models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/` | 기존 한국어 `base` TRT 자산 | 로컬 체크포인트 유지 가능, git 비추적 |
+| `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/` | Orin Nano 8GB에서 직접 생성한 safe `small` TRT 자산 | 운영/재현용 로컬 체크포인트 유지 |
+| `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device/` | AGX Orin에서 빌드했던 교차 장치 확인 기준 | 문서만 유지, checkpoint 상시 보관 대상 아님 |
+
+`small nano safe` 기준:
+
+- 엔진 dtype: `fp16`
+- 빌드 가중치 dtype: `fp32`
+- `decoder chunk 2`
+- `encoder chunk 1`
+- `workspace 64MB`
+- `max_text_ctx 64`
 
 ## 디렉토리 역할
 
@@ -179,9 +201,10 @@ python stt/tools/stt_gui_demo.py
 - `녹음 시작 / 녹음 정지 / 기록 지우기`
 - `정지 후 4개 모델 전체 비교` 체크박스
 - 모델 선택 드롭다운
-  - `whisper tiny (cuda)`
-  - `whisper base (cuda)`
-  - `whisper base (trt)`
+  - `whisper tiny fp16 (cuda)`
+  - `whisper base fp16 (cuda)`
+  - `whisper base fp16e_fp16w (trt, legacy)`
+  - `whisper small fp16e_fp32w (trt, nano safe)`
   - `gpt-4o-mini-transcribe (api)`
 - 모델 전환은 백그라운드 로딩으로 처리
 - 전사 결과는 스크롤 가능한 히스토리로 저장
@@ -256,18 +279,19 @@ python stt/experiments/stt_trt_builder_experiment.py \
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
 python stt/experiments/stt_trt_benchmark_experiment.py \
-  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
   --max-text-ctx 64
 ```
 
-현재 승격 경로는 아래다.
+현재 로컬 승격 경로는 아래다.
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/whisper_trt_split.pth`
 
-다만 이 `.pth`는 파일 크기 때문에 git에 올리지 않고, 로컬에서만 생성/보관한다. 이 경로를 다시 만들고 싶으면 아래 순서대로 재현하면 된다.
+이 `.pth`들은 파일 크기 때문에 git에 올리지 않고, 로컬에서만 생성/보관한다. 다시 만들고 싶으면 아래 순서대로 재현하면 된다.
 
 1. split builder로 checkpoint 생성
 ```bash
@@ -284,9 +308,9 @@ python stt/experiments/stt_trt_builder_experiment.py \
 
 2. 생성한 checkpoint를 메인 로컬 경로로 복사
 ```bash
-mkdir -p /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64
+mkdir -p /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy
 cp /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128/whisper_trt_split.pth \
-  /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth
+  /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth
 ```
 
 3. benchmark 재실행
@@ -294,14 +318,14 @@ cp /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_b
 cd /home/everybot/workspace/ondevice-voice-agent/project/repo
 source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
 python stt/experiments/stt_trt_benchmark_experiment.py \
-  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
   --max-text-ctx 64
 ```
 
-즉 레포에는 재현 코드와 요약 스냅샷만 남기고, 대용량 checkpoint는 각 개발 환경에서 다시 만든다. 현 시점 수치 기준으로는 속도는 더 빠르지만 정확도는 PyTorch `base(cuda)`보다 약간 불리해, 기본값 전환은 아직 하지 않았다.
+즉 레포에는 재현 코드와 요약 스냅샷만 남기고, 대용량 checkpoint는 각 개발 환경에서 다시 만든다. AGX Orin 교차 장치 확인용 `small`은 문서 기준만 남기고 checkpoint 자체는 상시 보관 대상으로 두지 않는다.
 
 ### 6. API 사용 로그 확인
 
@@ -348,37 +372,45 @@ python stt/tools/stt_benchmark.py \
 기준:
 
 - 데이터셋: `stt/datasets/korean_eval_50/`
-- 로컬 Whisper / API 결과:
-  - `stt/eval_results/korean_eval_50_final_compare/korean_eval_50/`
-- TRT 결과:
-  - `stt/eval_results/korean_eval_50_final_compare_trt/korean_eval_50/`
-
-TRT 비교 시에는 아래 checkpoint를 직접 읽는다.
-
-- `stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`
+- 최종 6모델 아카이브:
+  - `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/`
+- 사람이 읽는 요약 문서:
+  - `docs/reports/stt_korean_eval50_six_model_overview.md`
 
 | 모델 | 장치 | 샘플 수 | Load (s) | Mean STT (s) | P95 STT (s) | Mean RTF | Normalized Exact Match | Normalized CER |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| `gpt-4o-mini-transcribe` | `api` | 50 | 1.4970 | 0.9206 | 1.5994 | 0.1892 | 0.6800 | 0.0683 |
-| `whisper tiny` | `cuda` | 50 | 4.6292 | 0.6256 | 0.8169 | 0.1286 | 0.0400 | 0.4753 |
-| `whisper base` | `cuda` | 50 | 3.2445 | 0.6954 | 0.9428 | 0.1429 | 0.1800 | 0.1653 |
-| `whisper base` | `cuda_trt` | 50 | 3.5309 | 0.1883 | 0.2504 | 0.0387 | 0.1600 | 0.1759 |
+| `whisper tiny fp16` | `cuda` | 50 | 4.2783 | 0.6488 | 0.8045 | 0.1333 | 0.0400 | 0.4753 |
+| `whisper base fp16` | `cuda` | 50 | 1.5342 | 0.7017 | 0.9329 | 0.1442 | 0.1800 | 0.1653 |
+| `whisper base fp16e_fp16w` | `trt, legacy` | 50 | 3.4855 | 0.1957 | 0.2543 | 0.0402 | 0.1600 | 0.1759 |
+| `whisper small fp16e_fp32w` | `trt, nano safe` | 50 | 31.6285 | 0.3823 | 0.5129 | 0.0786 | 0.4600 | 0.0886 |
+| `whisper small fp16e_fp32w` | `trt, agx cross-device` | 50 | 31.5101 | 0.7826 | 1.0321 | 0.1608 | 0.4600 | 0.0873 |
+| `gpt-4o-mini-transcribe` | `api` | 50 | 2.3201 | 1.0512 | 1.8980 | 0.2160 | 0.6800 | 0.0693 |
+
+현재 선택 결론:
+
+- 온디바이스 기본 후보는 `whisper small fp16e_fp32w (trt, nano safe)`로 본다.
+- 이유는 Jetson Orin Nano에서 직접 생성한 안전 경로이면서, `Normalized Exact Match 0.4600`, `Normalized CER 0.0886`, `Mean STT 0.3823s`로 정확도와 지연 시간 균형이 가장 좋기 때문이다.
+- 참고용 최고 정확도는 `gpt-4o-mini-transcribe (api)`지만, 온디바이스 기본값으로는 쓰지 않는다.
+- 최고 속도 fallback은 `whisper base fp16e_fp16w (trt, legacy)`다. `Mean STT 0.1957s`로 가장 빠르지만 정확도는 `small nano safe`보다 낮다.
 
 현재 표 기준으로 보면:
 
 - 정확도는 `API`가 가장 좋다.
-- 로컬 Whisper 중 정확도는 `whisper base (cuda)`가 가장 좋다.
-- 속도는 `whisper base (TRT)`가 가장 빠르다.
-- `whisper base (TRT)`는 `whisper base (cuda)`보다 CER이 약간 불리하지만, 지연 시간은 크게 줄어든다.
+- 로컬 Whisper 중 정확도는 `whisper base fp16 (cuda)`가 가장 좋다.
+- 로컬 온디바이스 기준 정확도는 `whisper small fp16e_fp32w (trt, nano safe)`와 `whisper small fp16e_fp32w (trt, agx cross-device)`가 가장 좋다.
+- 속도는 `whisper base fp16e_fp16w (trt, legacy)`가 가장 빠르다.
+- `whisper base fp16e_fp16w (trt, legacy)`는 `whisper base fp16 (cuda)`보다 CER이 약간 불리하지만, 지연 시간은 크게 줄어든다.
+- `whisper small fp16e_fp32w (trt, nano safe)`는 `small` 계열 중에서 Nano에서 직접 생성한 안전 경로다.
+- `whisper small fp16e_fp32w (trt, agx cross-device)`는 CER이 약간 더 낮지만, AGX에서 만든 교차 장치 엔진이라 운영 기본값으로 두기에는 보수적 검토가 필요하다.
 
 원본 결과 경로:
 
-- `whisper tiny / base (cuda)`:
-  - `stt/eval_results/korean_eval_50_final_compare/korean_eval_50/20260317_120234/summary.json`
-- `gpt-4o-mini-transcribe`:
-  - `stt/eval_results/korean_eval_50_final_compare/korean_eval_50/20260317_120359/summary.json`
-- `whisper base (TRT)`:
-  - `stt/eval_results/korean_eval_50_final_compare_trt/korean_eval_50/20260317_120455/summary.json`
+- 최종 6모델 요약:
+  - `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/summary.json`
+- 최종 6모델 overview:
+  - `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/overview.md`
+- 단독 재실행된 `small nano safe`:
+  - `stt/eval_results/korean_eval_50/20260317_171922/summary.json`
 
 API STT 실행 메모:
 

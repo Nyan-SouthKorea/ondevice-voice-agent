@@ -17,9 +17,11 @@
 
 ### 지원 모델
 
-- `whisper tiny (cuda)`
-- `whisper base (cuda)`
-- `whisper base (trt)`
+- `whisper tiny fp16 (cuda)`
+- `whisper base fp16 (cuda)`
+- `whisper base fp16e_fp16w (trt, legacy)`
+- `whisper small fp16e_fp32w (trt, nano safe)`
+- `whisper small fp16e_fp32w (trt, agx cross-device)`
 - `gpt-4o-mini-transcribe`
 
 ### 핵심 요구사항
@@ -27,6 +29,8 @@
 - 모델 전환 시 메인 GUI가 멈추지 않는다.
 - STT 실행 중 중복 녹음/중복 전사를 막는다.
 - API 모델은 명시적으로 선택해야 하며, 세션 API 호출 횟수를 표시한다.
+- 비교 모드는 최대 2개 모델만 선택해 순차 실행한다.
+- 비교 대상이 아닌 모델은 메모리에 상주시켜 두지 않는다.
 - 너무 짧은 녹음은 전사하지 않는다.
 - 마지막 모델 로드 상태, 녹음 상태, STT 실행 상태를 화면에 표시한다.
 
@@ -38,6 +42,7 @@
 4. 실시간 입력 레벨 표시
 5. 전사 결과 스크롤 히스토리
 6. API 경고 문구와 세션 호출 횟수 표시
+7. 선택한 최대 2개 모델 비교
 
 ## 2단계: wake word + VAD + STT 통합 GUI 데모
 

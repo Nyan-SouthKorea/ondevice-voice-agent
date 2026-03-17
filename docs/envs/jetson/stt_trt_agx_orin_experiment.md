@@ -147,7 +147,7 @@ python stt/experiments/stt_trt_benchmark_experiment.py \
 ## 6. 실행 후 기록 갱신
 
 - `docs/envs/stt_trt_experiment_env.md`에 실험 로그(값/오류/조정 파라미터)를 append
-- `stt/models/whisper_trt_base_ko_ctx64/README.md`의 재현 경로를 AGX 기준으로 갱신
+- `stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/README.md`의 재현 경로를 AGX 기준으로 갱신
 - `stt/README.md`의 AGX 실습용 실행 예시를 최신 상태로 유지
 - `docs/logbook.md`에 1~2줄로 실패/성공 요약만 기록
 

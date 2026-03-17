@@ -5,8 +5,10 @@
 import argparse
 import csv
 from datetime import datetime
+import gc
 import json
 from pathlib import Path
+import re
 import string
 import sys
 import time
@@ -42,6 +44,12 @@ def parse_args():
         action="append",
         default=[],
         help="비교할 설정. 예: whisper:tiny, whisper:base, api:gpt-4o-mini-transcribe",
+    )
+    parser.add_argument(
+        "--config-file",
+        type=Path,
+        default=None,
+        help="평가할 설정 사전 리스트가 들어 있는 JSON 파일 경로",
     )
     parser.add_argument(
         "--language",
@@ -221,6 +229,36 @@ def parse_config(config_value):
     }
 
 
+def load_config_list(args):
+    """
+    기능:
+    - 명령행 설정과 JSON 설정 파일을 합쳐 최종 평가 설정 목록을 만든다.
+
+    입력:
+    - `args`: 파싱된 명령행 인자 객체.
+
+    반환:
+    - 평가에 사용할 설정 사전 리스트를 반환한다.
+    """
+    configs = [parse_config(value) for value in args.config]
+
+    if args.config_file:
+        payload = json.loads(args.config_file.read_text(encoding="utf-8"))
+        if not isinstance(payload, list):
+            raise RuntimeError("--config-file은 사전 리스트 JSON이어야 합니다.")
+        for item in payload:
+            if not isinstance(item, dict):
+                raise RuntimeError("--config-file 안의 각 항목은 사전이어야 합니다.")
+            copied = dict(item)
+            if not copied.get("model"):
+                raise RuntimeError("--config-file 항목에는 model이 필요합니다.")
+            configs.append(copied)
+
+    if not configs:
+        configs.append(parse_config("whisper:tiny"))
+    return configs
+
+
 def build_run_name(config):
     """
     기능:
@@ -232,9 +270,26 @@ def build_run_name(config):
     반환:
     - 실행 이름 문자열을 반환한다.
     """
+    if config.get("variant"):
+        return sanitize_name(config["variant"])
     model = config["model"]
-    model_name = config["model_name"] or "default"
-    return f"{model}_{model_name}".replace("/", "_").replace(":", "_")
+    model_name = config.get("model_name") or "default"
+    return sanitize_name(f"{model}_{model_name}")
+
+
+def sanitize_name(value):
+    """
+    기능:
+    - 실행 이름과 파일명에 안전한 문자열로 정리한다.
+
+    입력:
+    - `value`: 정리할 원본 문자열.
+
+    반환:
+    - 영문자, 숫자, 일부 구분자만 남긴 문자열을 반환한다.
+    """
+    lowered = str(value).strip().replace("/", "_").replace(":", "_")
+    return re.sub(r"[^a-zA-Z0-9._-]+", "_", lowered).strip("_") or "run"
 
 
 def compute_percentile(values, percentile):
@@ -297,108 +352,125 @@ def evaluate_config(entries, config, args):
     """
     run_name = build_run_name(config)
     load_started_at = time.perf_counter()
-    transcriber = STTTranscriber(
-        model=config["model"],
-        model_name=config["model_name"],
-        language=args.language,
-        device=args.device,
-        download_root=args.download_root,
-        api_key=args.api_key,
-        prompt=args.prompt,
-        usage_purpose=args.usage_purpose or f"stt_benchmark:{args.dataset_dir.name}:{run_name}",
-    )
-    load_time_sec = time.perf_counter() - load_started_at
-
-    warmup_enabled = (config["model"] != "api") and (not args.disable_warmup)
-    warmup_time_sec = 0.0
-    warmup_sample_id = ""
-    if warmup_enabled and entries:
-        warmup_entry = entries[0]
-        warmup_audio = transcriber.load_audio(warmup_entry["wav_path"])
-        warmup_started_at = time.perf_counter()
-        transcriber.transcribe(warmup_audio)
-        warmup_time_sec = time.perf_counter() - warmup_started_at
-        warmup_sample_id = warmup_entry["id"]
-
-    rows = []
-    total_audio_sec = 0.0
-    total_stt_sec = 0.0
-    total_exact_match = 0
-    total_normalized_exact_match = 0
-    total_cer = 0.0
-    total_normalized_cer = 0.0
-    stt_times = []
-    rtf_values = []
-
-    for entry in entries:
-        reference = read_text_file(entry["text_path"])
-        audio = transcriber.load_audio(entry["wav_path"])
-        audio_sec = float(len(audio)) / 16000.0
-        prediction = transcriber.transcribe(audio)
-        stt_sec = float(transcriber.last_duration_sec)
-
-        normalized_reference = normalize_text(reference)
-        normalized_prediction = normalize_text(prediction)
-
-        exact_match = int(reference == prediction)
-        normalized_exact_match = int(normalized_reference == normalized_prediction)
-        cer = compute_cer(reference, prediction)
-        normalized_cer = compute_cer(normalized_reference, normalized_prediction)
-        rtf = stt_sec / audio_sec if audio_sec > 0 else 0.0
-
-        rows.append(
-            {
-                "run_name": run_name,
-                "id": entry["id"],
-                "audio_sec": round(audio_sec, 4),
-                "stt_sec": round(stt_sec, 4),
-                "rtf": round(rtf, 4),
-                "exact_match": exact_match,
-                "normalized_exact_match": normalized_exact_match,
-                "cer": round(cer, 4),
-                "normalized_cer": round(normalized_cer, 4),
-                "warmup_excluded": 1,
-                "reference": reference,
-                "prediction": prediction,
-            }
+    device = config.get("device", args.device)
+    checkpoint_path = config.get("checkpoint_path")
+    workspace_mb = int(config.get("workspace_mb", 128))
+    max_text_ctx = int(config.get("max_text_ctx", 64))
+    transcriber = None
+    try:
+        transcriber = STTTranscriber(
+            model=config["model"],
+            model_name=config.get("model_name"),
+            language=args.language,
+            device=device,
+            download_root=args.download_root,
+            api_key=args.api_key,
+            prompt=args.prompt,
+            usage_purpose=args.usage_purpose or f"stt_benchmark:{args.dataset_dir.name}:{run_name}",
+            checkpoint_path=checkpoint_path,
+            workspace_mb=workspace_mb,
+            max_text_ctx=max_text_ctx,
         )
+        load_time_sec = time.perf_counter() - load_started_at
 
-        total_audio_sec += audio_sec
-        total_stt_sec += stt_sec
-        total_exact_match += exact_match
-        total_normalized_exact_match += normalized_exact_match
-        total_cer += cer
-        total_normalized_cer += normalized_cer
-        stt_times.append(stt_sec)
-        rtf_values.append(rtf)
+        warmup_enabled = (config["model"] != "api") and (not args.disable_warmup)
+        warmup_time_sec = 0.0
+        warmup_sample_id = ""
+        if warmup_enabled and entries:
+            warmup_entry = entries[0]
+            warmup_audio = transcriber.load_audio(warmup_entry["wav_path"])
+            warmup_started_at = time.perf_counter()
+            transcriber.transcribe(warmup_audio)
+            warmup_time_sec = time.perf_counter() - warmup_started_at
+            warmup_sample_id = warmup_entry["id"]
 
-    sample_count = len(rows)
-    summary = {
-        "run_name": run_name,
-        "model": config["model"],
-        "model_name": config["model_name"] or "default",
-        "device": args.device or "auto",
-        "sample_count": sample_count,
-        "load_time_sec": round(load_time_sec, 4),
-        "warmup_enabled": int(warmup_enabled),
-        "warmup_sample_id": warmup_sample_id,
-        "warmup_time_sec": round(warmup_time_sec, 4),
-        "total_audio_sec": round(total_audio_sec, 4),
-        "total_stt_sec": round(total_stt_sec, 4),
-        "mean_stt_sec": round(total_stt_sec / sample_count, 4),
-        "p50_stt_sec": round(compute_percentile(stt_times, 0.50), 4),
-        "p95_stt_sec": round(compute_percentile(stt_times, 0.95), 4),
-        "max_stt_sec": round(max(stt_times), 4) if stt_times else 0.0,
-        "mean_rtf": round(total_stt_sec / total_audio_sec, 4) if total_audio_sec > 0 else 0.0,
-        "p50_rtf": round(compute_percentile(rtf_values, 0.50), 4),
-        "p95_rtf": round(compute_percentile(rtf_values, 0.95), 4),
-        "max_rtf": round(max(rtf_values), 4) if rtf_values else 0.0,
-        "exact_match_rate": round(total_exact_match / sample_count, 4),
-        "normalized_exact_match_rate": round(total_normalized_exact_match / sample_count, 4),
-        "mean_cer": round(total_cer / sample_count, 4),
-        "mean_normalized_cer": round(total_normalized_cer / sample_count, 4),
-    }
-    return {"summary": summary, "rows": rows}
+        rows = []
+        total_audio_sec = 0.0
+        total_stt_sec = 0.0
+        total_exact_match = 0
+        total_normalized_exact_match = 0
+        total_cer = 0.0
+        total_normalized_cer = 0.0
+        stt_times = []
+        rtf_values = []
+
+        for entry in entries:
+            reference = read_text_file(entry["text_path"])
+            audio = transcriber.load_audio(entry["wav_path"])
+            audio_sec = float(len(audio)) / 16000.0
+            prediction = transcriber.transcribe(audio)
+            stt_sec = float(transcriber.last_duration_sec)
+
+            normalized_reference = normalize_text(reference)
+            normalized_prediction = normalize_text(prediction)
+
+            exact_match = int(reference == prediction)
+            normalized_exact_match = int(normalized_reference == normalized_prediction)
+            cer = compute_cer(reference, prediction)
+            normalized_cer = compute_cer(normalized_reference, normalized_prediction)
+            rtf = stt_sec / audio_sec if audio_sec > 0 else 0.0
+
+            rows.append(
+                {
+                    "run_name": run_name,
+                    "id": entry["id"],
+                    "audio_sec": round(audio_sec, 4),
+                    "stt_sec": round(stt_sec, 4),
+                    "rtf": round(rtf, 4),
+                    "exact_match": exact_match,
+                    "normalized_exact_match": normalized_exact_match,
+                    "cer": round(cer, 4),
+                    "normalized_cer": round(normalized_cer, 4),
+                    "warmup_excluded": 1,
+                    "reference": reference,
+                    "prediction": prediction,
+                }
+            )
+
+            total_audio_sec += audio_sec
+            total_stt_sec += stt_sec
+            total_exact_match += exact_match
+            total_normalized_exact_match += normalized_exact_match
+            total_cer += cer
+            total_normalized_cer += normalized_cer
+            stt_times.append(stt_sec)
+            rtf_values.append(rtf)
+
+        sample_count = len(rows)
+        summary = {
+            "status": "ok",
+            "error_text": "",
+            "run_name": run_name,
+            "model": config["model"],
+            "model_name": config.get("model_name") or "default",
+            "variant": config.get("variant", ""),
+            "label": config.get("label", ""),
+            "device": device or "auto",
+            "sample_count": sample_count,
+            "load_time_sec": round(load_time_sec, 4),
+            "warmup_enabled": int(warmup_enabled),
+            "warmup_sample_id": warmup_sample_id,
+            "warmup_time_sec": round(warmup_time_sec, 4),
+            "total_audio_sec": round(total_audio_sec, 4),
+            "total_stt_sec": round(total_stt_sec, 4),
+            "mean_stt_sec": round(total_stt_sec / sample_count, 4),
+            "p50_stt_sec": round(compute_percentile(stt_times, 0.50), 4),
+            "p95_stt_sec": round(compute_percentile(stt_times, 0.95), 4),
+            "max_stt_sec": round(max(stt_times), 4) if stt_times else 0.0,
+            "mean_rtf": round(total_stt_sec / total_audio_sec, 4) if total_audio_sec > 0 else 0.0,
+            "p50_rtf": round(compute_percentile(rtf_values, 0.50), 4),
+            "p95_rtf": round(compute_percentile(rtf_values, 0.95), 4),
+            "max_rtf": round(max(rtf_values), 4) if rtf_values else 0.0,
+            "exact_match_rate": round(total_exact_match / sample_count, 4),
+            "normalized_exact_match_rate": round(total_normalized_exact_match / sample_count, 4),
+            "mean_cer": round(total_cer / sample_count, 4),
+            "mean_normalized_cer": round(total_normalized_cer / sample_count, 4),
+        }
+        return {"summary": summary, "rows": rows}
+    finally:
+        if transcriber is not None:
+            transcriber.close()
+        gc.collect()
 
 
 def write_rows_csv(output_path, rows):
@@ -446,9 +518,13 @@ def write_summary_csv(output_path, summaries):
     - 없음.
     """
     fieldnames = [
+        "status",
+        "error_text",
         "run_name",
         "model",
         "model_name",
+        "variant",
+        "label",
         "device",
         "sample_count",
         "load_time_sec",
@@ -514,26 +590,29 @@ def write_summary_markdown(output_path, summaries):
     lines = [
         "# STT Summary Table",
         "",
-        "| run_name | model | device | sample_count | load_time_sec | warmup_time_sec | mean_stt_sec | p50_stt_sec | p95_stt_sec | max_stt_sec | mean_rtf | p95_rtf | norm_match | norm_cer |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| status | run_name | label | model | device | sample_count | load_time_sec | warmup_time_sec | mean_stt_sec | p50_stt_sec | p95_stt_sec | max_stt_sec | mean_rtf | p95_rtf | norm_match | norm_cer | error |",
+        "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for summary in summaries:
         lines.append(
             "| "
+            f"{summary.get('status', 'ok')} | "
             f"{summary['run_name']} | "
+            f"{summary.get('label') or summary['model_name']} | "
             f"{summary['model_name']} | "
             f"{summary['device']} | "
-            f"{summary['sample_count']} | "
-            f"{summary['load_time_sec']} | "
-            f"{summary['warmup_time_sec']} | "
-            f"{summary['mean_stt_sec']} | "
-            f"{summary['p50_stt_sec']} | "
-            f"{summary['p95_stt_sec']} | "
-            f"{summary['max_stt_sec']} | "
-            f"{summary['mean_rtf']} | "
-            f"{summary['p95_rtf']} | "
-            f"{summary['normalized_exact_match_rate']} | "
-            f"{summary['mean_normalized_cer']} |"
+            f"{summary.get('sample_count', '-') } | "
+            f"{summary.get('load_time_sec', '-') } | "
+            f"{summary.get('warmup_time_sec', '-') } | "
+            f"{summary.get('mean_stt_sec', '-') } | "
+            f"{summary.get('p50_stt_sec', '-') } | "
+            f"{summary.get('p95_stt_sec', '-') } | "
+            f"{summary.get('max_stt_sec', '-') } | "
+            f"{summary.get('mean_rtf', '-') } | "
+            f"{summary.get('p95_rtf', '-') } | "
+            f"{summary.get('normalized_exact_match_rate', '-') } | "
+            f"{summary.get('mean_normalized_cer', '-') } | "
+            f"{summary.get('error_text', '').replace('|', '/')} |"
         )
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -558,6 +637,8 @@ def write_readable_markdown(output_path, summary, rows):
         "",
         f"- model: {summary['model']}",
         f"- model_name: {summary['model_name']}",
+        f"- variant: {summary.get('variant') or '-'}",
+        f"- label: {summary.get('label') or '-'}",
         f"- device: {summary['device']}",
         f"- sample_count: {summary['sample_count']}",
         f"- load_time_sec: {summary['load_time_sec']}",
@@ -617,13 +698,14 @@ def print_summary_table(summaries):
     for summary in summaries:
         print(
             f"{summary['run_name']:<28} "
-            f"load={summary['load_time_sec']:<6} "
-            f"samples={summary['sample_count']:<3} "
-            f"mean_stt={summary['mean_stt_sec']:<6} "
-            f"p95_stt={summary['p95_stt_sec']:<6} "
-            f"mean_rtf={summary['mean_rtf']:<6} "
-            f"norm_match={summary['normalized_exact_match_rate']:<6} "
-            f"norm_cer={summary['mean_normalized_cer']:<6}"
+            f"status={summary.get('status', 'ok'):<7} "
+            f"load={summary.get('load_time_sec', '-')!s:<6} "
+            f"samples={summary.get('sample_count', '-')!s:<3} "
+            f"mean_stt={summary.get('mean_stt_sec', '-')!s:<6} "
+            f"p95_stt={summary.get('p95_stt_sec', '-')!s:<6} "
+            f"mean_rtf={summary.get('mean_rtf', '-')!s:<6} "
+            f"norm_match={summary.get('normalized_exact_match_rate', '-')!s:<6} "
+            f"norm_cer={summary.get('mean_normalized_cer', '-')!s:<6}"
         )
 
 
@@ -641,19 +723,51 @@ def main():
     args = parse_args()
     dataset_dir = args.dataset_dir.resolve()
     entries = list_dataset_entries(dataset_dir)
-    configs = args.config or ["whisper:tiny"]
-    parsed_configs = [parse_config(config_value) for config_value in configs]
+    parsed_configs = load_config_list(args)
     run_dir = ensure_output_dir(args.output_dir.resolve(), dataset_dir.name)
 
     summaries = []
     for config in parsed_configs:
-        result = evaluate_config(entries, config, args)
-        summary = result["summary"]
-        rows = result["rows"]
-        run_name = summary["run_name"]
-        summaries.append(summary)
-        write_rows_csv(run_dir / f"{run_name}_per_sample.csv", rows)
-        write_readable_markdown(run_dir / f"{run_name}_readable.md", summary, rows)
+        run_name = build_run_name(config)
+        try:
+            result = evaluate_config(entries, config, args)
+            summary = result["summary"]
+            rows = result["rows"]
+            summaries.append(summary)
+            write_rows_csv(run_dir / f"{run_name}_per_sample.csv", rows)
+            write_readable_markdown(run_dir / f"{run_name}_readable.md", summary, rows)
+        except Exception as exc:
+            summaries.append(
+                {
+                    "status": "failed",
+                    "error_text": str(exc),
+                    "run_name": run_name,
+                    "model": config["model"],
+                    "model_name": config.get("model_name") or "default",
+                    "variant": config.get("variant", ""),
+                    "label": config.get("label", ""),
+                    "device": config.get("device", args.device) or "auto",
+                    "sample_count": 0,
+                    "load_time_sec": 0.0,
+                    "warmup_enabled": 0,
+                    "warmup_sample_id": "",
+                    "warmup_time_sec": 0.0,
+                    "total_audio_sec": 0.0,
+                    "total_stt_sec": 0.0,
+                    "mean_stt_sec": 0.0,
+                    "p50_stt_sec": 0.0,
+                    "p95_stt_sec": 0.0,
+                    "max_stt_sec": 0.0,
+                    "mean_rtf": 0.0,
+                    "p50_rtf": 0.0,
+                    "p95_rtf": 0.0,
+                    "max_rtf": 0.0,
+                    "exact_match_rate": 0.0,
+                    "normalized_exact_match_rate": 0.0,
+                    "mean_cer": 0.0,
+                    "mean_normalized_cer": 0.0,
+                }
+            )
 
     write_summary_csv(run_dir / "summary.csv", summaries)
     write_summary_json(run_dir / "summary.json", dataset_dir, summaries)

@@ -89,11 +89,12 @@ class WhisperTRTSTTModel:
 
         audio_features = self.model.embed_audio(mel)
         prompt = list(self.model.tokenizer.sot_sequence_including_notimestamps)
-        tokens = self._torch.LongTensor(prompt).cuda()[None, ...]
+        token_device = self.model.decoder.token_embedding.weight.device
+        tokens = self._torch.LongTensor(prompt).to(token_device)[None, ...]
 
         for _ in range(self.model.dims.n_text_ctx - len(prompt)):
             logits = self.model.logits(tokens, audio_features)
-            next_tokens = logits.argmax(dim=-1)
+            next_tokens = logits.argmax(dim=-1).to(tokens.device)
             tokens = self._torch.cat([tokens, next_tokens[:, -1:]], dim=-1)
             if tokens[0, -1] == self.model.tokenizer.eot:
                 break
@@ -102,7 +103,9 @@ class WhisperTRTSTTModel:
         if generated.shape[1] > 0 and generated[0, -1] == self.model.tokenizer.eot:
             generated = generated[:, :-1]
 
-        text = self.model.tokenizer.decode([int(x) for x in generated.flatten()])
+        text = self.model.tokenizer.decode(
+            [int(x) for x in generated.flatten().detach().cpu().tolist()]
+        )
         self.last_duration_sec = time.perf_counter() - started_at
         self.last_text = str(text).strip()
         self.last_result = {

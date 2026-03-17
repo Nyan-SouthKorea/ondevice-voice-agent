@@ -1,6 +1,6 @@
-# WhisperTRT Base KO ctx64
+# WhisperTRT Base KO ctx64 fp16e fp16w legacy
 
-이 디렉토리는 현재 승격된 한국어 `WhisperTRT base` 자산 경로다.
+이 디렉토리는 기존 승격 한국어 `WhisperTRT base` 자산 경로다.
 
 중요:
 
@@ -21,6 +21,8 @@
 현재 기준:
 
 - 모델: `WhisperTRT base`
+- 엔진 dtype: `fp16`
+- 빌드 가중치 dtype: `fp16`
 - 언어: `ko`
 - 최대 text context: `64`
 

@@ -76,6 +76,21 @@ def parse_args():
         action="store_true",
         help="TensorRT verbose 로그 사용 여부",
     )
+    parser.add_argument(
+        "--disable-lowmem-export",
+        action="store_true",
+        help="low-memory ONNX export 우회를 끄고 기본 torch2trt 경로를 사용한다.",
+    )
+    parser.add_argument(
+        "--disable-fp16",
+        action="store_true",
+        help="fp16 대신 fp32로 빌드한다.",
+    )
+    parser.add_argument(
+        "--keep-fp32-weights",
+        action="store_true",
+        help="빌드용 Whisper 가중치를 half로 줄이지 않고 fp32 상태로 유지한다.",
+    )
     return parser.parse_args()
 
 
@@ -108,6 +123,7 @@ def prepare_dirs(work_dir):
         "encoder_extra": root / "encoder_extra.pt",
         "dims": root / "dims.json",
         "checkpoint": root / "whisper_trt_split.pth",
+        "lowmem_runtime_flag": root / "lowmem_runtime.txt",
     }
 
 
@@ -129,7 +145,7 @@ def load_runtime_modules():
     return torch, whisper, wm
 
 
-def load_model_for_trt_build(wm, whisper, model_name):
+def load_model_for_trt_build(wm, whisper, model_name, use_half_weights):
     """
     기능:
     - TRT 빌드용 Whisper 모델을 CPU에서 half로 줄인 뒤 GPU에 올린다.
@@ -142,11 +158,34 @@ def load_model_for_trt_build(wm, whisper, model_name):
     반환:
     - GPU에 적재된 fp16 Whisper 모델을 반환한다.
     """
-    model = wm.load_model(model_name, device="cpu").half()
-    for module in model.modules():
-        if isinstance(module, whisper.model.LayerNorm):
-            module.float()
+    model = wm.load_model(model_name, device="cpu")
+    if use_half_weights:
+        model = model.half()
+        for module in model.modules():
+            if isinstance(module, whisper.model.LayerNorm):
+                module.float()
     return model.cuda().eval()
+
+
+def prepare_module_for_trt_build(module, whisper, use_half_weights):
+    """
+    기능:
+    - 빌드 대상 모듈 조각만 dtype을 정리한 뒤 CUDA로 올린다.
+
+    입력:
+    - `module`: CUDA로 올릴 torch 모듈 조각.
+    - `whisper`: whisper 모듈.
+    - `use_half_weights`: half 가중치 사용 여부.
+
+    반환:
+    - CUDA에 올라간 eval 모드를 반환한다.
+    """
+    if use_half_weights:
+        module = module.half()
+        for child in module.modules():
+            if isinstance(child, whisper.model.LayerNorm):
+                child.float()
+    return module.cuda().eval()
 
 
 def get_decoder_chunk_ranges(total_blocks, chunk_size):
@@ -196,6 +235,7 @@ def build_chunked_text_decoder_class(torch, wm):
             positional_embedding,
             ln,
             mask,
+            input_dtype=None,
         ):
             super().__init__()
             self.engines = torch.nn.ModuleList(engines)
@@ -203,23 +243,33 @@ def build_chunked_text_decoder_class(torch, wm):
             self.positional_embedding = positional_embedding
             self.ln = ln
             self.register_buffer("mask", mask, persistent=False)
+            self.input_dtype = input_dtype
 
         @torch.no_grad()
         def forward(self, x, xa):
             offset = 0
-            x = (
-                self.token_embedding(x)
-                + self.positional_embedding[offset : offset + x.shape[-1]]
-            )
-            x = x.to(xa.dtype)
+            token_device = self.token_embedding.weight.device
+            pos = self.positional_embedding[offset : offset + x.shape[-1]]
+            if pos.device != token_device:
+                pos = pos.to(token_device)
+            x = self.token_embedding(x.to(token_device)) + pos
+            if self.input_dtype is not None:
+                x = x.to(device=xa.device, dtype=self.input_dtype)
+                xa = xa.to(self.input_dtype)
+            else:
+                x = x.to(device=xa.device, dtype=xa.dtype)
 
+            mask = self.mask
+            if mask.device != x.device:
+                mask = mask.to(x.device)
             for engine in self.engines:
-                x = engine(x, xa, self.mask)
+                x = engine(x, xa, mask)
 
+            ln_device = self.ln.weight.device
+            if x.device != ln_device:
+                x = x.to(ln_device)
             x = self.ln(x)
-            logits = (
-                x @ torch.transpose(self.token_embedding.weight.to(x.dtype), 0, 1)
-            ).float()
+            logits = project_logits_with_embedding(x, self.token_embedding)
             return logits
 
     return ChunkedTextDecoderTRT
@@ -257,6 +307,28 @@ def build_audio_encoder_chunk_runtime_class(torch, wm):
     return ChunkedAudioEncoderTRT
 
 
+def project_logits_with_embedding(x, token_embedding):
+    """
+    기능:
+    - token embedding weight의 현재 dtype/device를 기준으로 logits를 계산한다.
+
+    입력:
+    - `x`: decoder 출력 텐서.
+    - `token_embedding`: token embedding 모듈.
+
+    반환:
+    - float32 logits를 반환한다.
+    """
+    import torch
+
+    weight = token_embedding.weight
+    if weight.device != x.device:
+        weight = weight.to(x.device)
+    if x.dtype != weight.dtype:
+        x = x.to(weight.dtype)
+    return (x @ torch.transpose(weight, 0, 1)).float()
+
+
 def prepare_builder(
     wm,
     whisper,
@@ -265,6 +337,9 @@ def prepare_builder(
     workspace_mb,
     max_text_ctx,
     verbose,
+    use_lowmem_export,
+    use_fp16,
+    use_half_weights,
 ):
     """
     기능:
@@ -278,6 +353,8 @@ def prepare_builder(
         - `workspace_mb`: TensorRT workspace 크기(MB).
         - `max_text_ctx`: decoder 엔진 빌드 시 최대 text context 길이.
         - `verbose`: verbose 로그 사용 여부.
+        - `use_lowmem_export`: low-memory ONNX export 우회 사용 여부.
+        - `use_fp16`: fp16 빌드 사용 여부.
 
     반환:
     - 준비된 builder 클래스를 반환한다.
@@ -308,14 +385,18 @@ def prepare_builder(
         builder = CustomBuilder
 
     builder.verbose = verbose
-    builder.fp16_mode = True
+    builder.fp16_mode = bool(use_fp16)
     builder.max_workspace_size = int(workspace_mb) * (1 << 20)
     builder.max_text_ctx = int(max_text_ctx)
+    builder.use_lowmem_export = bool(use_lowmem_export)
+    builder.use_half_weights = bool(use_half_weights)
 
     @classmethod
     @wm.torch.no_grad()
     def build_text_decoder_engine(cls, block_start=0, block_end=None):
-        model = load_model_for_trt_build(wm, whisper, cls.model)
+        model = load_model_for_trt_build(
+            wm, whisper, cls.model, cls.use_half_weights
+        )
         dims = model.dims
 
         capped_text_ctx = max(
@@ -338,10 +419,7 @@ def prepare_builder(
         xa = wm.torch.randn(1, dims.n_audio_ctx, dims.n_audio_state).cuda()
         mask = wm.torch.randn(capped_text_ctx, capped_text_ctx).cuda()
 
-        engine = build_torch2trt_with_lowmem_export(
-            wm,
-            decoder_blocks_module,
-            [x, xa, mask],
+        trt_kwargs = dict(
             use_onnx=True,
             min_shapes=[
                 (1, 1, dims.n_text_state),
@@ -364,6 +442,19 @@ def prepare_builder(
             fp16_mode=cls.fp16_mode,
             log_level=wm.tensorrt.Logger.VERBOSE if cls.verbose else wm.tensorrt.Logger.ERROR,
         )
+        if cls.use_lowmem_export:
+            engine = build_torch2trt_with_lowmem_export(
+                wm,
+                decoder_blocks_module,
+                [x, xa, mask],
+                **trt_kwargs,
+            )
+        else:
+            engine = wm.torch2trt.torch2trt(
+                decoder_blocks_module,
+                [x, xa, mask],
+                **trt_kwargs,
+            )
 
         return engine
 
@@ -372,7 +463,7 @@ def prepare_builder(
     @classmethod
     @wm.torch.no_grad()
     def build_audio_encoder_engine(cls, block_start=0, block_end=None):
-        model = load_model_for_trt_build(wm, whisper, cls.model)
+        model = wm.load_model(cls.model, device="cpu").eval()
         dims = model.dims
         total_blocks = len(model.encoder.blocks)
         block_start = max(0, int(block_start))
@@ -383,11 +474,12 @@ def prepare_builder(
             )
 
         class AudioEncoderFirstChunkEngine(wm.nn.Module):
-            def __init__(self, conv1, conv2, blocks):
+            def __init__(self, conv1, conv2, blocks, ln_post=None):
                 super().__init__()
                 self.conv1 = conv1
                 self.conv2 = conv2
                 self.blocks = blocks
+                self.ln_post = ln_post
 
             @wm.torch.no_grad()
             def forward(self, x, positional_embedding):
@@ -397,6 +489,8 @@ def prepare_builder(
                 x = (x + positional_embedding).to(x.dtype)
                 for block in self.blocks:
                     x = block(x)
+                if self.ln_post is not None:
+                    x = self.ln_post(x)
                 return x
 
         class AudioEncoderLaterChunkEngine(wm.nn.Module):
@@ -421,21 +515,27 @@ def prepare_builder(
                 model.encoder.conv1,
                 model.encoder.conv2,
                 encoder_blocks,
+                model.encoder.ln_post if is_last else None,
             )
         else:
             encoder_module = AudioEncoderLaterChunkEngine(
                 encoder_blocks,
                 model.encoder.ln_post if is_last else None,
             )
+        encoder_module = prepare_module_for_trt_build(
+            encoder_module,
+            whisper,
+            cls.use_half_weights,
+        )
 
         n_frames = dims.n_audio_ctx * 2
         if is_first:
             x = wm.torch.randn(1, dims.n_mels, n_frames).cuda()
-            positional_embedding = model.encoder.positional_embedding.cuda().detach()
-            engine = build_torch2trt_with_lowmem_export(
-                wm,
-                encoder_module,
-                [x, positional_embedding],
+            positional_embedding = model.encoder.positional_embedding.detach()
+            if cls.use_half_weights:
+                positional_embedding = positional_embedding.half()
+            positional_embedding = positional_embedding.cuda()
+            trt_kwargs = dict(
                 use_onnx=True,
                 min_shapes=[
                     (1, dims.n_mels, 1),
@@ -455,12 +555,22 @@ def prepare_builder(
                 fp16_mode=cls.fp16_mode,
                 log_level=wm.tensorrt.Logger.VERBOSE if cls.verbose else wm.tensorrt.Logger.ERROR,
             )
+            if cls.use_lowmem_export:
+                engine = build_torch2trt_with_lowmem_export(
+                    wm,
+                    encoder_module,
+                    [x, positional_embedding],
+                    **trt_kwargs,
+                )
+            else:
+                engine = wm.torch2trt.torch2trt(
+                    encoder_module,
+                    [x, positional_embedding],
+                    **trt_kwargs,
+                )
         else:
             x = wm.torch.randn(1, dims.n_audio_ctx, dims.n_audio_state).cuda()
-            engine = build_torch2trt_with_lowmem_export(
-                wm,
-                encoder_module,
-                [x],
+            trt_kwargs = dict(
                 use_onnx=True,
                 min_shapes=[
                     (1, dims.n_audio_ctx, dims.n_audio_state),
@@ -477,7 +587,21 @@ def prepare_builder(
                 fp16_mode=cls.fp16_mode,
                 log_level=wm.tensorrt.Logger.VERBOSE if cls.verbose else wm.tensorrt.Logger.ERROR,
             )
+            if cls.use_lowmem_export:
+                engine = build_torch2trt_with_lowmem_export(
+                    wm,
+                    encoder_module,
+                    [x],
+                    **trt_kwargs,
+                )
+            else:
+                engine = wm.torch2trt.torch2trt(
+                    encoder_module,
+                    [x],
+                    **trt_kwargs,
+                )
 
+        del model
         return engine
 
     builder.build_audio_encoder_engine = build_audio_encoder_engine
@@ -510,6 +634,11 @@ def load_checkpoint_model(
     torch, whisper, wm = load_runtime_modules()
     import torch.nn as nn
 
+    dtype_map = {
+        "float16": torch.float16,
+        "float32": torch.float32,
+    }
+
     builder = prepare_builder(
         wm=wm,
         whisper=whisper,
@@ -518,13 +647,94 @@ def load_checkpoint_model(
         workspace_mb=workspace_mb,
         max_text_ctx=max_text_ctx,
         verbose=verbose,
+        use_lowmem_export=True,
+        use_fp16=True,
+        use_half_weights=True,
     )
 
-    checkpoint = torch.load(str(checkpoint_path), map_location="cpu")
+    checkpoint_path = Path(checkpoint_path)
+    work_dir_mode = checkpoint_path.is_dir()
+
+    if work_dir_mode:
+        paths = prepare_dirs(str(checkpoint_path))
+        with paths["dims"].open("r", encoding="utf-8") as file:
+            dims_dict = json.load(file)
+        checkpoint = {"dims": dims_dict}
+        if paths["decoder_chunk_meta"].exists():
+            with paths["decoder_chunk_meta"].open("r", encoding="utf-8") as file:
+                checkpoint["text_decoder_chunk_ranges"] = json.load(file)["chunk_ranges"]
+        if paths["encoder_chunk_meta"].exists():
+            with paths["encoder_chunk_meta"].open("r", encoding="utf-8") as file:
+                checkpoint["audio_encoder_chunk_ranges"] = json.load(file)["chunk_ranges"]
+        if paths["decoder_extra"].exists():
+            checkpoint["text_decoder_extra_state"] = torch.load(
+                paths["decoder_extra"], map_location="cpu"
+            )
+        if paths["encoder_extra"].exists():
+            checkpoint["audio_encoder_extra_state"] = torch.load(
+                paths["encoder_extra"], map_location="cpu"
+            )
+        decoder_dtype_path = checkpoint_path / "text_decoder_input_dtype.txt"
+        if decoder_dtype_path.exists():
+            checkpoint["text_decoder_input_dtype"] = (
+                decoder_dtype_path.read_text(encoding="utf-8").strip()
+            )
+        if paths["lowmem_runtime_flag"].exists():
+            checkpoint["lowmem_runtime"] = (
+                paths["lowmem_runtime_flag"].read_text(encoding="utf-8").strip().lower()
+                in {"1", "true", "yes", "on"}
+            )
+    else:
+        checkpoint = torch.load(str(checkpoint_path), map_location="cpu")
+
     dims = wm.ModelDimensions(**checkpoint["dims"])
+    decoder_input_dtype = dtype_map.get(checkpoint.get("text_decoder_input_dtype"))
+    lowmem_runtime = bool(checkpoint.get("lowmem_runtime", False))
 
     aes = checkpoint["audio_encoder_extra_state"]
-    if "audio_encoder_engines" in checkpoint:
+    if work_dir_mode:
+        if paths["encoder_chunk_meta"].exists():
+            with paths["encoder_chunk_meta"].open("r", encoding="utf-8") as file:
+                encoder_chunk_meta = json.load(file)
+            if len(encoder_chunk_meta.get("files", [])) > 1:
+                chunked_audio_cls = build_audio_encoder_chunk_runtime_class(torch, wm)
+                first_engine = wm.torch2trt.TRTModule()
+                first_engine.load_state_dict(
+                    torch.load(
+                        paths["encoder_engines_dir"] / encoder_chunk_meta["files"][0],
+                        map_location="cpu",
+                    )
+                )
+                later_engines = []
+                for file_name in encoder_chunk_meta["files"][1:]:
+                    engine = wm.torch2trt.TRTModule()
+                    engine.load_state_dict(
+                        torch.load(
+                            paths["encoder_engines_dir"] / file_name,
+                            map_location="cpu",
+                        )
+                    )
+                    later_engines.append(engine)
+                encoder = chunked_audio_cls(
+                    first_engine,
+                    later_engines,
+                    aes["positional_embedding"],
+                )
+            else:
+                audio_encoder_engine = wm.torch2trt.TRTModule()
+                audio_encoder_engine.load_state_dict(
+                    torch.load(paths["encoder_engine"], map_location="cpu")
+                )
+                encoder = wm.AudioEncoderTRT(
+                    audio_encoder_engine, aes["positional_embedding"]
+                )
+        else:
+            audio_encoder_engine = wm.torch2trt.TRTModule()
+            audio_encoder_engine.load_state_dict(
+                torch.load(paths["encoder_engine"], map_location="cpu")
+            )
+            encoder = wm.AudioEncoderTRT(audio_encoder_engine, aes["positional_embedding"])
+    elif "audio_encoder_engines" in checkpoint:
         chunked_audio_cls = build_audio_encoder_chunk_runtime_class(torch, wm)
         first_engine = wm.torch2trt.TRTModule()
         first_engine.load_state_dict(checkpoint["audio_encoder_engines"][0])
@@ -551,7 +761,98 @@ def load_checkpoint_model(
     text_ln.load_state_dict(tes["ln"])
     text_mask = tes["mask"]
 
-    if "text_decoder_engines" in checkpoint:
+    if work_dir_mode:
+        if paths["decoder_chunk_meta"].exists():
+            with paths["decoder_chunk_meta"].open("r", encoding="utf-8") as file:
+                decoder_chunk_meta = json.load(file)
+            if len(decoder_chunk_meta.get("files", [])) > 1:
+                chunked_cls = build_chunked_text_decoder_class(torch, wm)
+                decoder_engines = []
+                for file_name in decoder_chunk_meta["files"]:
+                    engine = wm.torch2trt.TRTModule()
+                    engine.load_state_dict(
+                        torch.load(
+                            paths["decoder_engines_dir"] / file_name,
+                            map_location="cpu",
+                        )
+                    )
+                    decoder_engines.append(engine)
+                decoder = chunked_cls(
+                    decoder_engines,
+                    token_embedding,
+                    positional_embedding,
+                    text_ln,
+                    text_mask,
+                    decoder_input_dtype,
+                )
+            else:
+                class TextDecoderTRTWithDType(nn.Module):
+                    def __init__(
+                        self,
+                        engine,
+                        token_embedding,
+                        positional_embedding,
+                        ln,
+                        mask,
+                        input_dtype=None,
+                    ):
+                        super().__init__()
+                        self.engine = engine
+                        self.token_embedding = token_embedding
+                        self.positional_embedding = positional_embedding
+                        self.ln = ln
+                        self.register_buffer("mask", mask, persistent=False)
+                        self.input_dtype = input_dtype
+
+                    @torch.no_grad()
+                    def forward(self, x, xa):
+                        offset = 0
+                        token_device = self.token_embedding.weight.device
+                        pos = self.positional_embedding[offset : offset + x.shape[-1]]
+                        if pos.device != token_device:
+                            pos = pos.to(token_device)
+                        x = self.token_embedding(x.to(token_device)) + pos
+                        if self.input_dtype is not None:
+                            x = x.to(device=xa.device, dtype=self.input_dtype)
+                            xa = xa.to(self.input_dtype)
+                        else:
+                            x = x.to(device=xa.device, dtype=xa.dtype)
+                        mask = self.mask
+                        if mask.device != x.device:
+                            mask = mask.to(x.device)
+                        x = self.engine(x, xa, mask)
+                        ln_device = self.ln.weight.device
+                        if x.device != ln_device:
+                            x = x.to(ln_device)
+                        x = self.ln(x)
+                        logits = project_logits_with_embedding(x, self.token_embedding)
+                        return logits
+
+                text_decoder_engine = wm.torch2trt.TRTModule()
+                text_decoder_engine.load_state_dict(
+                    torch.load(paths["decoder_engine"], map_location="cpu")
+                )
+                decoder = TextDecoderTRTWithDType(
+                    text_decoder_engine,
+                    token_embedding,
+                    positional_embedding,
+                    text_ln,
+                    text_mask,
+                    decoder_input_dtype,
+                )
+        else:
+            text_decoder_engine = wm.torch2trt.TRTModule()
+            text_decoder_engine.load_state_dict(
+                torch.load(paths["decoder_engine"], map_location="cpu")
+            )
+            decoder = wm.TextDecoderTRT(
+                text_decoder_engine,
+                token_embedding,
+                positional_embedding,
+                text_ln,
+                text_mask,
+            )
+    elif "text_decoder_engines" in checkpoint:
         chunked_cls = build_chunked_text_decoder_class(torch, wm)
         decoder_engines = []
         for engine_state in checkpoint["text_decoder_engines"]:
@@ -564,20 +865,110 @@ def load_checkpoint_model(
             positional_embedding,
             text_ln,
             text_mask,
+            decoder_input_dtype,
         )
     else:
+        class TextDecoderTRTWithDType(nn.Module):
+            def __init__(
+                self,
+                engine,
+                token_embedding,
+                positional_embedding,
+                ln,
+                mask,
+                input_dtype=None,
+            ):
+                super().__init__()
+                self.engine = engine
+                self.token_embedding = token_embedding
+                self.positional_embedding = positional_embedding
+                self.ln = ln
+                self.register_buffer("mask", mask, persistent=False)
+                self.input_dtype = input_dtype
+
+            @torch.no_grad()
+            def forward(self, x, xa):
+                offset = 0
+                token_device = self.token_embedding.weight.device
+                pos = self.positional_embedding[offset : offset + x.shape[-1]]
+                if pos.device != token_device:
+                    pos = pos.to(token_device)
+                x = self.token_embedding(x.to(token_device)) + pos
+                if self.input_dtype is not None:
+                    x = x.to(device=xa.device, dtype=self.input_dtype)
+                    xa = xa.to(self.input_dtype)
+                else:
+                    x = x.to(device=xa.device, dtype=xa.dtype)
+
+                mask = self.mask
+                if mask.device != x.device:
+                    mask = mask.to(x.device)
+                x = self.engine(x, xa, mask)
+                ln_device = self.ln.weight.device
+                if x.device != ln_device:
+                    x = x.to(ln_device)
+                x = self.ln(x)
+                logits = project_logits_with_embedding(x, self.token_embedding)
+                return logits
+
         text_decoder_engine = wm.torch2trt.TRTModule()
         text_decoder_engine.load_state_dict(checkpoint["text_decoder_engine"])
-        decoder = wm.TextDecoderTRT(
+        decoder = TextDecoderTRTWithDType(
             text_decoder_engine,
             token_embedding,
             positional_embedding,
             text_ln,
             text_mask,
+            decoder_input_dtype,
         )
 
+    def move_runtime_modules_to_cuda(trt_model):
+        """
+        기능:
+        - TRT engine은 그대로 두고, runtime에 필요한 작은 모듈과 버퍼만 CUDA로 옮긴다.
+
+        입력:
+        - `trt_model`: 생성된 WhisperTRT 모델.
+
+        반환:
+        - CUDA 준비가 끝난 WhisperTRT 모델을 반환한다.
+        """
+
+        if hasattr(trt_model.encoder, "positional_embedding"):
+            trt_model.encoder.positional_embedding = (
+                trt_model.encoder.positional_embedding.cuda()
+            )
+
+        if lowmem_runtime:
+            trt_model.decoder.token_embedding = trt_model.decoder.token_embedding.cpu().half()
+            trt_model.decoder.ln = trt_model.decoder.ln.cpu()
+            if isinstance(trt_model.decoder.positional_embedding, torch.nn.Parameter):
+                trt_model.decoder.positional_embedding = torch.nn.Parameter(
+                    trt_model.decoder.positional_embedding.detach().cpu().half(),
+                    requires_grad=False,
+                )
+            else:
+                trt_model.decoder.positional_embedding = (
+                    trt_model.decoder.positional_embedding.cpu().half()
+                )
+            trt_model.decoder.mask = trt_model.decoder.mask.cuda()
+        else:
+            trt_model.decoder.token_embedding = trt_model.decoder.token_embedding.cuda()
+            trt_model.decoder.ln = trt_model.decoder.ln.cuda()
+            if isinstance(trt_model.decoder.positional_embedding, torch.nn.Parameter):
+                trt_model.decoder.positional_embedding = torch.nn.Parameter(
+                    trt_model.decoder.positional_embedding.detach().cuda(),
+                    requires_grad=False,
+                )
+            else:
+                trt_model.decoder.positional_embedding = (
+                    trt_model.decoder.positional_embedding.cuda()
+                )
+            trt_model.decoder.mask = trt_model.decoder.mask.cuda()
+        return trt_model.eval()
+
     model = wm.WhisperTRT(dims, encoder, decoder, builder.get_tokenizer())
-    model = model.cuda().eval()
+    model = move_runtime_modules_to_cuda(model)
     return model
 
 
@@ -662,6 +1053,9 @@ def build_decoder(
     max_text_ctx,
     decoder_chunk_size,
     verbose,
+    use_lowmem_export,
+    use_fp16,
+    use_half_weights,
 ):
     """
     기능:
@@ -672,6 +1066,9 @@ def build_decoder(
     - `model_name`: WhisperTRT 모델 이름.
     - `workspace_mb`: TensorRT workspace 크기(MB).
     - `verbose`: verbose 로그 사용 여부.
+    - `use_lowmem_export`: low-memory ONNX export 우회 사용 여부.
+    - `use_fp16`: fp16 빌드 사용 여부.
+    - `use_half_weights`: 빌드용 가중치를 half로 줄일지 여부.
 
     반환:
     - 없음.
@@ -685,6 +1082,9 @@ def build_decoder(
         workspace_mb,
         max_text_ctx,
         verbose,
+        use_lowmem_export,
+        use_fp16,
+        use_half_weights,
     )
     write_dims(paths, model_name, max_text_ctx)
 
@@ -697,20 +1097,15 @@ def build_decoder(
 
     paths["decoder_engines_dir"].mkdir(parents=True, exist_ok=True)
 
-    started_at = time.perf_counter()
     saved_chunk_paths = []
-    for chunk_index, (block_start, block_end) in enumerate(chunk_ranges):
-        engine = builder.build_text_decoder_engine(block_start, block_end)
+    for chunk_index in range(len(chunk_ranges)):
         if len(chunk_ranges) == 1:
             chunk_path = paths["decoder_engine"]
         else:
             chunk_path = (
                 paths["decoder_engines_dir"] / f"decoder_engine_{chunk_index:02d}.pt"
             )
-        torch.save(engine.state_dict(), chunk_path)
         saved_chunk_paths.append(chunk_path.name)
-        del engine
-        cleanup_cuda(torch)
 
     with paths["decoder_chunk_meta"].open("w", encoding="utf-8") as file:
         json.dump(
@@ -723,6 +1118,22 @@ def build_decoder(
             ensure_ascii=False,
             indent=2,
         )
+
+    started_at = time.perf_counter()
+    for chunk_index, (block_start, block_end) in enumerate(chunk_ranges):
+        if len(chunk_ranges) == 1:
+            chunk_path = paths["decoder_engine"]
+        else:
+            chunk_path = (
+                paths["decoder_engines_dir"] / f"decoder_engine_{chunk_index:02d}.pt"
+            )
+        if chunk_path.exists():
+            continue
+
+        engine = builder.build_text_decoder_engine(block_start, block_end)
+        torch.save(engine.state_dict(), chunk_path)
+        del engine
+        cleanup_cuda(torch)
 
     capped_text_ctx = max(8, min(int(max_text_ctx), int(builder.max_text_ctx)))
     model = whisper.load_model(model_name, device="cpu").eval()
@@ -751,6 +1162,9 @@ def build_encoder(
     max_text_ctx,
     encoder_chunk_size,
     verbose,
+    use_lowmem_export,
+    use_fp16,
+    use_half_weights,
 ):
     """
     기능:
@@ -761,6 +1175,9 @@ def build_encoder(
     - `model_name`: WhisperTRT 모델 이름.
     - `workspace_mb`: TensorRT workspace 크기(MB).
     - `verbose`: verbose 로그 사용 여부.
+    - `use_lowmem_export`: low-memory ONNX export 우회 사용 여부.
+    - `use_fp16`: fp16 빌드 사용 여부.
+    - `use_half_weights`: 빌드용 가중치를 half로 줄일지 여부.
 
     반환:
     - 없음.
@@ -774,6 +1191,9 @@ def build_encoder(
         workspace_mb,
         max_text_ctx,
         verbose,
+        use_lowmem_export,
+        use_fp16,
+        use_half_weights,
     )
     write_dims(paths, model_name, max_text_ctx)
 
@@ -786,20 +1206,15 @@ def build_encoder(
 
     paths["encoder_engines_dir"].mkdir(parents=True, exist_ok=True)
 
-    started_at = time.perf_counter()
     saved_chunk_paths = []
-    for chunk_index, (block_start, block_end) in enumerate(chunk_ranges):
-        engine = builder.build_audio_encoder_engine(block_start, block_end)
+    for chunk_index in range(len(chunk_ranges)):
         if len(chunk_ranges) == 1:
             chunk_path = paths["encoder_engine"]
         else:
             chunk_path = (
                 paths["encoder_engines_dir"] / f"encoder_engine_{chunk_index:02d}.pt"
             )
-        torch.save(engine.state_dict(), chunk_path)
         saved_chunk_paths.append(chunk_path.name)
-        del engine
-        cleanup_cuda(torch)
 
     with paths["encoder_chunk_meta"].open("w", encoding="utf-8") as file:
         json.dump(
@@ -812,6 +1227,22 @@ def build_encoder(
             ensure_ascii=False,
             indent=2,
         )
+
+    started_at = time.perf_counter()
+    for chunk_index, (block_start, block_end) in enumerate(chunk_ranges):
+        if len(chunk_ranges) == 1:
+            chunk_path = paths["encoder_engine"]
+        else:
+            chunk_path = (
+                paths["encoder_engines_dir"] / f"encoder_engine_{chunk_index:02d}.pt"
+            )
+        if chunk_path.exists():
+            continue
+
+        engine = builder.build_audio_encoder_engine(block_start, block_end)
+        torch.save(engine.state_dict(), chunk_path)
+        del engine
+        cleanup_cuda(torch)
 
     model = whisper.load_model(model_name, device="cpu").eval()
     extra_state = {
@@ -964,6 +1395,12 @@ def run_subprocess(step, args):
     ]
     if args.verbose:
         command.append("--verbose")
+    if args.disable_lowmem_export:
+        command.append("--disable-lowmem-export")
+    if args.disable_fp16:
+        command.append("--disable-fp16")
+    if args.keep_fp32_weights:
+        command.append("--keep-fp32-weights")
 
     subprocess.run(command, check=True)
 
@@ -991,6 +1428,9 @@ def main():
             args.max_text_ctx,
             args.decoder_chunk_size,
             args.verbose,
+            not args.disable_lowmem_export,
+            not args.disable_fp16,
+            not args.keep_fp32_weights,
         )
         return
 
@@ -1003,6 +1443,9 @@ def main():
             args.max_text_ctx,
             args.encoder_chunk_size,
             args.verbose,
+            not args.disable_lowmem_export,
+            not args.disable_fp16,
+            not args.keep_fp32_weights,
         )
         return
 

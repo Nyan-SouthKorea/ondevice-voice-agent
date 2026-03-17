@@ -1,0 +1,53 @@
+[
+  {
+    "model": "whisper",
+    "model_name": "tiny",
+    "device": "cuda",
+    "variant": "tiny_cuda",
+    "label": "whisper tiny fp16 (cuda)"
+  },
+  {
+    "model": "whisper",
+    "model_name": "base",
+    "device": "cuda",
+    "variant": "base_cuda",
+    "label": "whisper base fp16 (cuda)"
+  },
+  {
+    "model": "whisper_trt",
+    "model_name": "base",
+    "device": "cuda",
+    "variant": "base_trt_legacy",
+    "label": "whisper base fp16e_fp16w (trt, legacy)",
+    "checkpoint_path": "/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth",
+    "workspace_mb": 128,
+    "max_text_ctx": 64
+  },
+  {
+    "model": "whisper_trt",
+    "model_name": "small",
+    "device": "cuda",
+    "variant": "small_trt_nano_safe",
+    "label": "whisper small fp16e_fp32w (trt, nano safe)",
+    "checkpoint_path": "/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/whisper_trt_split.pth",
+    "workspace_mb": 64,
+    "max_text_ctx": 64
+  },
+  {
+    "model": "whisper_trt",
+    "model_name": "small",
+    "device": "cuda",
+    "variant": "small_trt_agx_cross_device",
+    "label": "whisper small fp16e_fp32w (trt, agx cross-device)",
+    "checkpoint_path": "/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device/whisper_trt_split.pth",
+    "workspace_mb": 128,
+    "max_text_ctx": 64
+  },
+  {
+    "model": "api",
+    "model_name": "gpt-4o-mini-transcribe",
+    "device": "auto",
+    "variant": "api_gpt_4o_mini_transcribe",
+    "label": "gpt-4o-mini-transcribe (api)"
+  }
+]

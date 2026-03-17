@@ -91,21 +91,28 @@ def build_expected_rows(summary_rows, expect_specs):
 
     indexed = {}
     for row in summary_rows:
-        key = (row["model"], row["model_name"], row["device"])
+        key = (row["model"], row["model_name"], row["device"], row.get("variant", ""))
         indexed[key] = row
 
     rows = []
     for spec in expect_specs:
-        model, model_name, device = spec.split(":", 2)
-        found = indexed.get((model, model_name, device))
+        parts = spec.split(":", 3)
+        if len(parts) == 3:
+            model, model_name, device = parts
+            variant = ""
+        else:
+            model, model_name, device, variant = parts
+        found = indexed.get((model, model_name, device, variant))
         label = f"{model_name} ({device})" if model == "whisper" else f"{model_name} (api)"
         if found:
             rows.append(
                 {
-                    "status": "ok",
-                    "label": label,
+                    "status": found.get("status", "ok"),
+                    "error_text": found.get("error_text", ""),
+                    "label": found.get("label") or label,
                     "model": model,
                     "model_name": model_name,
+                    "variant": variant,
                     "device": device,
                     "sample_count": found["sample_count"],
                     "load_time_sec": found["load_time_sec"],
@@ -123,9 +130,11 @@ def build_expected_rows(summary_rows, expect_specs):
         rows.append(
             {
                 "status": "missing_summary",
+                "error_text": "",
                 "label": label,
                 "model": model,
                 "model_name": model_name,
+                "variant": variant,
                 "device": device,
                 "sample_count": None,
                 "load_time_sec": None,
@@ -217,6 +226,7 @@ def format_status(value):
     return {
         "ok": "완료",
         "missing_summary": "summary 없음",
+        "failed": "실패",
     }.get(value, value)
 
 
@@ -265,7 +275,7 @@ def render_markdown(results_dir, rows, winners):
         "",
         "## 지표 설명",
         "",
-        "- `상태 (Status)`: 해당 모델 조합에 대해 summary 산출물이 존재하는지 나타낸다.",
+        "- `상태 (Status)`: 해당 모델 조합이 완료됐는지, 실패했는지, summary가 없는지 나타낸다.",
         "- `모델 (Label)`: 평가한 모델 이름과 실행 장치 조합이다.",
         "- `샘플 수 (Samples)`: 실제 평가에 사용된 문장 수다.",
         "- `Load (s)`: 모델을 메모리에 올리는 데 걸린 시간이다. warm-up 이전 1회 비용이다.",
@@ -275,6 +285,7 @@ def render_markdown(results_dir, rows, winners):
         "- `Normalized Exact Match`: 정규화 후 기준 문장과 예측 문장이 완전히 같은 비율이다. 공백, 일부 기호 차이를 줄인 뒤 비교한다.",
         "- `Normalized CER`: 정규화 후 문자 오류율이다. 낮을수록 좋다.",
         "- `원본 run (Source)`: 수치를 읽어온 run 디렉토리 이름이다.",
+        "- `오류 메모 (Error)`: 실패한 경우 summary에 저장된 마지막 오류 문자열이다.",
         "",
         "## 질문 기반 추가 설명",
         "",
@@ -340,8 +351,8 @@ def render_markdown(results_dir, rows, winners):
         [
             "## 전체 평가 표",
             "",
-            "| 상태 | 모델 | 샘플 수 | Load (s) | Mean STT (s) | P95 STT (s) | Mean RTF | Normalized Exact Match | Normalized CER | 원본 run |",
-            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+            "| 상태 | 모델 | 샘플 수 | Load (s) | Mean STT (s) | P95 STT (s) | Mean RTF | Normalized Exact Match | Normalized CER | 원본 run | 오류 메모 |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         ]
     )
 
@@ -354,7 +365,8 @@ def render_markdown(results_dir, rows, winners):
             f"{format_number(row['mean_rtf'])} | "
             f"{format_number(row['normalized_exact_match_rate'])} | "
             f"{format_number(row['mean_normalized_cer'])} | "
-            f"`{row['source_dir']}` |"
+            f"`{row['source_dir']}` | "
+            f"{str(row.get('error_text', '')).replace('|', '/')} |"
         )
 
     lines.append("")

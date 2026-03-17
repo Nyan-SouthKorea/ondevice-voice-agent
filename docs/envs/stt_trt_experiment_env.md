@@ -214,7 +214,7 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
 
 생성된 checkpoint는 이후 메인 모델 자산으로 승격 이동했다.
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64/whisper_trt_split.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth`
 
 주의:
 
@@ -247,66 +247,25 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
 - `normalized_exact_match_rate 0.1600`
 - `mean_normalized_cer 0.1759`
 
-### 9. `small` 한국어 경로 가능성 확인
+### 9. `small` 한국어 경로 정리
 
-`small`은 같은 split builder를 그대로 쓰면 모델을 GPU에 올리는 단계에서 먼저 실패했다.
+`small`은 최종적으로 아래 두 모델 기준으로 정리한다.
 
-그래서 builder 내부를 추가로 조정했다.
+- `whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe`
+  - Jetson Orin Nano 기준 safe 모델
+  - `decoder chunk 2`
+  - `encoder chunk 1`
+  - `workspace 64MB`
+  - `max_text_ctx 64`
+- `whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device`
+  - AGX Orin에서 생성한 교차 장치 확인용 모델
+  - Nano에서 로드될 수 있지만 TensorRT cross-device 경고가 날 수 있다
+  - checkpoint 자체는 상시 보관하지 않고, 문서 기준과 재현 절차만 유지한다
 
-- 빌드용 Whisper 모델을 CPU에서 `half()`로 줄인 뒤 GPU에 적재
-- `LayerNorm`만 다시 `float()`로 유지
+핵심:
 
-이후 확인된 점:
-
-- `small` 모델 자체를 GPU에 올리는 단계는 통과했다.
-- 즉, 이전처럼 "모델 로드 자체가 불가능한 상태"는 벗어났다.
-
-하지만 decoder split build는 현재도 통과하지 못했다.
-
-확인한 조건:
-
-- `--model-name small`
-- `--language ko`
-- `--workspace-mb 128`
-- `--max-text-ctx 64`
-
-결과:
-
-- ONNX export / constant folding 단계에서 다시 `CUDACachingAllocator` 계열 오류가 났다.
-
-더 공격적인 조건:
-
-- `--workspace-mb 64`
-- `--max-text-ctx 32`
-
-결과:
-
-- TRT decoder 빌드 단계에서 다시 OOM이 났다.
-- 확인된 메시지 예:
-  - `autotuning: User allocator error allocating 30031872-byte buffer`
-  - `Could not find any implementation for node ...`
-
-이후 추가 진행:
-
-- builder에 `decoder_chunk_size`, `encoder_chunk_size`를 넣어 block 단위 chunk 빌드를 지원하도록 확장했다.
-- `torch.onnx.export(do_constant_folding=False)`와 ONNX graph folding 비활성 경로를 넣어 export 메모리 피크를 더 낮췄다.
-
-추가 확인 결과:
-
-- `small ko / ctx64 / ws64MB / decoder 2-block chunk`는 decoder 전체 6개 chunk와 encoder 2개 chunk까지 저장하고 checkpoint 생성, load-check까지 통과했다.
-- 하지만 이 checkpoint는 50문장 benchmark에서 모든 예측이 `[�]`로 나와 전사 품질은 실패했다.
-- 원인 진단 결과, `decoder 2-block chunk` 경로는 첫 decoder chunk 출력부터 `NaN`으로 무너졌다.
-
-현재 진행 중인 다음 단계:
-
-- `decoder 1-block chunk`로 decoder를 더 잘게 나눠 NaN 문제를 줄이는 시도
-- encoder도 `6-block`에서 막히면 `3-block`으로 더 잘게 나누는 시도
-
-현재 해석:
-
-- `small`은 이제 "빌드 자체가 절대 불가능한 상태"는 아니다.
-- 다만 `decoder`와 `encoder`를 separately 메모리 절감하는 것만으로는 부족하고, **전사 품질이 유지되는 chunk 크기**를 찾는 단계로 들어갔다.
-- 즉, 현 시점 Jetson Orin Nano 8GB 조건에서는 `small`을 단순히 변환 성공시키는 것보다, **의미 있는 한국어 전사를 유지한 채 성공시키는 것**이 핵심 문제다.
+- `small`은 GPU 메모리 부족 이슈 때문에 encoder와 decoder를 chunk 단위로 나눠 safe 모델을 만든다.
+- 운영 기본값으로는 `nano_safe` 모델을 우선 사용한다.
 
 ## 현재 결론
 
