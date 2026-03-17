@@ -2,6 +2,25 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-17 | Human + Codex | Wake Word + VAD + STT 통합 GUI 데모와 스크린샷 문서화
+
+### Context
+
+- 사용자가 wake word, VAD, STT를 한 화면에서 확인할 수 있는 통합 GUI 데모를 먼저 구현하길 원했다.
+- 이후 데모 스크린샷 4장을 문서 자산으로 포함해, 단계별 동작을 보기 좋게 설명하길 원했다.
+
+### Actions
+
+- `voice_pipeline_gui_demo.py`를 추가해 `Wake Word 대기 -> 듣는 중 -> STT 처리 중 -> 출력 완료` 단계를 하나의 GUI로 연결했다.
+- 통합 GUI는 `stt_trt_experiment` env를 기준으로 실행하고, Jetson ORT는 `.pth` 브리지로 재사용하게 맞췄다.
+- 스크린샷 4장을 `docs/assets/screenshots/stt/` 아래로 옮기고, `stt/README.md`에 통합 GUI 설명과 화면 예시를 추가했다.
+- 현재 상태와 다음 작업은 `docs/status.md`에서 통합 GUI 기준으로 짧게 갱신했다.
+
+### Next
+
+- 실제 마이크 조건에서 통합 GUI의 wake threshold, VAD 종료 타이밍, STT 모델 기본값을 점검한다.
+- 사용성 검증 후 SDK형 orchestrator 리팩토링이 필요한지 별도로 판단한다.
+
 ## 2026-03-17 | Human + Codex | STT GUI 6모델 선택지와 2모델 비교 제한 반영
 
 ### Context

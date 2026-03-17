@@ -210,6 +210,55 @@ python stt/tools/stt_gui_demo.py
 - 전사 결과는 스크롤 가능한 히스토리로 저장
 - API는 경고 문구와 세션 호출 횟수를 표시
 
+### 2-2. Wake Word + VAD + STT 통합 GUI 데모
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+python voice_pipeline_gui_demo.py
+```
+
+이 데모는 기존 `wake_word`, `vad`, `stt` 모듈을 그대로 묶어, 호출어 감지부터 발화 구간 검출, STT 결과 표시까지 한 화면에서 확인하는 용도다.
+
+현재 화면 구성:
+
+- 왼쪽: STT 모델 선택, 마이크 시작/중지, 현재 상태 문구
+- 오른쪽: 프로세스 램프와 실시간 지표
+- 아래: 전사 결과 히스토리
+
+프로세스 램프 단계:
+
+- `Wake Word 대기`
+- `듣는 중`
+- `STT 처리 중`
+- `출력 완료`
+
+청취 상태는 상단 강조 문구로 함께 표시한다.
+
+- `마이크 켜짐, 호출어 대기 중`
+- `마이크가 켜져 있고 현재 명령을 듣고 있습니다`
+- `듣기 종료, STT 처리 중`
+- `처리 완료, 다시 호출어 대기`
+
+화면 예시는 아래 순서로 본다.
+
+| 대기 상태 | 호출어 감지 후 듣는 중 |
+|---|---|
+| ![Voice pipeline idle](../docs/assets/screenshots/stt/voice_pipeline_gui_01_idle_waiting.png) | ![Voice pipeline listening](../docs/assets/screenshots/stt/voice_pipeline_gui_02_wake_detected_listening.png) |
+
+| STT 처리 중 | 출력 완료 |
+|---|---|
+| ![Voice pipeline stt processing](../docs/assets/screenshots/stt/voice_pipeline_gui_03_stt_processing.png) | ![Voice pipeline result displayed](../docs/assets/screenshots/stt/voice_pipeline_gui_04_result_displayed.png) |
+
+이 데모에서 확인할 수 있는 점:
+
+- wake word threshold 기준으로 호출어가 감지되는지
+- wake 이후 VAD가 실제 발화 구간만 수집하는지
+- 발화 종료 후 STT가 어떤 모델로 얼마만에 끝나는지
+- 최종 텍스트가 히스토리에 누적되는지
+
+현재 통합 GUI는 먼저 데모 레이어에서 세 모듈을 연결한 상태다. SDK형 orchestrator 리팩토링은 아직 적용하지 않았고, 실제 사용성 검증 후 별도 논의 대상으로 둔다.
+
 ### 3. 로컬 Whisper 비교 평가
 
 Jetson GPU 기준 기본 비교:
