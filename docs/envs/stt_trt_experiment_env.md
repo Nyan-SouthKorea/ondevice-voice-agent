@@ -50,6 +50,20 @@
 
 - build isolation이 켜지면 격리 빌드 환경에서 시스템 `tensorrt`를 못 보고 실패했다.
 
+## 실험용 코드
+
+- 분리 빌드 스크립트:
+  - `stt/stt_trt_builder_experiment.py`
+
+이 스크립트는 아래 순서로 동작한다.
+
+1. decoder 엔진을 별도 프로세스로 빌드해 저장
+2. encoder 엔진을 별도 프로세스로 빌드해 저장
+3. 중간 산출물을 최종 checkpoint로 합치기
+4. 합쳐진 checkpoint가 실제로 load 가능한지 확인
+
+즉, 기존 `whisper_trt`의 단일 프로세스 builder 대신, 피크 메모리를 줄이기 위해 `encoder / decoder / combine / load-check`를 분리했다.
+
 ## 공식 기준
 
 - WhisperTRT 공식 저장소:
@@ -97,17 +111,89 @@ SDPA를 끈 뒤에는 실제 TensorRT 엔진 생성 단계까지 진행됐지만
 
 - `BaseEnBuilder.max_workspace_size`를 `256MB`까지 줄여 다시 시도했지만 동일하게 OOM이 발생했다.
 
+### 4. 분리 빌드 결과
+
+단일 builder 대신 `stt/stt_trt_builder_experiment.py`로 `decoder -> encoder -> combine -> load-check`를 분리한 뒤에는 `base.en` 공식 경로가 실제로 통과했다.
+
+확인된 결과:
+
+- `decoder` 빌드 성공
+  - 약 `79.627 sec`
+- `encoder` 빌드 성공
+  - 약 `154.023 sec`
+- 최종 checkpoint 생성 성공
+  - `whisper_trt_split.pth`
+- checkpoint load 성공
+  - `WhisperTRT`
+  - 약 `2.255 sec`
+
+생성된 중간 산출물 예:
+
+- `decoder_engine.pt`
+- `decoder_extra.pt`
+- `encoder_engine.pt`
+- `encoder_extra.pt`
+- `whisper_trt_split.pth`
+
+해석:
+
+- Jetson Orin Nano 8GB에서 `base.en`이 아예 불가능한 것은 아니었다.
+- 문제는 모델 자체가 아니라, 기존 단일 프로세스 builder의 빌드 피크 메모리였다.
+- `encoder / decoder`를 분리하고 프로세스를 끊어 주면 `base.en` 공식 TensorRT checkpoint까지 만들 수 있다.
+
+### 5. 영어 전사 smoke
+
+생성한 split checkpoint로 영어 샘플 wav를 실제 전사했다.
+
+- checkpoint load: 약 `2.144 sec`
+- transcribe: 약 `2.612 sec`
+- 결과 텍스트 정상 출력 확인
+
+이 단계는 한국어 성능 검증이 아니라, `WhisperTRT base.en` 경로가 실제 로드와 추론까지 이어진다는 기술적 확인용이다.
+
+### 6. 다국어 `base` 한국어 경로 시도
+
+`stt/stt_trt_builder_experiment.py`에 아래 실험 경로를 추가해 다국어 `base`를 한국어 tokenizer 기준으로 다시 시도했다.
+
+- `--model-name base`
+- `--language ko`
+
+추가로 decoder 메모리를 줄이기 위해 아래 옵션도 실험했다.
+
+- `--max-text-ctx 128`, `--workspace-mb 256`
+- `--max-text-ctx 64`, `--workspace-mb 128`
+
+현재 결과:
+
+- 다국어 `base`는 split builder 기준으로도 아직 **decoder 단계에서 OOM**이 난다.
+- 즉, 영어 전용 `base.en`은 split build로 통과했지만, 한국어 다국어 `base`는 아직 같은 방식으로 바로 이어지지 않는다.
+
+확인된 OOM 메시지 예:
+
+- `autotuning: User allocator error allocating 21504000-byte buffer`
+- `region '__mye103221-consts' allocation failed` (`50438400 bytes`)
+- `Requested size was 100872448 bytes`
+
+해석:
+
+- 다국어 `base`는 영어 전용 `base.en`보다 decoder 빌드 피크 메모리 요구량이 더 크다.
+- `max_text_ctx`와 workspace를 줄여도 현재 Jetson Orin Nano 8GB 조건에서는 decoder 빌드가 아직 안정적으로 통과하지 않는다.
+
 ## 현재 결론
 
 - `WhisperTRT` 실험 환경 자체는 구성됐다.
-- 그러나 현재 Jetson Orin Nano 8GB 조건에서는 `base.en` TensorRT 엔진 빌드를 아직 통과시키지 못했다.
-- 즉, 현재 blocker는 의존성 미설치가 아니라 **엔진 생성 시점의 GPU 메모리 한계** 쪽으로 보는 것이 맞다.
+- `base.en` 공식 경로는 기본 builder 그대로는 OOM이 났지만, 분리 빌드 방식으로는 checkpoint 생성과 로드까지 성공했다.
+- 즉, 현재 핵심은 TensorRT 자체 지원 여부가 아니라 **빌드 전략**이다.
+- 다만 현재 성공한 것은 영어 전용 `base.en` 경로이며, 한국어 다국어 `base` 모델 경로는 아직 decoder OOM 때문에 추가 최적화가 필요하다.
 
 ## 현재 판단
 
 - 현 시점의 STT 기본 경로는 계속 `Whisper base (PyTorch + CUDA)`로 유지하는 편이 안전하다.
-- `WhisperTRT`는 환경 재현 경로는 확보했지만, `base.en` 빌드 성공 전까지는 정식 후보로 올리지 않는다.
+- 이유:
+  - 현재 실제 한국어 평가와 직접 연결된 경로는 아직 PyTorch `base` 쪽이다.
+  - 이번 TRT 성공은 영어 전용 `base.en` 경로 기준이다.
+- 다만 `WhisperTRT`는 이제 Jetson에서 완전히 막힌 경로가 아니라, 공식 `.en` 모델 기준으로는 성립 가능한 경로로 본다.
 - 이후 다시 시도한다면 아래부터 검토한다.
-  1. 더 작은 모델(`tiny.en`)로 엔진 생성 교차 확인
-  2. 메모리 더 여유 있는 Jetson 조건에서 `base.en` 재시도
-  3. `base.en` 대신 다국어 모델을 바로 건드리기 전에 공식 영어 경로부터 안정화
+  1. split builder를 기준 구현으로 다듬기
+  2. `tiny.en / base.en` 속도 비교 정리
+  3. 다국어 `base` decoder의 추가 메모리 절감 방법을 찾기
