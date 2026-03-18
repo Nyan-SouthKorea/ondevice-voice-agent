@@ -129,11 +129,11 @@
   - screening 요약:
     - `Edge TTS (KO)` 성공, `elapsed_sec 2.213`
     - `OpenAI API TTS (KO)` 성공, `elapsed_sec 2.087`
-    - `Piper (EN, cpu)` 성공, `elapsed_sec 0.463`
+    - `Piper (EN, cpu)` 성공, `elapsed_sec 0.318`
     - `Piper (EN, cuda:0)` 성공, `elapsed_sec 1.802`
     - `MeloTTS (KO, cuda:0)` 실패, `NvMapMemAlloc error 12`
-    - `MeloTTS (KO, cpu warm)` 성공, `elapsed_sec 19.569`
-    - `Kokoro (EN, cuda warm)` 성공, `elapsed_sec 2.013`
+    - `MeloTTS (KO, cpu warm)` 성공, `elapsed_sec 14.506`
+    - `Kokoro (EN, cuda warm)` 성공, `elapsed_sec 1.629`
   - 현재 Jetson shortlist:
     - 영어 local: `Piper cpu`, `Kokoro cuda`
     - 한국어는 일단 network fallback 유지

@@ -100,6 +100,10 @@
 - `kokoro`: `cuda`
 
 현재 `tts/tools/tts_jetson_demo.py`는 위 권장 device를 기본값으로 사용한다. 필요한 경우 `--device`로 덮어쓴다.
+기본값 재검증 결과:
+- `piper auto`: `elapsed_sec 0.318`
+- `kokoro auto`: `elapsed_sec 1.629`
+- `melotts auto`: `elapsed_sec 14.506`
 
 ## 성공 기준
 

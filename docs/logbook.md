@@ -27,6 +27,10 @@
   - GPU cold `elapsed_sec 41.600`
   - GPU warm `elapsed_sec 2.013`
   - 영어 local 후보로 유지 가치가 높다
+- thin wrapper 기본값 재검증:
+  - `piper auto` `elapsed_sec 0.318`
+  - `kokoro auto` `elapsed_sec 1.629`
+  - `melotts auto` `elapsed_sec 14.506`
 - screening 결론은 `docs/reports/tts_jetson_screening_20260318.md`로 승격했다.
 - 현재 Jetson shortlist는 아래다.
   - 영어 local: `Piper cpu`, `Kokoro cuda`

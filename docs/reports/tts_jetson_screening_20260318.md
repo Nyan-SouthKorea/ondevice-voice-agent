@@ -31,6 +31,18 @@
 | `Kokoro` | EN | `cuda` cold | 성공 | `16.804` | `41.600` | 최초 실행은 model, voice, spaCy model 다운로드 포함 |
 | `Kokoro` | EN | `cuda` warm | 성공 | `7.594` | `2.013` | warm run 기준 영어 local 후보 가치 높음 |
 
+## thin wrapper 기본값 재검증
+
+- `tts/tools/tts_jetson_demo.py`는 현재 아래 기본 device를 자동으로 넣는다.
+  - `piper -> cpu`
+  - `kokoro -> cuda`
+  - `melotts -> cpu`
+- 이 기본값으로 `--device` 없이 다시 실행한 결과는 아래와 같다.
+  - `Piper auto`: `model_load_sec 1.568`, `elapsed_sec 0.318`
+  - `Kokoro auto`: `model_load_sec 4.544`, `elapsed_sec 1.629`
+  - `MeloTTS auto`: `model_load_sec 1.969`, `elapsed_sec 14.506`
+- 즉 현재 thin wrapper 기본값은 screening 결과와 일치한다.
+
 ## 산출물 경로
 
 - `Edge TTS`
@@ -46,6 +58,7 @@
 - `Kokoro`
   - `/home/everybot/workspace/ondevice-voice-agent/results/tts/jetson_demo/kokoro/demo.wav`
   - `/home/everybot/workspace/ondevice-voice-agent/results/tts/jetson_demo/kokoro/demo_warm.wav`
+  - `/home/everybot/workspace/ondevice-voice-agent/results/tts/jetson_demo/kokoro/demo_auto.wav`
 
 ## 파일 메타
 
@@ -91,4 +104,3 @@
   1. 영어 local demo는 `Piper cpu`와 `Kokoro cuda`를 비교 유지
   2. 한국어는 일단 network fallback을 유지
   3. 영어 local 품질이 우세하면 이후 custom training 계획을 검토
-
