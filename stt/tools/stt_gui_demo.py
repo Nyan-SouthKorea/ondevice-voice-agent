@@ -98,7 +98,7 @@ def parse_args():
     )
     parser.add_argument(
         "--default-model",
-        default="whisper_base_cuda",
+        default="whisper_small_trt_safe",
         choices=[item["key"] for item in MODEL_OPTIONS],
         help="시작 시 선택할 기본 STT 모델",
     )

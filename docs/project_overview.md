@@ -12,8 +12,8 @@
 |---|---|
 | Wake word | 요소기술 완료, 현장 튜닝 진행 |
 | VAD | 요소기술 완료 |
-| STT | 래퍼와 비교 평가 준비 완료 |
-| TTS | 래퍼와 API 최소 경로 시작 |
+| STT | 50문장 비교 완료, 기본 온디바이스 모델 `WhisperTRT small nano safe` 확정 |
+| TTS | 래퍼와 API 최소 경로 준비, 다음 우선 개발 대상 |
 | LLM | 대기 |
 
 ## 시스템 파이프라인
@@ -25,6 +25,8 @@
   -> [STT]
   -> [LLM]
   -> [TTS]
+
+현재 STT 기준점은 `WhisperTRT small nano safe`다. 이유와 수치는 [status.md](status.md)와 [../stt/README.md](../stt/README.md)에 유지한다.
 ```
 
 ## 기준 문서

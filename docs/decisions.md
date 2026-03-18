@@ -37,10 +37,10 @@
 - 결정: 다음 phase의 주안점은 개별 모듈 구현이 아니라 연동과 현장 튜닝이다.
 - 이유: 각각의 기본 추론 경로와 데모 검증은 이미 끝난 상태다.
 
-## 2026-03-16 | STT v1은 Whisper 경로를 기본 후보로 검증한다
+## 2026-03-18 | STT v1 기본 온디바이스 모델은 `WhisperTRT small nano safe`다
 
-- 결정: STT는 먼저 온디바이스 Whisper를 기준 후보로 두고, 50문장 직접 녹음 세트로 모델 크기를 비교한 뒤 기본값을 확정한다.
-- 이유: 감이 아니라 실제 발화 기준 속도와 정확도로 선택해야 한다.
+- 결정: 50문장 직접 녹음 비교 기준 STT v1 기본 온디바이스 모델은 `WhisperTRT small nano safe`로 고정한다. `Whisper base (PyTorch + CUDA)`와 `WhisperTRT base legacy`는 비교 기준과 fallback으로 유지한다.
+- 이유: Jetson Orin Nano 8GB에서 직접 생성한 safe TRT 경로라서 장치 간 불확실성이 적고, 현재 로컬 온디바이스 경로 중 정확도와 지연 시간 균형이 가장 좋다.
 
 ## 2026-03-17 | TTS v1은 공통 래퍼와 API 최소 경로로 시작한다
 

@@ -2,6 +2,25 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-18 | Human + Codex | STT 기본 모델 확정 문서화와 TTS 다음 단계 정리
+
+### Context
+
+- 사용자가 현재 STT 최종 모델을 `WhisperTRT small nano safe`로 명확히 고정하고, 그 이유와 다음 우선순위가 TTS라는 점을 문서 전반에 반영하길 원했다.
+- 동시에 이미 폐기한 AGX cross-device TRT 경로를 active 문서 기준에서 완전히 제외한 상태로 정리하길 원했다.
+
+### Actions
+
+- `README.md`, `docs/status.md`, `docs/project_overview.md`, `docs/decisions.md`, `docs/jetson_transition_plan.md`, `stt/README.md`, `tts/README.md`를 현재 기준으로 다시 맞췄다.
+- STT 기본 온디바이스 모델은 `WhisperTRT small nano safe`로 고정하고, 선택 이유를 `Jetson 직접 생성 safe 경로`, `온디바이스 정확도 우위`, `실사용 가능한 지연 시간` 기준으로 정리했다.
+- STT 단독 GUI 기본 선택과 `STTTranscriber(model="whisper_trt")` 기본 checkpoint도 `small nano safe` 기준으로 맞췄다.
+- TTS는 `OpenAI Audio Speech API` 최소 경로 이후 다음 집중 모듈이 `MeloTTS` Jetson 검증이라는 점을 상위 문서에 반영했다.
+
+### Next
+
+- Jetson에서 `MeloTTS` 설치와 한국어 합성 smoke를 검증한다.
+- 필요하면 `TTSSynthesizer`에 온디바이스 backend, playback, cache를 순서대로 붙인다.
+
 ## 2026-03-18 | Human + Codex | A100 워크스페이스 평탄화와 운영 정책 정리
 
 ### Context

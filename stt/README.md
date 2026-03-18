@@ -7,7 +7,8 @@
 - 초기 구현 완료
 - 온디바이스와 API 기반 STT를 같은 사용법으로 갈아끼울 수 있는 구조를 잡았다.
 - 고정 문장 50개 기준 녹음 데이터셋과 비교 평가 흐름을 추가했다.
-- 현재 기본 후보 판단과 상위 진행 상태는 `docs/status.md`를 기준으로 보고, 이 문서는 STT 디렉토리 구조와 재현 절차만 담당한다.
+- 현재 기본 온디바이스 모델은 `WhisperTRT small nano safe`로 확정했다.
+- 현재 기본값 판단과 상위 진행 상태는 `docs/status.md`를 기준으로 보고, 이 문서는 STT 디렉토리 구조와 재현 절차만 담당한다.
 
 예상 역할:
 
@@ -18,7 +19,7 @@
 
 - `transcriber.py`
   - 공통 진입점
-  - `STTTranscriber(model="whisper" | "api")`
+  - `STTTranscriber(model="whisper" | "whisper_trt" | "api")`
 - `stt_whisper.py`
   - OpenAI Whisper 기반 온디바이스 백엔드
 - `stt_api.py`
@@ -49,7 +50,13 @@
 ```python
 from stt import STTTranscriber
 
-transcriber = STTTranscriber(model="whisper", model_name="tiny")
+transcriber = STTTranscriber(
+    model="whisper_trt",
+    model_name="small",
+    checkpoint_path="stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/whisper_trt_split.pth",
+    workspace_mb=64,
+    max_text_ctx=64,
+)
 text = transcriber.transcribe(audio)
 print(text)
 print(transcriber.last_duration_sec)
@@ -57,12 +64,12 @@ print(transcriber.last_duration_sec)
 
 현재 v1 기준:
 
-- 기본 온디바이스 backend는 `whisper`
-- 기본 Whisper 모델값은 현재 `tiny` 잠정값
+- 기본 온디바이스 backend는 `whisper_trt`
+- 기본 TRT checkpoint 기준은 `small nano safe`
 - API backend는 구조만 같이 맞춰 둠
 - 입력은 `16kHz mono` wav 또는 float32 mono 배열 기준
 - 현재 단계의 목적은 `짧은 utterance -> text` 기본 경로 확보와 비교 평가 기준 마련이다
-- 기본 모델값은 감으로 정하지 않고, 직접 녹음한 50문장 세트로 속도와 정확도를 비교한 뒤 정한다
+- 기본 모델값은 감으로 정하지 않고, 직접 녹음한 50문장 세트로 속도와 정확도를 비교한 뒤 정했다
 - 현재 추천 판단과 전체 우선순위는 `docs/status.md`, 정량 비교표는 `docs/reports/stt_korean_eval50_overview.md`를 기준으로 본다.
 
 ## 모델 자산 역할
@@ -80,6 +87,12 @@ print(transcriber.last_duration_sec)
 - `encoder chunk 1`
 - `workspace 64MB`
 - `max_text_ctx 64`
+
+이 경로를 기본값으로 두는 이유:
+
+- Jetson Orin Nano 8GB에서 직접 생성한 safe TRT 경로라서 cross-device TRT 리스크가 없다.
+- 현재 로컬 온디바이스 경로 중 `Normalized Exact Match`와 `Normalized CER`가 가장 좋다.
+- `Mean STT 0.3823s`로 실사용 지연 시간도 유지해, 정확도와 속도 균형이 가장 낫다.
 
 ## 디렉토리 역할
 
@@ -421,7 +434,7 @@ python stt/tools/stt_benchmark.py \
 - 샘플별 GT/예측 비교는 `<run_name>_readable.md`에 사람이 읽기 쉬운 형태로 저장한다.
 - 실행별 요약 표는 `summary.csv`, `summary.json`, `summary.md`로 함께 저장한다.
 
-## 최종 50문장 비교
+## 현재 active 50문장 비교
 
 기준:
 
@@ -441,7 +454,7 @@ python stt/tools/stt_benchmark.py \
 
 현재 선택 결론:
 
-- 온디바이스 기본 후보는 `whisper small fp16e_fp32w (trt, nano safe)`로 본다.
+- 온디바이스 기본값은 `whisper small fp16e_fp32w (trt, nano safe)`다.
 - 이유는 Jetson Orin Nano에서 직접 생성한 안전 경로이면서, `Normalized Exact Match 0.4600`, `Normalized CER 0.0886`, `Mean STT 0.3823s`로 정확도와 지연 시간 균형이 가장 좋기 때문이다.
 - 참고용 최고 정확도는 `gpt-4o-mini-transcribe (api)`지만, 온디바이스 기본값으로는 쓰지 않는다.
 - 최고 속도 fallback은 `whisper base fp16e_fp16w (trt, legacy)`다. `Mean STT 0.1957s`로 가장 빠르지만 정확도는 `small nano safe`보다 낮다.

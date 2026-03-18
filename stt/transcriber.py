@@ -63,12 +63,12 @@ class STTTranscriber:
             resolved_checkpoint = checkpoint_path or (
                 Path(__file__).resolve().parent
                 / "models"
-                / "whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy"
+                / "whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe"
                 / "whisper_trt_split.pth"
             )
             self.backend = WhisperTRTSTTModel(
                 checkpoint_path=resolved_checkpoint,
-                model_name=model_name or "base",
+                model_name=model_name or "small",
                 language=language,
                 workspace_mb=workspace_mb,
                 max_text_ctx=max_text_ctx,

@@ -27,6 +27,7 @@
 - Jetson runtime env 정리
 - Jetson 학습 smoke env 정리
 - STT recorder / benchmark 준비
+- STT 50문장 비교와 기본 모델 확정 (`WhisperTRT small nano safe`)
 - TTS 공통 래퍼와 API 최소 경로 확보
 
 ## 남은 항목
@@ -34,8 +35,8 @@
 1. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값 확정
 2. hard negative 문구와 연속 배경 오디오 기준 false accept 점검
 3. wake word 뒤에 VAD를 연결하고 utterance cut 기준 확정
-4. STT 50문장 직접 녹음 세트 비교 후 기본 모델 확정
-5. Jetson에서 `MeloTTS` 설치와 한국어 합성 smoke 검증
+4. Jetson에서 `MeloTTS` 설치와 한국어 합성 smoke 검증
+5. `WhisperTRT small nano safe` 기준으로 통합 GUI 실마이크 조건을 점검
 6. 상위 SDK 연결용 공통 음성 파이프라인 인터페이스 정리
 
 ## 성공 기준
