@@ -29,7 +29,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model",
-        choices=["api"],
+        choices=TTSSynthesizer.available_models(),
         default="api",
         help="사용할 TTS 백엔드",
     )
@@ -40,7 +40,7 @@ def parse_args():
     )
     parser.add_argument(
         "--voice",
-        default="alloy",
+        default=None,
         help="사용할 음성 이름",
     )
     parser.add_argument(
@@ -64,6 +64,33 @@ def parse_args():
         type=float,
         default=1.0,
         help="합성 속도 배율",
+    )
+    parser.add_argument(
+        "--rate",
+        default=None,
+        help="backend별 속도 문자열. 예: edge_tts는 +8%",
+    )
+    parser.add_argument(
+        "--pitch",
+        default=None,
+        help="backend별 음높이 문자열. 예: edge_tts는 +5Hz",
+    )
+    parser.add_argument(
+        "--device",
+        default=None,
+        help="backend 실행 장치 문자열. 예: cuda:0",
+    )
+    parser.add_argument(
+        "--reference-audio",
+        type=Path,
+        default=None,
+        help="voice cloning 계열 backend가 사용할 참조 음성 경로",
+    )
+    parser.add_argument(
+        "--checkpoint-root",
+        type=Path,
+        default=None,
+        help="backend 외부 자산 루트 경로",
     )
     parser.add_argument(
         "--output",
@@ -98,10 +125,16 @@ def main():
         instructions=args.instructions,
         response_format=args.response_format,
         speed=args.speed,
+        rate=args.rate,
+        pitch=args.pitch,
+        device=args.device,
+        reference_audio_path=args.reference_audio,
+        checkpoint_root=args.checkpoint_root,
         usage_purpose=args.usage_purpose,
     )
     output_path = synthesizer.synthesize_to_file(args.text, args.output)
     print(f"output: {output_path}")
+    print(f"model_load_sec: {synthesizer.model_load_sec:.3f}")
     print(f"elapsed_sec: {synthesizer.last_duration_sec:.3f}")
 
 

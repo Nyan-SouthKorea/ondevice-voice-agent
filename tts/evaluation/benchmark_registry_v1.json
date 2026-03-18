@@ -1,0 +1,148 @@
+{
+  "version": "v1",
+  "entries": [
+    {
+      "id": "melotts_ko",
+      "display_name": "MeloTTS (KO)",
+      "family": "local_candidate",
+      "backend": "melotts",
+      "prompt_language": "ko",
+      "env_python": "env/tts_melotts/bin/python",
+      "synth_kwargs": {
+        "model": "melotts",
+        "model_name": "KR",
+        "voice": "KR",
+        "device": "cuda:0"
+      }
+    },
+    {
+      "id": "melotts_en",
+      "display_name": "MeloTTS (EN)",
+      "family": "local_candidate",
+      "backend": "melotts",
+      "prompt_language": "en",
+      "env_python": "env/tts_melotts/bin/python",
+      "synth_kwargs": {
+        "model": "melotts",
+        "model_name": "EN",
+        "voice": "EN-Default",
+        "device": "cuda:0"
+      }
+    },
+    {
+      "id": "openvoice_v2_ko",
+      "display_name": "OpenVoice V2 (KO)",
+      "family": "local_candidate",
+      "backend": "openvoice_v2",
+      "prompt_language": "ko",
+      "env_python": "env/tts_openvoice_v2/bin/python",
+      "synth_kwargs": {
+        "model": "openvoice_v2",
+        "model_name": "KR",
+        "voice": "KR",
+        "device": "cuda:0",
+        "reference_audio_path": "results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav"
+      }
+    },
+    {
+      "id": "openvoice_v2_en",
+      "display_name": "OpenVoice V2 (EN)",
+      "family": "local_candidate",
+      "backend": "openvoice_v2",
+      "prompt_language": "en",
+      "env_python": "env/tts_openvoice_v2/bin/python",
+      "synth_kwargs": {
+        "model": "openvoice_v2",
+        "model_name": "EN",
+        "voice": "EN-US",
+        "device": "cuda:0",
+        "reference_audio_path": "results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav"
+      }
+    },
+    {
+      "id": "piper_en",
+      "display_name": "Piper (EN)",
+      "family": "local_candidate",
+      "backend": "piper",
+      "prompt_language": "en",
+      "env_python": "env/tts_piper/bin/python",
+      "synth_kwargs": {
+        "model": "piper",
+        "model_name": "en_US-lessac-medium",
+        "device": "cuda:0"
+      }
+    },
+    {
+      "id": "kokoro_en",
+      "display_name": "Kokoro (EN)",
+      "family": "local_candidate",
+      "backend": "kokoro",
+      "prompt_language": "en",
+      "env_python": "env/tts_kokoro/bin/python",
+      "synth_kwargs": {
+        "model": "kokoro",
+        "model_name": "en-us",
+        "voice": "af_heart",
+        "device": "cuda"
+      }
+    },
+    {
+      "id": "edge_tts_ko",
+      "display_name": "Edge TTS (KO)",
+      "family": "reference_backend",
+      "backend": "edge_tts",
+      "prompt_language": "ko",
+      "env_python": "env/tts_edge_tts/bin/python",
+      "synth_kwargs": {
+        "model": "edge_tts",
+        "voice": "ko-KR-InJoonNeural",
+        "rate": "+0%",
+        "pitch": "+0Hz"
+      }
+    },
+    {
+      "id": "edge_tts_en",
+      "display_name": "Edge TTS (EN)",
+      "family": "reference_backend",
+      "backend": "edge_tts",
+      "prompt_language": "en",
+      "env_python": "env/tts_edge_tts/bin/python",
+      "synth_kwargs": {
+        "model": "edge_tts",
+        "voice": "en-US-AndrewMultilingualNeural",
+        "rate": "+0%",
+        "pitch": "+0Hz"
+      }
+    },
+    {
+      "id": "openai_api_ko",
+      "display_name": "OpenAI API TTS (KO)",
+      "family": "reference_backend",
+      "backend": "openai_api",
+      "prompt_language": "ko",
+      "env_python": "env/tts_openai_api/bin/python",
+      "synth_kwargs": {
+        "model": "openai_api",
+        "model_name": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "response_format": "wav",
+        "usage_purpose": "tts_benchmark_openai_api_ko_v1"
+      }
+    },
+    {
+      "id": "openai_api_en",
+      "display_name": "OpenAI API TTS (EN)",
+      "family": "reference_backend",
+      "backend": "openai_api",
+      "prompt_language": "en",
+      "env_python": "env/tts_openai_api/bin/python",
+      "synth_kwargs": {
+        "model": "openai_api",
+        "model_name": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "response_format": "wav",
+        "usage_purpose": "tts_benchmark_openai_api_en_v1"
+      }
+    }
+  ]
+}

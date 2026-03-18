@@ -1,0 +1,201 @@
+prompt_id	language	track	category	paired_group	text
+KO001	ko	paired	short_response	P001	안녕하세요. 시스템 점검을 시작하겠습니다.
+EN001	en	paired	short_response	P001	Hello. I will start the system check now.
+KO002	ko	paired	short_response	P002	네, 요청하신 작업을 바로 실행할게요.
+EN002	en	paired	short_response	P002	Yes, I will run the requested task right away.
+KO003	ko	paired	short_response	P003	잠시만 기다려 주세요. 데이터를 불러오는 중입니다.
+EN003	en	paired	short_response	P003	Please wait a moment. I am loading the data now.
+KO004	ko	paired	short_response	P004	알겠습니다. 현재 상태를 다시 확인하겠습니다.
+EN004	en	paired	short_response	P004	Understood. I will check the current status again.
+KO005	ko	paired	short_response	P005	연결이 안정적이면 다음 단계로 넘어가겠습니다.
+EN005	en	paired	short_response	P005	If the connection is stable, I will move to the next step.
+KO006	ko	paired	device_command	P006	거실 조명을 켜고 커튼은 그대로 두세요.
+EN006	en	paired	device_command	P006	Turn on the living room lights and leave the curtains as they are.
+KO007	ko	paired	device_command	P007	로봇 청소기를 멈추고 충전대로 보내 주세요.
+EN007	en	paired	device_command	P007	Stop the robot vacuum and send it back to the charging dock.
+KO008	ko	paired	device_command	P008	주방 카메라 영상을 큰 화면으로 띄워 주세요.
+EN008	en	paired	device_command	P008	Show the kitchen camera feed on the large display.
+KO009	ko	paired	device_command	P009	출입문이 닫혔는지 다시 한번 확인해 주세요.
+EN009	en	paired	device_command	P009	Please check one more time whether the front door is closed.
+KO010	ko	paired	device_command	P010	지금 회의실 온도를 스물두 도로 맞춰 주세요.
+EN010	en	paired	device_command	P010	Please set the meeting room temperature to twenty-two degrees now.
+KO011	ko	paired	schedule_time	P011	오늘 오후 세 시 일정은 고객 미팅으로 되어 있습니다.
+EN011	en	paired	schedule_time	P011	Today's three p.m. schedule is listed as a client meeting.
+KO012	ko	paired	schedule_time	P012	내일 오전 아홉 시에 알림을 다시 울려 주세요.
+EN012	en	paired	schedule_time	P012	Please ring the reminder again at nine a.m. tomorrow.
+KO013	ko	paired	schedule_time	P013	다음 주 화요일 오전 열 시 회의는 온라인으로 진행합니다.
+EN013	en	paired	schedule_time	P013	The meeting next Tuesday at ten a.m. will be held online.
+KO014	ko	paired	schedule_time	P014	배송 예정 시간은 오후 다섯 시에서 여섯 시 사이입니다.
+EN014	en	paired	schedule_time	P014	The expected delivery time is between five and six p.m.
+KO015	ko	paired	schedule_time	P015	남은 작업 시간은 약 십이 분 정도입니다.
+EN015	en	paired	schedule_time	P015	The remaining task time is about twelve minutes.
+KO016	ko	paired	number_unit	P016	배터리가 현재 칠십이 퍼센트 남아 있습니다.
+EN016	en	paired	number_unit	P016	The battery is currently at seventy-two percent.
+KO017	ko	paired	number_unit	P017	오늘 매출은 백이십삼만 사천 원으로 집계되었습니다.
+EN017	en	paired	number_unit	P017	Today's sales were counted at one million two hundred thirty-four thousand won.
+KO018	ko	paired	number_unit	P018	센서가 초당 스물네 번 데이터를 갱신합니다.
+EN018	en	paired	number_unit	P018	The sensor updates its data twenty-four times per second.
+KO019	ko	paired	number_unit	P019	이 패키지의 총 무게는 일 점 팔 킬로그램입니다.
+EN019	en	paired	number_unit	P019	The total weight of this package is one point eight kilograms.
+KO020	ko	paired	number_unit	P020	창고 온도는 영하 삼 도까지 내려갈 수 있습니다.
+EN020	en	paired	number_unit	P020	The warehouse temperature can drop to minus three degrees Celsius.
+KO021	ko	paired	navigation	P021	엘리베이터에서 내려 오른쪽으로 십 미터 이동해 주세요.
+EN021	en	paired	navigation	P021	Get off the elevator and move ten meters to the right.
+KO022	ko	paired	navigation	P022	안내 데스크는 정문으로 들어오면 바로 왼편에 있습니다.
+EN022	en	paired	navigation	P022	The information desk is immediately on the left after you enter the main gate.
+KO023	ko	paired	navigation	P023	주차장은 지하 이 층과 지하 삼 층을 사용하시면 됩니다.
+EN023	en	paired	navigation	P023	You may use basement levels two and three for parking.
+KO024	ko	paired	navigation	P024	택배 보관함은 편의점 옆 복도 끝에 있습니다.
+EN024	en	paired	navigation	P024	The parcel locker is at the end of the hallway next to the convenience store.
+KO025	ko	paired	navigation	P025	응급 장비는 복도 끝 비상문 옆 캐비닛에 있습니다.
+EN025	en	paired	navigation	P025	The emergency equipment is in the cabinet next to the emergency exit at the end of the hall.
+KO026	ko	paired	customer_support	P026	문의하신 내용은 오늘 안으로 답변드리겠습니다.
+EN026	en	paired	customer_support	P026	I will get back to you about your question within today.
+KO027	ko	paired	customer_support	P027	불편을 드려 죄송합니다. 바로 원인을 확인하겠습니다.
+EN027	en	paired	customer_support	P027	I am sorry for the inconvenience. I will check the cause right away.
+KO028	ko	paired	customer_support	P028	고객님의 요청 사항을 우선순위에 맞춰 처리하겠습니다.
+EN028	en	paired	customer_support	P028	I will process your request according to its priority.
+KO029	ko	paired	customer_support	P029	추가 정보가 필요하면 이 번호로 다시 연락 주세요.
+EN029	en	paired	customer_support	P029	If you need more information, please contact this number again.
+KO030	ko	paired	customer_support	P030	지금 접수된 건은 총 세 건이며 순차적으로 처리됩니다.
+EN030	en	paired	customer_support	P030	Three cases have been received so far and will be handled in order.
+KO031	ko	paired	task_instruction	P031	상자를 열기 전에 전원 케이블부터 분리해 주세요.
+EN031	en	paired	task_instruction	P031	Please disconnect the power cable before opening the box.
+KO032	ko	paired	task_instruction	P032	필터를 교체한 뒤 덮개를 끝까지 눌러 잠가 주세요.
+EN032	en	paired	task_instruction	P032	After replacing the filter, press the cover down fully to lock it.
+KO033	ko	paired	task_instruction	P033	바닥이 젖어 있으니 천천히 이동해 주세요.
+EN033	en	paired	task_instruction	P033	The floor is wet, so please move slowly.
+KO034	ko	paired	task_instruction	P034	사용 설명서를 읽고 초기 설정을 먼저 완료해 주세요.
+EN034	en	paired	task_instruction	P034	Please read the user guide and finish the initial setup first.
+KO035	ko	paired	task_instruction	P035	오류가 반복되면 로그 파일을 저장한 뒤 재부팅해 주세요.
+EN035	en	paired	task_instruction	P035	If the error keeps repeating, save the log file and reboot afterward.
+KO036	ko	paired	explanatory	P036	이 기능은 네트워크가 없을 때도 기본 모드로 동작합니다.
+EN036	en	paired	explanatory	P036	This feature also works in a basic mode when the network is unavailable.
+KO037	ko	paired	explanatory	P037	새 모델은 이전 버전보다 응답 속도가 더 빠릅니다.
+EN037	en	paired	explanatory	P037	The new model responds faster than the previous version.
+KO038	ko	paired	explanatory	P038	이 서비스는 사용자 음성을 텍스트와 음성으로 동시에 처리합니다.
+EN038	en	paired	explanatory	P038	This service processes user speech into both text and audio at the same time.
+KO039	ko	paired	explanatory	P039	현재 보고 있는 결과는 자동 평가와 수기 점수를 함께 반영한 값입니다.
+EN039	en	paired	explanatory	P039	The result you are viewing reflects both automatic evaluation and manual scores.
+KO040	ko	paired	explanatory	P040	최종 후보는 성능뿐 아니라 이식성과 운영 난이도도 함께 봐야 합니다.
+EN040	en	paired	explanatory	P040	The final candidate must be judged not only by performance but also by portability and operational difficulty.
+KO041	ko	language_specific	honorific		실례지만 성함과 연락 가능한 시간을 말씀해 주시겠어요?
+KO042	ko	language_specific	honorific		확인되면 바로 안내드리겠습니다. 잠시만 자리에서 기다려 주세요.
+KO043	ko	language_specific	honorific		회의가 길어질 수 있으니 물 한 잔 드시고 편하게 앉아 계세요.
+KO044	ko	language_specific	honorific		지금 말씀하신 조건이면 오늘 안에 처리해 드릴 수 있습니다.
+KO045	ko	language_specific	honorific		원하시면 조금 더 부드러운 목소리로 다시 안내해 드릴게요.
+KO046	ko	language_specific	counting		서랍 오른쪽 칸에 새 배터리 네 개를 넣어 두었습니다.
+KO047	ko	language_specific	counting		세 번째 선반 다섯 번째 상자에 예비 부품이 보관돼 있습니다.
+KO048	ko	language_specific	counting		오늘 예약은 열한 시 두 건, 두 시 한 건, 네 시 한 건입니다.
+KO049	ko	language_specific	counting		회의실 의자는 스물여섯 개, 접이식 탁자는 여덟 개입니다.
+KO050	ko	language_specific	counting		이 주문은 사만 팔천오백 원이며 배송비는 별도입니다.
+KO051	ko	language_specific	mixed_english		내일 오전에 Slack 알림과 Zoom 회의 링크를 같이 보내 주세요.
+KO052	ko	language_specific	mixed_english		AI 스피커 펌웨어를 업데이트한 뒤 Bluetooth 연결을 다시 확인해 주세요.
+KO053	ko	language_specific	mixed_english		카메라 모델은 XN-200이고 센서 보드는 Rev B 버전입니다.
+KO054	ko	language_specific	mixed_english		이 파일은 backup 폴더가 아니라 release_candidate 폴더에 저장해 주세요.
+KO055	ko	language_specific	mixed_english		보고서 제목은 On-Device Voice Agent PoC 결과로 적어 주세요.
+KO056	ko	language_specific	address		오늘 현장 테스트는 경기도 성남시 분당구 판교역로 235번길 부근에서 진행했습니다.
+KO057	ko	language_specific	address		고객 방문 주소는 서울특별시 강남구 테헤란로 231, 8층입니다.
+KO058	ko	language_specific	address		지원 센터는 인천광역시 연수구 컨벤시아대로 204 건물 안에 있습니다.
+KO059	ko	language_specific	address		배송지는 부산광역시 해운대구 센텀중앙로 97로 입력해 주세요.
+KO060	ko	language_specific	address		접수처는 대전광역시 유성구 대학로 99 본관 1층입니다.
+KO061	ko	language_specific	punctuation_pause		음, 지금 바로 결정하기 어렵다면 오후에 다시 말씀해 주세요.
+KO062	ko	language_specific	punctuation_pause		네, 맞습니다. 다만 한 가지 예외 조건이 더 있습니다.
+KO063	ko	language_specific	punctuation_pause		어제는 괜찮았는데, 오늘은 센서 반응이 조금 느립니다.
+KO064	ko	language_specific	punctuation_pause		정리하면, 첫째는 안정성이고, 둘째는 속도이며, 셋째는 음질입니다.
+KO065	ko	language_specific	punctuation_pause		정말로 이 설정을 유지하시겠습니까? 변경 후에는 되돌리기 어렵습니다.
+KO066	ko	language_specific	long_form		처음 전원을 켠 뒤에는 약 삼십 초 동안 초기화가 진행되며, 그동안은 버튼을 여러 번 누르지 않는 편이 좋습니다.
+KO067	ko	language_specific	long_form		설치가 끝나면 안내 음성이 한 번 나오고, 이후에는 네트워크 상태에 따라 추가 다운로드가 자동으로 시작될 수 있습니다.
+KO068	ko	language_specific	long_form		테스트 중 오류가 발생하면 화면에 보이는 코드와 시간을 함께 기록해 두면 나중에 원인 분석이 훨씬 쉬워집니다.
+KO069	ko	language_specific	long_form		배터리 절약 모드에서는 일부 시각 인식 기능이 지연될 수 있으므로, 시연 전에는 반드시 성능 우선 모드로 전환해 주세요.
+KO070	ko	language_specific	long_form		사용자가 말을 멈춘 뒤 약간의 무음 구간이 지나면 전사가 시작되므로, 마지막 단어를 너무 빨리 끊지 않는 것이 좋습니다.
+KO071	ko	language_specific	conversation		좋아요, 지금 흐름이면 데모를 자연스럽게 이어갈 수 있겠습니다.
+KO072	ko	language_specific	conversation		아쉽지만 이 결과는 아직 고객 앞에서 바로 보여 드리기엔 부족합니다.
+KO073	ko	language_specific	conversation		생각보다 목소리가 부드럽게 나와서 첫인상은 꽤 괜찮습니다.
+KO074	ko	language_specific	conversation		같은 문장이라도 억양이 딱딱하면 전체 로봇 인상이 많이 차갑게 느껴집니다.
+KO075	ko	language_specific	conversation		오늘은 속도보다도 목소리 톤이 사람들에게 어떻게 들리는지 먼저 보겠습니다.
+KO076	ko	language_specific	tech_terms		WhisperTRT small nano safe 모델을 기본값으로 유지하겠습니다.
+KO077	ko	language_specific	tech_terms		MeloTTS와 OpenVoice V2는 한국어 기준에서 먼저 비교하는 편이 좋겠습니다.
+KO078	ko	language_specific	tech_terms		Piper와 Kokoro는 영어 품질과 커스텀 학습 가능성을 따로 살펴보겠습니다.
+KO079	ko	language_specific	tech_terms		TensorRT 변환 가능성과 ONNX export 경로도 같이 정리해 주세요.
+KO080	ko	language_specific	tech_terms		Jetson Orin Nano에서는 메모리 여유가 많지 않아서 모델 선택이 중요합니다.
+KO081	ko	language_specific	polite_support		불편하시겠지만 테스트가 끝날 때까지 마이크 앞에서 조금만 더 말씀해 주세요.
+KO082	ko	language_specific	polite_support		확인 감사합니다. 지금부터는 안내 음성을 천천히 재생해 보겠습니다.
+KO083	ko	language_specific	polite_support		원하시는 분위기가 차분한 편인지, 아니면 밝고 친근한 편인지 알려 주세요.
+KO084	ko	language_specific	polite_support		혹시 발음이 어색하게 들리는 부분이 있으면 문장 번호를 같이 말씀해 주세요.
+KO085	ko	language_specific	polite_support		지금 결과는 참고용이며, 최종 점수는 직접 청취 평가 후에 확정하겠습니다.
+KO086	ko	language_specific	system_flow		이번 시연에서는 wake word, VAD, STT, TTS를 순서대로 연결해서 보여 드리겠습니다.
+KO087	ko	language_specific	system_flow		A100 서버에서 생성한 wav 파일을 Jetson 결과와 같은 기준으로 비교하겠습니다.
+KO088	ko	language_specific	system_flow		benchmark 결과는 CSV와 JSON으로 남기고 요약은 markdown으로 정리하겠습니다.
+KO089	ko	language_specific	system_flow		fallback 경로는 API가 아니라 로컬 모델 기준으로 먼저 준비해 두겠습니다.
+KO090	ko	language_specific	system_flow		voice appeal 점수는 듣는 사람마다 차이가 있으니 메모도 함께 남겨 주세요.
+KO091	ko	language_specific	number_date		다음 점검은 2026년 3월 25일 수요일 오후 1시 30분으로 잡아 두겠습니다.
+KO092	ko	language_specific	number_date		오늘 생성된 파일은 총 128개이고 실패한 항목은 3개입니다.
+KO093	ko	language_specific	number_date		응답 길이가 2.4초를 넘으면 체감상 조금 느리게 들릴 수 있습니다.
+KO094	ko	language_specific	number_date		현재 GPU 메모리 사용량은 약 3.2기가바이트 수준으로 보입니다.
+KO095	ko	language_specific	number_date		이 장치는 초당 30프레임으로 영상을 처리하면서 음성 응답도 같이 수행합니다.
+KO096	ko	language_specific	quoted_speech		제가 들은 문장은 '하이 포포, 오늘 일정 알려 줘'였습니다.
+KO097	ko	language_specific	quoted_speech		다음 안내는 짧게 말하면 '문을 닫아 주세요', 길게 말하면 '문이 완전히 닫혔는지 확인해 주세요'입니다.
+KO098	ko	language_specific	quoted_speech		한 번 더 강조하자면, 지금은 최고 성능보다 안정적인 데모 완성도가 중요합니다.
+KO099	ko	language_specific	quoted_speech		데이터셋을 많이 만드는 것보다 평가 기준을 먼저 고정하는 편이 더 안전합니다.
+KO100	ko	language_specific	quoted_speech		이제부터는 모델을 늘리는 대신, 실제로 쓸 수 있는 후보를 빠르게 줄여 나가겠습니다.
+EN041	en	language_specific	polite_support		Would you mind telling me your name and the best time to reach you?
+EN042	en	language_specific	polite_support		Once it is confirmed, I will guide you to the next step immediately.
+EN043	en	language_specific	polite_support		The meeting may run long, so please have some water and make yourself comfortable.
+EN044	en	language_specific	polite_support		With the conditions you mentioned, we should be able to finish this today.
+EN045	en	language_specific	polite_support		If you want, I can repeat the guidance in a softer voice.
+EN046	en	language_specific	counting		There are four spare batteries in the right drawer of the cabinet.
+EN047	en	language_specific	counting		The backup part is stored in the fifth box on the third shelf.
+EN048	en	language_specific	counting		Today's bookings are two at eleven, one at two, and one at four.
+EN049	en	language_specific	counting		The meeting room has twenty-six chairs and eight folding tables.
+EN050	en	language_specific	counting		This order is forty-eight thousand five hundred won, and shipping is separate.
+EN051	en	language_specific	mixed_tech		Please send the Slack notification and the Zoom meeting link tomorrow morning.
+EN052	en	language_specific	mixed_tech		After updating the AI speaker firmware, check the Bluetooth connection again.
+EN053	en	language_specific	mixed_tech		The camera model is XN-200, and the sensor board is revision B.
+EN054	en	language_specific	mixed_tech		Save this file in the release_candidate folder, not in the backup folder.
+EN055	en	language_specific	mixed_tech		Please title the report On-Device Voice Agent PoC Results.
+EN056	en	language_specific	address		Today's field test was conducted near 235 Pangyoyeok-ro in Bundang-gu, Seongnam.
+EN057	en	language_specific	address		The client visit address is 231 Teheran-ro, eighth floor, Gangnam-gu, Seoul.
+EN058	en	language_specific	address		The support center is inside the building at 204 Convensia-daero, Yeonsu-gu, Incheon.
+EN059	en	language_specific	address		Please enter the delivery address as 97 Centum jungang-ro, Haeundae-gu, Busan.
+EN060	en	language_specific	address		The reception desk is on the first floor of the main building at 99 Daehak-ro, Yuseong-gu, Daejeon.
+EN061	en	language_specific	punctuation_pause		Well, if it is hard to decide right now, please let me know again this afternoon.
+EN062	en	language_specific	punctuation_pause		Yes, that is correct. However, there is one more exception to consider.
+EN063	en	language_specific	punctuation_pause		It worked yesterday, but today the sensor is reacting a little more slowly.
+EN064	en	language_specific	punctuation_pause		To summarize, the first priority is stability, the second is speed, and the third is voice quality.
+EN065	en	language_specific	punctuation_pause		Are you sure you want to keep this setting? It may be difficult to undo later.
+EN066	en	language_specific	long_form		After the device is powered on for the first time, initialization will continue for about thirty seconds, so it is better not to press the button repeatedly.
+EN067	en	language_specific	long_form		When installation is finished, you will hear a guide voice once, and depending on the network state, additional downloads may begin automatically.
+EN068	en	language_specific	long_form		If an error occurs during testing, write down both the code on the screen and the time, because that makes later analysis much easier.
+EN069	en	language_specific	long_form		In power-saving mode, some visual recognition features may slow down, so switch to performance mode before the demo starts.
+EN070	en	language_specific	long_form		Transcription begins after a short silent gap once the user stops speaking, so it is better not to cut off the last word too quickly.
+EN071	en	language_specific	conversation		Good, at this pace we should be able to continue the demo naturally.
+EN072	en	language_specific	conversation		Unfortunately, this result is still not strong enough to show directly to the client.
+EN073	en	language_specific	conversation		The voice sounds smoother than expected, so the first impression is actually quite good.
+EN074	en	language_specific	conversation		Even with the same sentence, a stiff intonation makes the whole robot feel colder.
+EN075	en	language_specific	conversation		Today, I want to look at how the voice tone feels to people before I focus on speed.
+EN076	en	language_specific	tech_terms		We will keep WhisperTRT small nano safe as the default speech-to-text model.
+EN077	en	language_specific	tech_terms		It makes sense to compare MeloTTS and OpenVoice V2 first for Korean.
+EN078	en	language_specific	tech_terms		Piper and Kokoro should be reviewed separately for English quality and custom training potential.
+EN079	en	language_specific	tech_terms		Please organize TensorRT feasibility and the ONNX export path as well.
+EN080	en	language_specific	tech_terms		Model choice matters on Jetson Orin Nano because the memory budget is tight.
+EN081	en	language_specific	polite_support		Please keep speaking near the microphone a little longer until the test is finished.
+EN082	en	language_specific	polite_support		Thank you for confirming. From here, I will replay the guide voice more slowly.
+EN083	en	language_specific	polite_support		Please tell me whether you want the persona to sound calm or bright and friendly.
+EN084	en	language_specific	polite_support		If any pronunciation sounds unnatural, please tell me the sentence number as well.
+EN085	en	language_specific	polite_support		This result is only a reference, and the final score will be fixed after the listening test.
+EN086	en	language_specific	system_flow		In this demo, I will connect wake word, VAD, STT, and TTS in sequence.
+EN087	en	language_specific	system_flow		I will compare the wav files generated on the A100 server with the Jetson results using the same rules.
+EN088	en	language_specific	system_flow		The benchmark results will be stored as CSV and JSON, and the summary will be written in markdown.
+EN089	en	language_specific	system_flow		I will prepare the fallback path using local models before I rely on an API.
+EN090	en	language_specific	system_flow		Voice appeal scores vary from person to person, so please leave a note together with the number.
+EN091	en	language_specific	number_date		The next inspection is scheduled for Wednesday, March twenty-fifth, twenty twenty-six, at one thirty p.m.
+EN092	en	language_specific	number_date		A total of one hundred twenty-eight files were generated today, and three items failed.
+EN093	en	language_specific	number_date		If the response takes longer than two point four seconds, it may start to feel slow.
+EN094	en	language_specific	number_date		Current GPU memory usage appears to be around three point two gigabytes.
+EN095	en	language_specific	number_date		This device processes video at thirty frames per second while producing voice responses at the same time.
+EN096	en	language_specific	quoted_speech		The sentence I heard was, quote, Hi Popo, tell me today's schedule, end quote.
+EN097	en	language_specific	quoted_speech		To say it briefly, the guidance is Close the door, and to say it fully, it is Please make sure the door is completely closed.
+EN098	en	language_specific	quoted_speech		To emphasize it once more, demo stability matters more right now than the highest possible quality.
+EN099	en	language_specific	quoted_speech		It is safer to lock the evaluation criteria first than to keep growing the dataset without a plan.
+EN100	en	language_specific	quoted_speech		From this point on, we should reduce the candidate list quickly instead of adding more models.

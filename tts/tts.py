@@ -7,7 +7,26 @@ TTS 공통 진입점.
 
 from pathlib import Path
 
-from .tts_api import OpenAIAPITTSModel
+from .backends import (
+    EdgeTTSModel,
+    KokoroTTSModel,
+    MeloTTSModel,
+    OpenAIAPITTSModel,
+    OpenVoiceV2Model,
+    PiperTTSModel,
+)
+
+IMPLEMENTED_TTS_MODELS = (
+    "api",
+    "openai_api",
+    "chatgpt_api",
+    "edge_tts",
+    "melotts",
+    "openvoice_v2",
+    "piper",
+    "kokoro",
+)
+PLANNED_TTS_MODELS = ()
 
 
 class TTSSynthesizer:
@@ -19,6 +38,11 @@ class TTSSynthesizer:
         instructions=None,
         response_format="wav",
         speed=1.0,
+        rate=None,
+        pitch=None,
+        device=None,
+        reference_audio_path=None,
+        checkpoint_root=None,
         api_key=None,
         usage_purpose=None,
     ):
@@ -33,6 +57,11 @@ class TTSSynthesizer:
         - `instructions`: 말투 제어용 추가 지시 문자열.
         - `response_format`: 출력 오디오 포맷.
         - `speed`: 합성 속도 배율.
+        - `rate`: backend별 속도 문자열. 현재 `edge_tts`에서 사용.
+        - `pitch`: backend별 음높이 문자열. 현재 `edge_tts`에서 사용.
+        - `device`: backend별 실행 장치 문자열.
+        - `reference_audio_path`: voice cloning 계열 backend의 참조 음성 경로.
+        - `checkpoint_root`: backend별 외부 자산 루트 경로.
         - `api_key`: API TTS용 키.
         - `usage_purpose`: API 사용 목적 기록용 문자열.
 
@@ -40,7 +69,7 @@ class TTSSynthesizer:
         - 없음.
         """
         self.model = model
-        if model == "api":
+        if model in {"api", "openai_api", "chatgpt_api"}:
             self.backend = OpenAIAPITTSModel(
                 model_name=model_name or "gpt-4o-mini-tts",
                 voice=voice or "alloy",
@@ -50,12 +79,79 @@ class TTSSynthesizer:
                 api_key=api_key,
                 usage_purpose=usage_purpose,
             )
+        elif model == "edge_tts":
+            self.backend = EdgeTTSModel(
+                voice=voice or "ko-KR-SunHiNeural",
+                rate=rate,
+                pitch=pitch,
+                speed=speed,
+            )
+        elif model == "melotts":
+            self.backend = MeloTTSModel(
+                language_code=model_name or "KR",
+                voice=voice or "KR",
+                speed=speed,
+                device=device or "cuda:0",
+            )
+        elif model == "openvoice_v2":
+            self.backend = OpenVoiceV2Model(
+                language_code=model_name or "KR",
+                voice=voice or "KR",
+                reference_audio_path=reference_audio_path,
+                speed=speed,
+                device=device or "cuda:0",
+                checkpoint_root=checkpoint_root,
+            )
+        elif model == "piper":
+            self.backend = PiperTTSModel(
+                model_name=model_name or "en_US-lessac-medium",
+                voice=voice,
+                speed=speed,
+                device=device or "cuda:0",
+                checkpoint_root=checkpoint_root,
+            )
+        elif model == "kokoro":
+            self.backend = KokoroTTSModel(
+                language_code=model_name or "a",
+                voice=voice or "af_heart",
+                speed=speed,
+                device=device or "cuda",
+            )
         else:
             raise ValueError(f"지원하지 않는 TTS 모델입니다: {model}")
 
         self.last_duration_sec = 0.0
         self.last_output_path = None
         self.last_error = ""
+        self.model_load_sec = float(getattr(self.backend, "model_load_sec", 0.0))
+
+    @staticmethod
+    def available_models():
+        """
+        기능:
+        - 현재 코드에서 바로 사용할 수 있는 TTS backend 목록을 반환한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - backend 이름 목록을 반환한다.
+        """
+        return list(IMPLEMENTED_TTS_MODELS)
+
+    @staticmethod
+    def planned_models():
+        """
+        기능:
+        - 현재 비교 대상으로 계획된 TTS 후보 목록을 반환한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 계획된 backend 이름 목록을 반환한다.
+        """
+        return list(PLANNED_TTS_MODELS)
 
     def synthesize_to_file(self, text, output_path):
         """

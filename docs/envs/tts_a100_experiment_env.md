@@ -1,0 +1,153 @@
+# TTS A100 Experiment Env
+
+> 목적: A100에서 TTS 4개 후보를 비교하기 위한 로컬 env 운영 기준을 정리한다.
+
+## 기본 원칙
+
+- TTS 후보마다 의존성이 크게 다를 수 있으므로 env를 분리한다.
+- 코드와 문서는 `repo/` 기준으로 유지하고, venv는 `../env/` 아래에만 둔다.
+- 대용량 모델 파일과 캐시는 리포 밖 로컬 경로에 둔다.
+
+## 권장 env 이름
+
+- `../env/tts_melotts`
+- `../env/tts_openvoice_v2`
+- `../env/tts_piper`
+- `../env/tts_kokoro`
+- `../env/tts_edge_tts`
+- `../env/tts_openai_api`
+- 공통 STT scorer용 `../env/tts_eval_stt`
+
+## 결과와 캐시 권장 위치
+
+- 생성 오디오와 측정 결과:
+  - `../results/tts/<date>/`
+- benchmark reference/asset:
+  - `../results/tts_assets/openvoice_v2/references/`
+- 모델 다운로드 캐시:
+  - 엔진별 로컬 캐시 경로 사용
+- 민감한 API 사용 로그:
+  - `../secrets/` 아래 로컬 문서 유지
+
+## 단계
+
+1. A100에서 후보별 env 생성
+2. 공통 문장셋으로 smoke
+3. 공통 메트릭 수집
+4. 비교 결과를 `docs/reports/`로 승격
+
+## 현재 확인된 benchmark scorer 메모
+
+- 생성 방식:
+  - `/usr/bin/python3.10 -m venv ../env/tts_eval_stt`
+- 설치:
+  - `pip install torch openai-whisper`
+- 확인 결과:
+  - A100 `cuda`에서 `STTTranscriber(model="whisper", model_name="large-v3")` 초기화 통과
+  - 현재 benchmark 기본 역전사 scorer는 이 env를 사용한다
+
+## 현재 확인된 MeloTTS 메모
+
+- 생성 방식:
+  - `/usr/bin/python3.10 -m venv ../env/tts_melotts`
+- 설치:
+  - `pip install git+https://github.com/myshell-ai/MeloTTS.git`
+  - `python -m unidic download`
+- 추가 호환성 핀:
+  - `pip install 'setuptools<81'`
+- 이유:
+  - `librosa 0.9.1`가 `pkg_resources`를 참조해 최신 `setuptools`에서 import 에러가 났다.
+- 첫 한국어 실행 시:
+  - `python-mecab-ko`, `python-mecab-ko-dic` 추가 설치가 자동으로 일어났다.
+- 영어 benchmark 메모:
+  - `nltk_data` 아래 `averaged_perceptron_tagger_eng` 리소스가 필요했다.
+  - `nltk.download('averaged_perceptron_tagger_eng')` 후 영어 smoke가 통과했다.
+
+## 현재 확인된 OpenVoice V2 메모
+
+- 생성 방식:
+  - `/usr/bin/python3.10 -m venv ../env/tts_openvoice_v2`
+- 설치:
+  - `pip install 'setuptools<81'`
+  - `pip install git+https://github.com/myshell-ai/OpenVoice.git --no-deps`
+  - `pip install git+https://github.com/myshell-ai/MeloTTS.git`
+  - `python -m unidic download`
+  - `pip install av==14.0.1 faster-whisper==1.2.1 whisper-timestamped==1.14.2 wavmark==0.0.3 ...`
+- 이유:
+  - 공식 dependency 조합 그대로는 `av==10.*`가 소스 빌드로 떨어져 FFmpeg dev library 부족 문제로 실패했다.
+  - A100 env에서는 wheel이 있는 `av==14.0.1`와 별도 의존성 설치가 더 안정적이었다.
+- 외부 자산 위치:
+  - checkpoint: `../results/tts_assets/openvoice_v2/checkpoints_v2`
+  - processed cache: `../results/tts_assets/openvoice_v2/processed`
+- 첫 한국어 실행 시:
+  - `python-mecab-ko`, `python-mecab-ko-dic` 추가 설치가 자동으로 일어났다.
+- 영어 benchmark 메모:
+  - base MeloTTS 영어 경로도 `averaged_perceptron_tagger_eng` 리소스를 요구한다.
+  - `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
+  - `../results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav`
+    두 파일을 benchmark용 고정 reference로 둔다.
+
+## 현재 확인된 Piper 메모
+
+- 생성 방식:
+  - `/usr/bin/python3.10 -m venv ../env/tts_piper`
+- 설치:
+  - `pip install piper-tts onnxruntime-gpu`
+  - `pip install nvidia-cublas-cu12 nvidia-cuda-runtime-cu12 nvidia-cufft-cu12 nvidia-cudnn-cu12 nvidia-cuda-nvrtc-cu12`
+  - `neurlang/piper-onnx-kss-korean`을 쓸 때는 `pip install pygoruut`
+- 이유:
+  - `piper-tts`만 설치하면 `onnxruntime` CPU 경로만 쓰여 A100 CUDA provider가 활성화되지 않았다.
+  - `onnxruntime-gpu`와 NVIDIA CUDA wheel을 별도로 두고, runtime에서 `onnxruntime.preload_dlls(directory='')`를 호출해야 CUDA provider가 정상 로드됐다.
+  - `pygoruut` phonemizer 계열 model은 Python `piper-tts`가 그대로는 못 읽어, backend 호환 레이어가 필요했다.
+- 외부 자산 위치:
+  - checkpoint/download root: `../results/tts_assets/piper`
+- 현재 smoke voice:
+  - `en_US-lessac-medium`
+- 서드파티 한국어 model:
+  - `../results/tts_assets/piper/neurlang_kss_korean/piper-kss-korean.onnx`
+- 주의:
+  - 공식 기본 `VOICES.md` 목록에는 한국어가 없다.
+  - 대신 `neurlang/piper-onnx-kss-korean`으로 한국어 smoke는 가능했지만, model 페이지 라이선스 표기가 `CC-BY-NC-SA-4.0`라 상용 기본 후보로는 보수적으로 봐야 한다.
+  - `pygoruut`는 로컬 phonemizer 프로세스를 띄우므로, 같은 env에서 병렬 smoke를 여러 개 동시에 띄우지 않는 편이 안전하다.
+
+## 현재 확인된 Kokoro 메모
+
+- 생성 방식:
+  - `python -m venv ../env/tts_kokoro`
+- 설치:
+  - `pip install 'kokoro>=0.9.2' soundfile`
+- 이유:
+  - 공식 model card 예시가 `kokoro` + `soundfile` 조합을 직접 안내한다.
+- 첫 실행 메모:
+  - 영어 `lang_code='a'` 기준 첫 실행에서 `en_core_web_sm`가 자동 설치됐다.
+  - 현재 env는 `espeakng-loader`가 함께 설치되어 system `espeak-ng` 없이도 공식 영어 경로가 동작했다.
+- 외부 자산 위치:
+  - 모델과 voice pack은 Hugging Face cache를 통해 자동 다운로드된다.
+- 공식 언어 메모:
+  - 현재 확인된 official language code는 `en-us`, `en-gb`, `es`, `fr-fr`, `hi`, `it`, `pt-br`, `ja`, `zh` 계열뿐이다.
+  - 즉 공식 Korean path는 없다.
+
+## 현재 확인된 Edge TTS 메모
+
+- 생성 방식:
+  - `/usr/bin/python3.10 -m venv ../env/tts_edge_tts`
+- 설치:
+  - `pip install edge-tts`
+- 이유:
+  - wake word positive 생성에 이미 쓰고 있던 network TTS 경로를 공통 SDK형 backend로 재사용하기 위함이다.
+- 구현 메모:
+  - 현재 SDK backend는 `.wav` 요청 시 `ffmpeg`로 실제 WAV 변환을 수행한다.
+  - `rate`, `pitch`를 직접 받아 wake word positive 생성 조건을 그대로 재현할 수 있다.
+  - OpenVoice V2 benchmark reference 생성에도 이 env를 사용한다.
+
+## 현재 확인된 OpenAI API TTS 메모
+
+- 생성 방식:
+  - `/usr/bin/python3.10 -m venv ../env/tts_openai_api`
+- 설치:
+  - `pip install openai`
+- 이유:
+  - `api` backend를 별도 network baseline env로 분리해 관리하기 위함이다.
+- 구현 메모:
+  - `TTSSynthesizer(model="api")`, `TTSSynthesizer(model="openai_api")`, `TTSSynthesizer(model="chatgpt_api")`가 모두 같은 backend를 사용한다.
+  - 실제 API 호출은 비용이 드니, 기본 smoke는 alias instantiation까지만 확인하고 필요할 때만 실행한다.

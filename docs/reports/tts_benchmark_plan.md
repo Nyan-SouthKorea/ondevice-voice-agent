@@ -1,0 +1,216 @@
+# TTS Benchmark Plan
+
+> 마지막 업데이트: 2026-03-18
+> 목적: A100 기준 TTS 6개 backend 비교와 이후 Jetson shortlist 선정을 위한 실행 계획을 고정한다.
+
+## 범위
+
+- 로컬 후보 4개:
+  - `MeloTTS`
+  - `OpenVoice V2`
+  - `Piper`
+  - `Kokoro`
+- reference backend 2개:
+  - `Edge TTS`
+  - `OpenAI API TTS`
+
+이번 benchmark의 핵심은 "모든 backend를 한 표로 억지 비교"가 아니라, 목적별로 나눠 보는 것이다.
+
+## 비교 표 구조
+
+### 1. 한국어 제품성 표
+
+- 대상:
+  - `MeloTTS`
+  - `OpenVoice V2`
+  - `Edge TTS`
+  - `OpenAI API TTS`
+- 목적:
+  - 한국어 고객 시연 기준의 실제 제품 후보 판단
+
+### 2. 영어 엔진 비교 표
+
+- 대상:
+  - `MeloTTS`
+  - `OpenVoice V2`
+  - `Piper`
+  - `Kokoro`
+  - `Edge TTS`
+  - `OpenAI API TTS`
+- 목적:
+  - `Piper`, `Kokoro`를 포함한 영어 성능과 향후 custom training 후보성 확인
+
+### 3. 언어 독립 엔지니어링 표
+
+- 대상:
+  - 6개 backend 전체
+- 목적:
+  - 속도, 메모리, 의존성, ONNX/TRT 가능성, Jetson 이식 난이도 비교
+
+## 프롬프트셋 구조
+
+- 총 200문장
+  - 한국어 100문장
+  - 영어 100문장
+- 이 중 40쌍은 한영 대응 prompt로 만든다.
+  - 같은 의미를 한국어/영어로 각각 만들고, 시스템 메트릭과 언어별 안정성 비교에 사용한다.
+- 나머지 60문장씩은 언어 특화 prompt로 구성한다.
+
+현재 canonical prompt 파일:
+
+- `tts/evaluation/prompts/tts_benchmark_prompts_v1.tsv`
+
+TSV 컬럼:
+
+- `prompt_id`
+- `language`
+- `track`
+- `category`
+- `paired_group`
+- `text`
+
+## 프롬프트 카테고리
+
+공통 paired 범주:
+
+- 짧은 인사/확인
+- 장치 제어
+- 일정/시간/날짜
+- 숫자/수량/단위
+- 길안내/위치
+- 고객 응대
+- 작업 지시
+- 짧은 설명/안내
+
+한국어 특화 범주:
+
+- 존댓말/완곡 표현
+- 조사와 받침 변화
+- 한글+영문 혼용
+- 숫자/금액/층수/호수
+- 한국형 주소와 기관명
+- 브랜드/서비스/제품명
+- 다문장 안내문
+- 감탄문/질문문/쉼표 기반 pause
+
+영어 특화 범주:
+
+- contraction
+- acronym / initialism
+- email / URL / code-like token
+- date / time / currency / unit
+- proper noun
+- 긴 안내문
+- list-like punctuation
+- conversational emphasis
+
+## STT 역전사 scorer 기준
+
+- API scorer는 이번 benchmark 기본 경로에서 제외한다.
+- A100 로컬 scorer를 사용한다.
+- 1차 기본 scorer 후보:
+  - `STTTranscriber(model="whisper", model_name="large-v3")`
+- 이유:
+  - 한국어/영어 둘 다 높은 정확도로 비교 가능
+  - 비용이 들지 않음
+  - 현재 repo 안의 STT 공통 인터페이스를 그대로 재사용할 수 있다
+  - Jetson 평가에서도 생성 wav만 A100로 옮겨 같은 scorer로 재평가 가능
+
+주의:
+
+- 역전사 점수는 `발음 명료도`와 `문장 보존` 지표로만 사용한다.
+- `목소리 매력`, `자연스러움`, `고객 인상`은 사람 청취 평가가 반드시 병행되어야 한다.
+
+## 청취 평가 방식
+
+- 사용자가 직접 샘플을 듣고 `10점 만점`으로 점수를 준다.
+- 모델별 청취 폴더를 사람이 바로 열 수 있게 정리한다.
+- 결과 표에는 최소 아래 항목을 둔다.
+  - `overall_impression_10`
+  - `naturalness_10`
+  - `voice_appeal_10`
+  - `pronunciation_10`
+  - `notes`
+
+## 공통 자동 메트릭
+
+- `model_load_sec`
+- `time_to_audio_ready_sec`
+- `audio_duration_sec`
+- `real_time_factor`
+- `peak_vram_mb`
+- `peak_ram_mb`
+- `success_rate`
+- `sample_rate`
+- `channel_count`
+- `format`
+- `stt_back_transcription_cer`
+- `stt_back_transcription_exact_match_rate`
+
+## 엔지니어링 메타데이터
+
+- `model_family`
+- `language_scope`
+- `voice_type`
+  - preset / cloning / reference
+- `parameter_count`
+- `checkpoint_size_mb`
+- `official_onnx`
+- `onnx_export_path`
+- `tensorrt_path`
+- `jetson_porting_risk`
+- `license`
+- `offline_capable`
+- `korean_voice_count`
+- `english_voice_count`
+
+## 출력물 구조
+
+권장 결과 경로:
+
+```text
+../results/tts/benchmark_v1/
+├── prompts/
+├── generated/
+│   ├── melotts/
+│   ├── openvoice_v2/
+│   ├── piper/
+│   ├── kokoro/
+│   ├── edge_tts/
+│   └── openai_api/
+├── manifests/
+├── metrics/
+├── backtranscription/
+└── listening/
+```
+
+청취용 폴더는 사람이 보기 쉽게 아래처럼 정리한다.
+
+```text
+generated/<model>/<language>/<voice_id>/<prompt_id>.wav
+```
+
+## 실행 순서
+
+1. 평가 프로토콜과 prompt canonical file 고정
+2. A100 로컬 STT scorer env 구성
+3. 6개 backend 공통 benchmark harness 작성
+4. A100 자동 평가 실행
+5. 모델별 청취 샘플 정리
+6. 사람 청취 10점 평가 입력
+7. 한국어 제품성 표 / 영어 엔진 표 / 엔지니어링 표 작성
+8. Jetson shortlist 선정
+
+## 현재 단계
+
+- 완료:
+  - benchmark 계획 문서 고정
+  - 한영 200문장 canonical prompt 생성
+  - `benchmark_registry_v1.json`과 `tts_listening_subset_v1.tsv` 고정
+  - A100 로컬 STT scorer `large-v3` 초기화 확인
+  - `tts/tools/tts_benchmark.py`, `tts/tools/tts_benchmark_worker.py` 작성
+  - 1-prompt smoke로 전체 파이프라인 검증
+- 다음:
+  - full prompt benchmark 실행
+  - listening score 수기 입력
+  - 3개 비교 표 정리

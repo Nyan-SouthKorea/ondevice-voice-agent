@@ -2,6 +2,395 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-18 | Human + Codex | 진행 보고 빈도와 마일스톤 commit 규칙 보강
+
+- 사용자가 장시간 작업에서 진행 보고를 더 자주 받고 싶어 했고, 중간 커밋 규칙이 문서에 명시적으로 없다는 점을 지적했다.
+- 이에 따라 `docs/README.md`, `docs/개발방침.md`, `docs/decisions.md`에 아래 규칙을 추가했다.
+  - 주요 액션 2~3개마다 한 줄 진행 보고
+  - 긴 명령의 핵심 출력 요약
+  - 장시간 작업의 마일스톤별 local commit 필요 여부 점검
+  - push 시점은 별도 판단
+  - 가능하면 `local commit 2회당 push 1회` 정도의 기본 cadence 유지
+
+## 2026-03-18 | Human + Codex | TTS benchmark harness 구현과 A100 1-prompt smoke 검증
+
+### Context
+
+- 사용자가 장기 TTS benchmark 작업이 중간에 압축되더라도 흔들리지 않도록, 계획만이 아니라 실제 실행 코드와 canonical registry까지 문서에 고정하길 원했다.
+- 또 사람 청취는 사용자가 직접 이어폰으로 듣고 10점 만점으로 입력할 예정이므로, 모델별 샘플 경로가 바로 열리게 정리되길 원했다.
+
+### Actions
+
+- `tts/evaluation/benchmark_registry_v1.json`를 추가해 10개 benchmark entry를 고정했다.
+  - `melotts_ko`, `melotts_en`
+  - `openvoice_v2_ko`, `openvoice_v2_en`
+  - `piper_en`, `kokoro_en`
+  - `edge_tts_ko`, `edge_tts_en`
+  - `openai_api_ko`, `openai_api_en`
+- `tts/evaluation/prompts/tts_listening_subset_v1.tsv`를 추가해 사람 청취용 canonical subset을 고정했다.
+- `tts/tools/tts_benchmark_worker.py`와 `tts/tools/tts_benchmark.py`를 추가했다.
+  - env별 worker subprocess 실행
+  - peak RAM / VRAM 측정
+  - `ffprobe` 기반 오디오 메타 수집
+  - `ffmpeg` 기반 16k mono 변환
+  - A100 로컬 `large-v3` scorer 기반 역전사
+  - listening sample 복사와 `listening_scores_template.tsv` 생성
+- `../env/tts_eval_stt`에서 `STTTranscriber(model="whisper", model_name="large-v3")` 초기화를 확인했다.
+- OpenVoice V2 benchmark용 고정 reference를 `Edge TTS`로 생성했다.
+  - `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
+  - `../results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav`
+- 영어 경로 smoke에서 `averaged_perceptron_tagger_eng` 누락을 확인하고, `tts_melotts`, `tts_openvoice_v2` env가 참조하는 `nltk_data`에 해당 리소스를 내려받았다.
+
+### Results
+
+- `../results/tts/benchmark_smoke_v1/`에서 1-prompt smoke를 실행했다.
+- `../results/tts/benchmark_smoke_en_fix/`에서 영어 리소스 보강 후 재검증을 실행했다.
+- 최종적으로 아래 entry들이 모두 1-prompt 자동 역전사까지 통과했다.
+  - `melotts_ko`, `melotts_en`
+  - `openvoice_v2_ko`, `openvoice_v2_en`
+  - `piper_en`, `kokoro_en`
+  - `edge_tts_ko`, `edge_tts_en`
+- smoke 요약 예시:
+  - `melotts_ko`: `mean_elapsed_sec 6.656`, `mean_rtf 1.332`, CER `0.0`
+  - `openvoice_v2_ko`: `mean_elapsed_sec 8.016`, `mean_rtf 1.602`, CER `0.0`
+  - `piper_en`: `mean_elapsed_sec 1.936`, `mean_rtf 0.701`, CER `0.0`
+  - `kokoro_en`: `mean_elapsed_sec 1.794`, `mean_rtf 0.629`, CER `0.0`
+  - `edge_tts_ko`: `mean_elapsed_sec 1.134`, `mean_rtf 0.204`, CER `0.0`
+  - `edge_tts_en`: `mean_elapsed_sec 1.422`, `mean_rtf 0.524`, CER `0.0`
+- 사람 청취용 경로와 수기 입력 템플릿도 생성된다.
+  - 예: `../results/tts/benchmark_smoke_v1/listening/`
+  - 예: `../results/tts/benchmark_smoke_v1/listening_scores_template.tsv`
+
+### Next
+
+- full prompt benchmark를 실행한다.
+- 사용자가 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
+- 결과를 3개 비교 표로 정리한 뒤 Jetson shortlist를 좁힌다.
+
+## 2026-03-18 | Human + Codex | TTS 6-backend benchmark 계획과 한영 200문장 canonical prompt 고정
+
+### Context
+
+- 사용자가 TTS 자동 평가를 바로 돌리기 전에, 장기 작업이 중간에 압축되더라도 흔들리지 않도록 benchmark 계획을 문서에 명확하게 고정하길 원했다.
+- 또 `Piper`, `Kokoro`는 영어 기준으로라도 비교하고 싶어 했고, 사람 청취 평가는 사용자가 직접 이어폰으로 듣고 10점 만점으로 입력하는 방식으로 진행하길 원했다.
+
+### Actions
+
+- `docs/reports/tts_benchmark_plan.md`를 추가해 6개 backend 기준 benchmark 구조를 고정했다.
+- 비교 표를 세 갈래로 나눴다.
+  - 한국어 제품성 표
+  - 영어 엔진 비교 표
+  - 언어 독립 엔지니어링 표
+- `tts/evaluation/README.md`를 현재 계획에 맞게 갱신했다.
+- `tts/evaluation/prompts/tts_benchmark_prompts_v1.tsv`를 추가했다.
+  - 한국어 100문장
+  - 영어 100문장
+  - 한영 대응 prompt 40쌍 포함
+- STT 역전사 scorer는 API가 아니라 A100 로컬 `STTTranscriber(model="whisper", model_name="large-v3")` 경로를 우선 쓰는 쪽으로 정리했다.
+
+### Results
+
+- benchmark의 기준 문서와 canonical prompt가 고정되었다.
+- 이후 컨텍스트가 압축되더라도 아래 두 파일을 기준으로 바로 이어갈 수 있다.
+  - `docs/reports/tts_benchmark_plan.md`
+  - `tts/evaluation/prompts/tts_benchmark_prompts_v1.tsv`
+
+### Next
+
+- A100 로컬 STT scorer env를 만들고 `STTTranscriber(model="whisper", model_name="large-v3")` 경로를 평가용으로 붙인다.
+- 이어서 6개 backend 공통 benchmark harness를 작성한다.
+
+## 2026-03-18 | Human + Codex | Edge TTS backend 추가와 OpenAI API alias 정리
+
+### Context
+
+- 사용자가 4개 로컬 TTS 후보를 평가하기 전에, wake word 학습에 쓰던 TTS도 같은 SDK형 인터페이스 아래에서 다시 쓸 수 있길 원했다.
+- 또 기존 `api` TTS를 명시적으로 `chatgpt api tts`처럼 부를 수 있게 정리하길 원했다.
+
+### Actions
+
+- wake word positive 생성 스크립트를 다시 확인해, 사용한 TTS가 Amazon이 아니라 `edge_tts`임을 확인했다.
+- `tts/backends/edge_tts.py`를 추가하고, `TTSSynthesizer(model="edge_tts")`로 공통 인터페이스에 연결했다.
+- `tts_demo.py`와 공통 진입점에 `rate`, `pitch` 인자를 추가해 wake word 생성 조건을 그대로 재현할 수 있게 했다.
+- `api`, `openai_api`, `chatgpt_api`가 모두 `OpenAIAPITTSModel`을 가리키도록 alias를 정리했다.
+- `../env/tts_edge_tts`, `../env/tts_openai_api` env를 새로 만들었다.
+
+### Results
+
+- `Edge TTS` 한국어 smoke:
+  - SDK smoke output: `../results/tts/20260318_edge_tts_smoke/sdk_import.wav`
+  - CLI smoke output: `../results/tts/20260318_edge_tts_smoke/demo_cli.wav`
+  - SDK smoke: `model_load_sec 0.000`, `elapsed_sec 0.915`
+  - CLI smoke: `model_load_sec 0.000`, `elapsed_sec 0.849`
+- 현재 SDK backend는 `.wav` 요청 시 `ffmpeg`로 실제 RIFF WAV를 만든다.
+- 기존 wake word 공개 샘플은 `.wav` 이름이지만 실제 포맷은 MP3라는 점도 다시 확인했다.
+- `OpenAI API TTS`는 실제 API 호출 없이 alias instantiation까지만 검증했다.
+  - `openai_api -> OpenAIAPITTSModel`
+  - `chatgpt_api -> OpenAIAPITTSModel`
+
+### Next
+
+- A100 4개 로컬 후보 benchmark를 진행하고, 필요하면 `Edge TTS`와 `OpenAI API TTS`를 reference 청취 baseline으로 함께 듣는다.
+
+## 2026-03-18 | Human + Codex | Kokoro A100 env 구축과 공식 영어 smoke 검증
+
+### Context
+
+- 사용자가 `Kokoro`도 같은 방식으로 A100에서 실제 env와 backend까지 붙여 보길 원했다.
+- 현재 프로젝트 방향상 과도한 구조 확장 없이 `TTSSynthesizer(model="kokoro")`로 공통 인터페이스를 유지하고, 공식 runtime 기준 smoke만 먼저 확인하면 충분했다.
+
+### Actions
+
+- `../env/tts_kokoro`를 만들고 `kokoro`, `soundfile`를 설치했다.
+- 설치된 `kokoro/pipeline.py`를 확인해 공식 language code와 alias를 직접 확인했다.
+- `tts/backends/kokoro.py`를 추가하고, `TTSSynthesizer(model="kokoro", model_name=<lang_code>, voice=<voice>)` 형태로 공통 인터페이스에 연결했다.
+- A100 `cuda` 기준 공식 영어 경로 `lang_code='a'`, `voice='af_heart'`로 direct smoke, SDK smoke, CLI smoke를 순차 실행했다.
+
+### Results
+
+- 공식 language code는 `en-us`, `en-gb`, `es`, `fr-fr`, `hi`, `it`, `pt-br`, `ja`, `zh` 계열뿐이고, 현재 공식 Korean path는 없다.
+- direct smoke:
+  - `model_load_sec 15.646`
+  - `elapsed_sec 2.941`
+  - output `../results/tts/20260318_kokoro_smoke/hello_en.wav`
+  - output length `4.600 sec`
+- SDK smoke:
+  - `model_load_sec 3.524`
+  - `elapsed_sec 1.138`
+  - output `../results/tts/20260318_kokoro_smoke/sdk_import.wav`
+- CLI smoke:
+  - `model_load_sec 3.403`
+  - `elapsed_sec 1.231`
+  - output `../results/tts/20260318_kokoro_smoke/demo_cli.wav`
+- 첫 영어 실행에서는 `en_core_web_sm`가 자동 설치됐고, 현재 env에서는 `espeakng-loader`가 함께 설치되어 system `espeak-ng` 없이도 공식 영어 경로가 동작했다.
+
+### Next
+
+- `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro` 공통 benchmark 수집 구조를 붙인다.
+- 한국어 제품 후보 판단은 `MeloTTS`, `OpenVoice V2` 중심으로 두고, `Kokoro`는 A100 비교 후보로만 유지한다.
+
+## 2026-03-18 | Human + Codex | Piper 시행착오 산출물 정리
+
+- `results/tts` 안에는 의미 있는 smoke와 비교 결과만 남기고, `20260318_piper_korean_debug`, `20260318_piper_korean_noise_search`, `20260318_piper_korean_norm_search`, `interactive.wav`, `manual_test.wav`는 `../results/_piper_artifact_archive_20260318_cleanup/`로 옮겨 작업 경로를 정리했다.
+
+## 2026-03-18 | Human + Codex | Piper 한국어 품질 디버깅과 author runtime 비교
+
+### Context
+
+- 사용자가 `../results/tts/20260318_piper_korean_smoke/` 결과를 직접 들어 보고, 일본어 억양처럼 들려 현재 결과가 전혀 쓸 수 없다고 지적했다.
+- 이어서 기존 STT 모듈을 이용해 가장 빠른 시간 안에 원인을 분리하고, 내 wrapper 실수인지 모델 자체 문제인지 더 명확히 확인하길 원했다.
+
+### Actions
+
+- `tts/backends/piper.py`의 `pygoruut` 경로를 다시 추적해 `pygoruut 0.7.0`과 `v0.6.2`를 비교했고, 단어 단위 `CleanWord / PrePunct / Phonetic` 출력을 직접 확인했다.
+- 우리 STT 모듈의 API backend `gpt-4o-mini-transcribe`를 사용해 여러 phoneme 정규화와 `noise_scale / noise_w_scale` 조합을 짧게 역전사 비교했다.
+- Hugging Face 모델 카드가 `piper-rs` 예제를 기준으로 배포된 점을 확인하고, Rust toolchain 설치 뒤 `piper-rs` 원 저자 repo를 lockfile 기준으로 library bin 형태로 빌드해 author runtime 합성 결과도 따로 생성했다.
+- Python backend는 config에 `pygoruut_version`이 있으면 그 값을 우선 사용하도록 보완했다.
+
+### Results
+
+- `pygoruut 0.7.0`은 `안녕하세요 -> 녕 + 안하세요`처럼 분절이 명확히 깨졌다.
+- `pygoruut v0.6.2`는 분절이 더 자연스러웠지만, Python `piper-tts` 경로에서는 역전사 기준 여전히 `"투페이파 하이단국가리 테스다시입니다"` 수준으로 무너졌다.
+- `piper-rs` 원 저자 repo는 lockfile 기준 library bin 빌드와 합성까지는 성공했다.
+  - output: `../results/tts/20260318_piper_korean_rust_smoke/wav_text_locked.wav`
+  - 역전사: `안녕하세요. 카이퍼 땡구그린의 습들입니다.`
+- 즉 현재 문제는 내 Python wrapper만의 문제로 보기 어렵고, 현재 model/phonemizer 조합 자체가 우리 한국어 기준에 맞지 않는 쪽에 가깝다고 판단했다.
+- `pygoruut_version=v0.6.2`를 author runtime config에 명시한 추가 검증은 rustruut가 해당 goruut 실행 파일을 찾지 못해 재현이 막혔다.
+
+### API Usage
+
+- `purpose: tts_piper_debug`
+  - 호출 `33회`
+  - 총 오디오 길이 `144.822s`
+  - 총 요청 시간 `33.659s`
+  - 총 usage `2118 tokens`
+- `purpose: tts_piper_runtime_compare`
+  - 호출 `2회`
+  - 총 오디오 길이 `8.556s`
+  - 총 요청 시간 `1.691s`
+  - 총 usage `130 tokens`
+  - 비교 대상:
+    - Python output `../results/tts/20260318_piper_runtime_compare_16k/python_sdk_16k.wav`
+    - Rust output `../results/tts/20260318_piper_runtime_compare_16k/rust_locked_16k.wav`
+
+### Next
+
+- `Piper`는 영어 공식 voice 경량성 비교용으로만 유지하고, 한국어 제품 후보 판단은 사실상 보류한다.
+- 다음 TTS 후보 구현과 공통 benchmark 쪽으로 무게중심을 옮긴다.
+
+## 2026-03-18 | Human + Codex | Piper 서드파티 한국어 model smoke와 문서 정정
+
+### Context
+
+- 사용자가 `Piper` 한국어 지원 여부를 다시 검토했고, 공식 기본 voice 목록과 별개로 `neurlang/piper-onnx-kss-korean` 같은 서드파티 model까지 포함해 사실을 정리하길 원했다.
+- 이어서 문서 표현을 정확히 고치고, A100에서 바로 한국어 smoke까지 확인하길 원했다.
+
+### Actions
+
+- 공식 Piper `VOICES.md`, Korean support discussion, Hugging Face `neurlang/piper-onnx-kss-korean` model 페이지를 다시 확인했다.
+- `../results/tts_assets/piper/neurlang_kss_korean/` 아래에 `piper-kss-korean.onnx`, `piper-kss-korean.onnx.json`을 내려받았다.
+- `tts/backends/piper.py`에 `phoneme_type=pygoruut` custom model용 얇은 호환 레이어를 추가했다.
+- `../env/tts_piper`에 `pygoruut`를 설치하고, A100 `cuda:0`에서 SDK/CLI smoke를 순차 실행했다.
+- `tts/README.md`, `tts/experiments/piper/README.md`, `docs/status.md`, `docs/research/tts.md`, `docs/envs/tts_a100_experiment_env.md`를 현재 사실에 맞게 정정했다.
+
+### Results
+
+- 공식 기본 Piper voice 목록에는 한국어가 없다는 점을 다시 확인했다.
+- 서드파티 한국어 model `neurlang/piper-onnx-kss-korean`은 A100에서 로드와 합성까지는 확인했다.
+  - SDK smoke: `model_load_sec 2.150`, `elapsed_sec 1.550`
+  - CLI smoke: `model_load_sec 2.384`, `elapsed_sec 1.446`
+  - providers: `CUDAExecutionProvider`, `CPUExecutionProvider`
+  - output:
+    - `../results/tts/20260318_piper_korean_smoke/sdk_import.wav`
+    - `../results/tts/20260318_piper_korean_smoke/demo_cli.wav`
+- 다만 이후 품질 디버깅 결과, 현재 이 model은 제품 기본 후보가 아니라 비교 연구 후보로만 두는 쪽이 맞다고 정리했다.
+
+### Next
+
+- `MeloTTS`, `OpenVoice V2`, `Piper` 공통 benchmark 수집 코드를 붙인다.
+- 이어서 `Kokoro` env와 backend를 같은 구조로 시작한다.
+
+## 2026-03-18 | Human + Codex | Piper A100 env 구축과 CUDA smoke 검증
+
+### Context
+
+- 사용자가 `Piper`도 A100에서 같은 공통 인터페이스 아래에 붙이고, 가능하면 GPU 경로까지 확인하길 원했다.
+- 현재 프로젝트 방향상 과도한 확장 없이 `TTSSynthesizer(model="piper")` 형태의 backend와 1차 smoke만 확보하면 충분했다.
+
+### Actions
+
+- `/usr/bin/python3.10 -m venv` 기준으로 `../env/tts_piper`를 만들고 `piper-tts`, `onnxruntime-gpu`를 설치했다.
+- `piper-tts` 기본 설치만으로는 ORT CUDA provider가 CPU로 fallback되는 것을 확인하고, `nvidia-cublas-cu12`, `nvidia-cuda-runtime-cu12`, `nvidia-cufft-cu12`, `nvidia-cudnn-cu12`, `nvidia-cuda-nvrtc-cu12`를 env에 추가했다.
+- `tts/backends/piper.py`를 추가하고, `TTSSynthesizer(model="piper")`로 공통 인터페이스에 연결했다.
+- runtime에서는 `onnxruntime.preload_dlls(directory='')`를 사용해 NVIDIA wheel 라이브러리를 먼저 로드한 뒤 `PiperVoice.load(..., use_cuda=True)`가 `CUDAExecutionProvider`를 잡도록 정리했다.
+- 공식 voice `en_US-lessac-medium`를 `../results/tts_assets/piper/` 아래로 내려받아 A100 smoke를 실행했다.
+
+### Results
+
+- 첫 smoke:
+  - output `../results/tts/20260318_piper_smoke/hello_en.wav`
+  - output length `3.808 sec`
+- SDK smoke:
+  - `model_load_sec 1.572`
+  - `elapsed_sec 1.300`
+  - providers `CUDAExecutionProvider`, `CPUExecutionProvider`
+  - output `../results/tts/20260318_piper_smoke/sdk_import.wav`
+- CLI smoke:
+  - `model_load_sec 1.551`
+  - `elapsed_sec 1.268`
+  - output `../results/tts/20260318_piper_smoke/demo_cli.wav`
+- 현재 공식 한국어 voice는 확인되지 않아, 1차 smoke는 영어 공식 voice로만 검증했다.
+
+### Next
+
+- `MeloTTS`, `OpenVoice V2`, `Piper` 공통 benchmark 수집 코드를 붙인다.
+- 이어서 `Kokoro` env와 backend를 같은 구조로 시작한다.
+
+## 2026-03-18 | Human + Codex | 문서 시작 게이트와 최소 문서 부트스트랩 규칙 강화
+
+### Context
+
+- 사용자가 세션이 길어지고 컨텍스트가 압축되더라도, 내가 매 작업 전에 문서를 다시 읽고 프로젝트 방향성을 재정렬하길 원했다.
+- 동시에 새 프로젝트나 비어 있는 디렉토리에서도, 사용자가 따로 지시하지 않아도 최소 문서 체계를 먼저 만들고 운영을 시작하길 원했다.
+
+### Actions
+
+- `docs/README.md`에 작업 시작 게이트 규칙과 최소 문서 부트스트랩 규칙을 추가했다.
+- `docs/개발방침.md`에 문서 refresh를 비사소한 작업의 시작 게이트로 둔다는 원칙을 추가했다.
+- `docs/decisions.md`에 `docs/README.md` 선독과 최소 문서 체계 선생성 결정을 현재 유효한 운영 기준으로 고정했다.
+
+### Next
+
+- 이후 비사소한 작업에서는 먼저 `docs/README.md`와 관련 파생 문서를 읽고, 그 기준 문서를 짧게 확인한 뒤 진행한다.
+
+## 2026-03-18 | Human + Codex | MeloTTS A100 첫 연결과 한국어 smoke 검증
+
+### Context
+
+- 사용자가 TTS 검토는 `MeloTTS`부터 실제로 시작하길 원했고, 계획 수립뿐 아니라 A100에서 바로 실행 가능한 상태까지 확인하길 원했다.
+
+### Actions
+
+- `/usr/bin/python3.10 -m venv` 기준으로 `../env/tts_melotts`를 만들고, `MeloTTS`와 `unidic`를 설치했다.
+- `librosa 0.9.1`와 최신 `setuptools` 충돌 때문에 `setuptools<81` pin이 필요하다는 점을 확인했다.
+- `tts/backends/melotts.py`를 추가하고, `TTSSynthesizer(model="melotts")`로 공통 인터페이스에 연결했다.
+- A100 `cuda:0` 기준 한국어 smoke를 실행해 `../results/tts/20260318_melotts_smoke/hello_kr.wav`를 생성했다.
+
+### Results
+
+- 첫 smoke:
+  - `model_load_sec 3.700`
+  - `elapsed_sec 16.515`
+  - output length `6.006 sec`
+- 두 번째 새 프로세스 재실행:
+  - `model_load_sec 2.713`
+  - `elapsed_sec 5.972`
+- 현재 확인된 MeloTTS 한국어 speaker id는 `KR -> 0`이다.
+
+### Next
+
+- `MeloTTS` 초기 평가 메트릭 수집 코드를 붙인다.
+- 이어서 `OpenVoice V2` env와 backend를 같은 구조로 시작한다.
+
+## 2026-03-18 | Human + Codex | OpenVoice V2 A100 env 구축과 reference voice smoke 검증
+
+### Context
+
+- 사용자가 `OpenVoice V2`도 A100에서 실제 backend와 env까지 붙여, SDK처럼 import 가능한 상태로 만들길 원했다.
+- 동시에 지나친 구조 확장 없이 `TTSSynthesizer` 공통 인터페이스 아래에서 reference 음성 기반 한국어 smoke까지 확인하길 원했다.
+
+### Actions
+
+- `/usr/bin/python3.10 -m venv` 기준으로 `../env/tts_openvoice_v2`를 만들고, `OpenVoice`는 `--no-deps`로 설치한 뒤 `MeloTTS`, `av`, `faster-whisper`, `whisper-timestamped`, `wavmark` 등을 별도로 정리했다.
+- `tts/backends/openvoice_v2.py`를 추가하고, `TTSSynthesizer(model="openvoice_v2", reference_audio_path=...)` 형태로 공통 인터페이스에 연결했다.
+- `reference_audio_path`와 `checkpoint_root`를 공통 TTS 진입점과 CLI demo 인자에 추가했다.
+- official `example_reference.mp3`를 기준으로 A100 `cuda:0` 한국어 smoke를 실행했고, 결과를 `../results/tts/20260318_openvoice_v2_smoke/` 아래에 저장했다.
+- 같은 reference 음성을 반복 사용할 때 `processed/.../se.pth`를 재사용하도록 cache 경로를 보완했다.
+
+### Results
+
+- 첫 SDK smoke:
+  - `model_load_sec 16.185`
+  - `elapsed_sec 13.327`
+  - total wall `34.442`
+  - output `../results/tts/20260318_openvoice_v2_smoke/hello_kr.wav`
+- CLI smoke:
+  - `model_load_sec 12.149`
+  - `elapsed_sec 10.528`
+  - output `../results/tts/20260318_openvoice_v2_smoke/demo_cli.wav`
+- cache 재사용 CLI smoke:
+  - `model_load_sec 10.771`
+  - `elapsed_sec 7.115`
+  - output `../results/tts/20260318_openvoice_v2_smoke/demo_cli_cached.wav`
+- 첫 smoke 출력 샘플 속성:
+  - `6.304 sec`
+  - `22050 Hz`
+  - `mono`
+
+### Next
+
+- `MeloTTS`, `OpenVoice V2` 공통 benchmark 수집 코드를 붙인다.
+- 이어서 `Piper` env와 backend를 같은 구조로 시작한다.
+
+## 2026-03-18 | Human + Codex | TTS 4후보 비교 구조와 평가 계획 정리
+
+### Context
+
+- 사용자가 TTS는 A100에서 먼저 넓게 보고, 이후 Jetson으로 좁히는 방향을 원했다.
+- 동시에 `docs/README.md`의 문서 운영 규칙을 지키면서, 디렉토리 구조와 평가 기준도 같이 정리하길 원했다.
+
+### Actions
+
+- `tts/` 아래에 `backends/`, `experiments/`, `evaluation/` 구조를 추가해 runtime 코드와 후보별 실험 메모, 평가 기준을 분리했다.
+- A100 비교 후보를 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`로 고정하고, 각 후보별 실험 디렉토리를 만들었다.
+- 공통 문장셋과 핵심 메트릭 기준을 `tts/evaluation/` 아래에 정리했다.
+- `docs/status.md`, `docs/research/tts.md`, `docs/decisions.md`, `tts/README.md`를 현재 방향에 맞게 갱신했다.
+
+### Next
+
+- A100에서 후보별 env를 만들고, 4개 backend를 같은 인터페이스 아래에 붙인다.
+- 공통 문장셋 기준으로 cold/warm latency, RAM/VRAM, 청취 품질 비교를 시작한다.
+
 ## 2026-03-18 | Human + Codex | STT 기본 모델 확정 문서화와 TTS 다음 단계 정리
 
 ### Context
