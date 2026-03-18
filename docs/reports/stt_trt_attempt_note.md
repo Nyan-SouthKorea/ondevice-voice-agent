@@ -32,7 +32,7 @@
 
 최종 benchmark 경로:
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_eval_results/korean_eval_50/20260317_112711`
+- `/home/everybot/workspace/ondevice-voice-agent/results/stt_trt_eval_results/korean_eval_50/20260317_112711`
 
 code-generated summary 기준:
 

@@ -8,9 +8,9 @@
 
 ## 실험 환경 경로
 
-- venv: `/home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment`
+- venv: `/home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment`
 - 기존 CUDA torch 재사용 원본:
-  - `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+  - `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke`
 
 ## 시스템 기준
 
@@ -30,7 +30,7 @@
 - 시스템 TensorRT:
   - `/usr/lib/python3.10/dist-packages`
 - 기존 smoke env의 torch / whisper:
-  - `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/lib/python3.10/site-packages`
+  - `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke/lib/python3.10/site-packages`
 
 이렇게 한 이유:
 
@@ -214,7 +214,7 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
 
 생성된 checkpoint는 이후 메인 모델 자산으로 승격 이동했다.
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth`
 
 주의:
 
@@ -239,7 +239,7 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
 50문장 전체 benchmark 결과:
 
 - 결과 디렉토리:
-  - `/home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_eval_results/korean_eval_50/20260317_112711`
+  - `/home/everybot/workspace/ondevice-voice-agent/results/stt_trt_eval_results/korean_eval_50/20260317_112711`
 - code-generated summary 기준:
 - `mean_stt_sec 0.2115`
 - `p95_stt_sec 0.2946`

@@ -1,6 +1,6 @@
 # Status
 
-> 마지막 업데이트: 2026-03-17
+> 마지막 업데이트: 2026-03-18
 
 ## 현재 목표
 
@@ -48,6 +48,9 @@
 - AGX Orin에서 TRT 빌드를 다시 시도할 때는 장비 프로파일 수집 스크립트와 AGX 전용 handoff 문서를 먼저 사용한다.
   - `stt/experiments/stt_trt_collect_jetson_profile.py`
   - `docs/envs/jetson/stt_trt_agx_orin_experiment.md`
+- 현재 로컬 워크스페이스 기준은 `repo / env / secrets` sibling 구조다.
+  - A100에서는 `env`를 비워 두고 필요할 때만 다시 만든다.
+  - Jetson에서는 같은 repo branch를 기준으로 실기 검증과 TRT 빌드를 진행한다.
 - STT 자동 생성 결과물은 `stt/eval_results/` 아래에 두고, 사람이 읽는 요약은 `docs/reports/stt_korean_eval50_six_model_overview.md`를 기준으로 본다.
 - 현재 STT 기본 후보는 `WhisperTRT small nano safe`다.
   - code-generated 비교 요약 기준:

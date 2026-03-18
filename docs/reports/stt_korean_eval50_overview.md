@@ -1,6 +1,6 @@
 # STT 평가 개요
 
-- 결과 디렉토리: `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/eval_results/korean_eval_50`
+- 결과 디렉토리: `/home/everybot/workspace/ondevice-voice-agent/repo/stt/eval_results/korean_eval_50`
 - 생성 시각: `2026-03-17 09:11:48`
 - 원본 산출물: 각 run 디렉토리의 `summary.json`
 - 자동 선택 규칙:

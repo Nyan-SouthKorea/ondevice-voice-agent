@@ -134,10 +134,10 @@ def build_snapshot(repo_root: Path, label: str, commit: str) -> dict:
         "commit": commit,
         "repo_root": repo_root.as_posix(),
         "group_rules": {
-            "active_docs": "all *.md except docs/archive/**, stt/eval_results/**, and secrets/**",
+            "active_docs": "all *.md in repo except docs/archive/** and stt/eval_results/**",
             "archive_docs": "docs/archive/**/*.md",
             "generated_artifacts": "stt/eval_results/**/*.md",
-            "local_private_docs": "secrets/**/*.md",
+            "local_private_docs": "not tracked in repo; local private docs live outside repo in ../secrets/**/*.md",
         },
         "totals": all_summary,
         "groups": group_summaries,

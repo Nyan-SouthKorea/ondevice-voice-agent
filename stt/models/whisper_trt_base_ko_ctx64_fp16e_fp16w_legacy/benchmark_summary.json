@@ -1,5 +1,5 @@
 {
-  "dataset_dir": "/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/datasets/korean_eval_50",
+  "dataset_dir": "/home/everybot/workspace/ondevice-voice-agent/repo/stt/datasets/korean_eval_50",
   "summaries": [
     {
       "run_name": "whisper_trt_base_ko_ctx64",

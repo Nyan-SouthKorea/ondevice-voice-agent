@@ -1,7 +1,7 @@
 # Documentation Metrics Snapshot: before_refactor
 
 - commit: `f91482dffdf2479e0ac5557e32739a8d16340570`
-- repo: `/home/everybot/workspace/ondevice-voice-agent/project/repo`
+- repo: `/home/everybot/workspace/ondevice-voice-agent/repo`
 
 ## Totals
 

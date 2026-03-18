@@ -9,7 +9,7 @@ Jetson용 실시간 wake word GUI demo.
 - DETECTED / IDLE 상태 표시
 
 예시:
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
 python wake_word/wake_word_gui_demo.py
 """
 

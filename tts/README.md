@@ -42,8 +42,8 @@ print(synthesizer.last_duration_sec)
 직접 실행:
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke/bin/activate
 python tts/tts_demo.py \
   --text "안녕하세요. TTS 테스트를 시작합니다." \
   --output tts_outputs/hello.wav \

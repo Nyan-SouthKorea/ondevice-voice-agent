@@ -195,7 +195,7 @@ def parse_args():
     )
     parser.add_argument(
         "--output-dir",
-        default="/home/everybot/workspace/ondevice-voice-agent/project/results/jetson_trt_profiles",
+        default="/home/everybot/workspace/ondevice-voice-agent/results/jetson_trt_profiles",
         help="json 결과를 저장할 폴더",
     )
     parser.add_argument(

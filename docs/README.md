@@ -21,7 +21,7 @@
 
 - `docs/archive/`
 - `stt/eval_results/` 같은 자동 생성 결과물
-- `secrets/` 아래 로컬 문서
+- 리포 바깥 `../secrets/` 아래 로컬 문서
 - 현재 작업과 무관한 모듈의 코드와 README
 
 ## Single Source of Truth
@@ -68,6 +68,7 @@ docs/
 - `project_overview.md`는 빠른 배경 설명용 얇은 문서다.
 - `jetson_transition_plan.md`는 Jetson 연동 체크리스트만 유지한다.
 - `stt/eval_results/**/*.md` 같은 자동 생성 결과물은 공식 문서가 아니라 실행 산출물로 본다.
+- 로컬 워크스페이스는 보통 `../repo`, `../env`, `../secrets`를 같은 루트 아래에 두고, 재생성 가능한 로컬 실행 결과는 필요할 때만 `../results`에 둔다.
 
 ## 운영 규칙
 

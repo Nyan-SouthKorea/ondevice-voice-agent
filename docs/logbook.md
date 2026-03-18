@@ -2,6 +2,25 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-18 | Human + Codex | A100 워크스페이스 평탄화와 운영 정책 정리
+
+### Context
+
+- 사용자가 A100 기준 워크스페이스를 `project/` 한 단계 없이 `repo / env / secrets` sibling 구조로 단순화하길 원했다.
+- 동시에 코드와 문서에 남아 있던 예전 경로를 모두 정리하고, 현재 운영 정책을 중복 없이 기준 문서에 반영하길 원했다.
+
+### Actions
+
+- 로컬 워크스페이스를 `repo / env / secrets` 기준으로 평탄화하고, A100 쪽 `env` 내부의 Jetson 가상환경은 비웠다.
+- `stt`/`tts`가 리포 바깥 `../secrets/`를 기준으로 동작하도록 경로 해석과 오류 메시지를 정리했다.
+- active 문서와 설정 파일에서 예전 상위 단계 경로 표현을 현재 워크스페이스 구조 기준으로 갱신했다.
+- 운영 정책은 `README.md`, `docs/README.md`, `docs/개발방침.md`, `docs/decisions.md`, `docs/status.md`에 역할별로 나눠 반영하고, 모듈 문서와 연구 문서는 경로 예시만 맞췄다.
+
+### Next
+
+- A100에서 실제로 사용할 새 로컬 env 이름 규칙을 정한다.
+- Jetson에서는 같은 repo branch를 기준으로 적용/검증만 수행하는 흐름을 유지한다.
+
 ## 2026-03-17 | Human + Codex | Wake Word + VAD + STT 통합 GUI 데모와 스크린샷 문서화
 
 ### Context

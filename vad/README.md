@@ -87,16 +87,16 @@ detector = VADDetector(model="silero", model_path="vad/models/silero_vad.onnx")
 demo 실행:
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
 python vad/vad_demo.py
 ```
 
 GUI demo 실행:
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
 python vad/vad_gui_demo.py
 ```
 

@@ -9,7 +9,7 @@ Jetson용 실시간 VAD GUI demo.
 - threshold 슬라이더로 현장 튜닝
 
 예시:
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
 python vad/vad_gui_demo.py
 """
 

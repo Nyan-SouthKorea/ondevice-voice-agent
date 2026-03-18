@@ -128,8 +128,8 @@ print(transcriber.last_duration_sec)
 ## 녹음 GUI
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke/bin/activate
 python stt/tools/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_50
 ```
 
@@ -149,7 +149,7 @@ python stt/tools/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_
 
 ### 1. 사용할 가상환경
 
-- 경로: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+- 경로: `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke`
 - 용도:
   - `torch`
   - `openai-whisper`
@@ -160,13 +160,13 @@ python stt/tools/stt_dataset_recorder.py --dataset-dir stt/datasets/korean_eval_
 활성화:
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke/bin/activate
 ```
 
 STT GUI에서 `tiny/base(cuda)`, `base(trt)`, `api`를 한 번에 다루려면 아래 env를 권장한다.
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment`
+- `/home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment`
 
 ### 2. 녹음 데이터셋 만들기
 
@@ -191,8 +191,8 @@ python stt/tools/stt_dataset_recorder.py --list-devices
 ### 2-1. STT GUI 데모
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment/bin/activate
 python stt/tools/stt_gui_demo.py
 ```
 
@@ -213,8 +213,8 @@ python stt/tools/stt_gui_demo.py
 ### 2-2. Wake Word + VAD + STT 통합 GUI 데모
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment/bin/activate
 python voice_pipeline_gui_demo.py
 ```
 
@@ -292,7 +292,7 @@ python stt/tools/stt_benchmark.py \
 
 ### 4. API STT 비교 평가
 
-`secrets/api_key.txt`가 있으면 별도 `--api-key` 없이 실행할 수 있다.
+리포 바깥 `../secrets/api_key.txt`가 있으면 별도 `--api-key` 없이 실행할 수 있다.
 
 ```bash
 python stt/tools/stt_benchmark.py \
@@ -315,29 +315,29 @@ API는 과금이 발생하므로 꼭 필요한 횟수만 실행한다.
 
 WhisperTRT 실험은 기존 smoke env가 아니라 별도 env에서 돌린다.
 
-- env: `/home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment`
+- env: `/home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment`
 - AGX Orin에서 codex로 동일 작업할 때는 [`docs/envs/jetson/stt_trt_agx_orin_experiment.md`](../docs/envs/jetson/stt_trt_agx_orin_experiment.md) 우선 참조
 - builder 실험:
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment/bin/activate
 python stt/experiments/stt_trt_builder_experiment.py \
   --step run \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
   --max-text-ctx 64 \
-  --work-dir /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128
+  --work-dir /home/everybot/workspace/ondevice-voice-agent/results/stt_trt_split_base_ko_ctx64_ws128
 ```
 
 - benchmark:
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment/bin/activate
 python stt/experiments/stt_trt_benchmark_experiment.py \
-  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
@@ -346,37 +346,37 @@ python stt/experiments/stt_trt_benchmark_experiment.py \
 
 현재 로컬 승격 경로는 아래다.
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth`
-- `/home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/whisper_trt_split.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/repo/stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/whisper_trt_split.pth`
 
 이 `.pth`들은 파일 크기 때문에 git에 올리지 않고, 로컬에서만 생성/보관한다. 다시 만들고 싶으면 아래 순서대로 재현하면 된다.
 
 1. split builder로 checkpoint 생성
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment/bin/activate
 python stt/experiments/stt_trt_builder_experiment.py \
   --step run \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
   --max-text-ctx 64 \
-  --work-dir /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128
+  --work-dir /home/everybot/workspace/ondevice-voice-agent/results/stt_trt_split_base_ko_ctx64_ws128
 ```
 
 2. 생성한 checkpoint를 메인 로컬 경로로 복사
 ```bash
-mkdir -p /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy
-cp /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_base_ko_ctx64_ws128/whisper_trt_split.pth \
-  /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth
+mkdir -p /home/everybot/workspace/ondevice-voice-agent/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy
+cp /home/everybot/workspace/ondevice-voice-agent/results/stt_trt_split_base_ko_ctx64_ws128/whisper_trt_split.pth \
+  /home/everybot/workspace/ondevice-voice-agent/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth
 ```
 
 3. benchmark 재실행
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment/bin/activate
 python stt/experiments/stt_trt_benchmark_experiment.py \
-  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/repo/stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/whisper_trt_split.pth \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
@@ -387,8 +387,8 @@ python stt/experiments/stt_trt_benchmark_experiment.py \
 
 ### 6. API 사용 로그 확인
 
-- 키 위치: `secrets/api_key.txt`
-- 사용 로그: `secrets/api_usage_log.md`
+- 키 위치: `../secrets/api_key.txt`
+- 사용 로그: `../secrets/api_usage_log.md`
 
 API를 실제 호출하면 아래 항목이 자동으로 남는다.
 
@@ -403,8 +403,8 @@ API를 실제 호출하면 아래 항목이 자동으로 남는다.
 ## 비교 평가
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke/bin/activate
 python stt/tools/stt_benchmark.py \
   --dataset-dir stt/datasets/korean_eval_50 \
   --config whisper:tiny \
@@ -472,8 +472,8 @@ python stt/tools/stt_benchmark.py \
 
 API STT 실행 메모:
 
-- `--api-key`를 주지 않으면 로컬 `secrets/api_key.txt`를 먼저 찾는다.
-- API를 실제 호출하면 로컬 `secrets/api_usage_log.md`에 사용 목적, 모델, 오디오 길이, 요청 시간, API가 보고한 usage 값이 자동으로 기록된다.
+- `--api-key`를 주지 않으면 리포 바깥 로컬 `../secrets/api_key.txt`를 먼저 찾는다.
+- API를 실제 호출하면 리포 바깥 로컬 `../secrets/api_usage_log.md`에 사용 목적, 모델, 오디오 길이, 요청 시간, API가 보고한 usage 값이 자동으로 기록된다.
 - 현재 Audio Transcriptions API는 일반 텍스트 토큰 수 대신 `usage.seconds` 형태의 사용량을 보고한다.
 
 현재 참고 기준:

@@ -7,7 +7,7 @@
 
 이 문서는 Jetson 런타임 환경 문서다.
 
-- 위치: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson`
+- 위치: `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson`
 - 용도: `wake_word` 실시간 ONNX 추론, `vad` demo 실행, CUDA provider 검증
 - 성격: Linux 서버 학습 환경 문서가 아니라 Jetson 배포/검증용 로컬 venv 문서
 
@@ -44,7 +44,7 @@ Jetson의 CUDA / TensorRT / JetPack 기본 스택은 NVIDIA 공식 문서를 기
 - Jetson L4T: `R36.4.7`
 - Python: `3.10.12`
 - venv 이름: `wake_word_jetson`
-- venv 경로: `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson`
+- venv 경로: `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson`
 - Jetson ORT 패키지:
   - package: `onnxruntime-gpu`
   - version: `1.23.0`
@@ -95,7 +95,7 @@ Jetson의 CUDA / TensorRT / JetPack 기본 스택은 NVIDIA 공식 문서를 기
 
 ```bash
 python3 -m pip install --user virtualenv
-python3 -m virtualenv /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson
+python3 -m virtualenv /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson
 ```
 
 ## 5-2. Jetson ORT 재사용 연결
@@ -106,7 +106,7 @@ python3 -m virtualenv /home/everybot/workspace/ondevice-voice-agent/project/env/
 
 파일:
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/lib/python3.10/site-packages/jetson_user_site.pth`
+- `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/lib/python3.10/site-packages/jetson_user_site.pth`
 
 내용:
 
@@ -123,7 +123,7 @@ python3 -m virtualenv /home/everybot/workspace/ondevice-voice-agent/project/env/
 ## 5-3. venv 활성화
 
 ```bash
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
 ```
 
 ## 5-4. 런타임 최소 패키지 설치
@@ -145,7 +145,7 @@ python -m pip install --prefer-binary requests tqdm scipy scikit-learn soundfile
 ### 6-1. ORT import 및 provider 확인
 
 ```bash
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
 python - <<'PY'
 import onnxruntime as ort
 print("version", ort.__version__)
@@ -162,8 +162,8 @@ PY
 ### 6-2. 실제 CUDA session 생성 확인
 
 ```bash
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
-python /home/everybot/workspace/ondevice-voice-agent/project/repo/wake_word/train/check_onnx_gpu.py
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
+python /home/everybot/workspace/ondevice-voice-agent/repo/wake_word/train/check_onnx_gpu.py
 ```
 
 기대값:
@@ -179,8 +179,8 @@ python /home/everybot/workspace/ondevice-voice-agent/project/repo/wake_word/trai
 ### 6-3. GUI demo 실행 확인
 
 ```bash
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
 python wake_word/wake_word_gui_demo.py \
   --model wake_word/models/hi_popo/hi_popo_classifier.onnx \
   --metadata wake_word/models/hi_popo/hi_popo_classifier_onnx.json \
@@ -199,8 +199,8 @@ python wake_word/wake_word_gui_demo.py \
 ### 6-4. VAD demo 실행 확인
 
 ```bash
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
 python vad/vad_demo.py
 ```
 

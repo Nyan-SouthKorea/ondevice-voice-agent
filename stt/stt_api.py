@@ -11,6 +11,21 @@ import wave
 import numpy as np
 
 
+def _resolve_secrets_dir():
+    """기능: 로컬 secrets 디렉토리 위치를 결정한다.
+    입력: 없음.
+    반환: Path
+    """
+
+    repo_root = Path(__file__).resolve().parents[1]
+    project_root = repo_root.parent
+    outer_secrets_dir = project_root / "secrets"
+    repo_secrets_dir = repo_root / "secrets"
+    if outer_secrets_dir.exists():
+        return outer_secrets_dir
+    return repo_secrets_dir
+
+
 class OpenAIAPISTTModel:
     def __init__(
         self,
@@ -45,7 +60,7 @@ class OpenAIAPISTTModel:
         self.language = language
         self.prompt = prompt
         self.usage_purpose = usage_purpose or "stt_api_unspecified"
-        self.secrets_dir = Path(__file__).resolve().parents[1] / "secrets"
+        self.secrets_dir = _resolve_secrets_dir()
         self.usage_log_path = self.secrets_dir / "api_usage_log.md"
         resolved_api_key = api_key or self._read_local_api_key()
         self.last_text = ""
@@ -57,7 +72,9 @@ class OpenAIAPISTTModel:
         self.last_error = ""
 
         if not resolved_api_key:
-            raise RuntimeError("OpenAI API 키를 찾을 수 없습니다. secrets/api_key.txt를 확인하세요.")
+            raise RuntimeError(
+                "OpenAI API 키를 찾을 수 없습니다. ../secrets/api_key.txt를 확인하세요."
+            )
 
         self.client = OpenAI(api_key=resolved_api_key)
 

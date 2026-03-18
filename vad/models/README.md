@@ -11,7 +11,7 @@
 공식 다운로드 예시:
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+cd /home/everybot/workspace/ondevice-voice-agent/repo
 mkdir -p vad/models
 curl -L \
   https://raw.githubusercontent.com/snakers4/silero-vad/v6.2.1/src/silero_vad/data/silero_vad.onnx \
@@ -21,7 +21,7 @@ curl -L \
 실행 예시:
 
 ```bash
-source /home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson/bin/activate
+source /home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson/bin/activate
 python vad/vad_demo.py --model silero
 ```
 

@@ -23,16 +23,16 @@ Codex에게 다음을 바로 지시하고, 결과를 먼저 확인한다.
 아래 명령은 AGX 장비마다 달라지는 정보를 문서화한다.
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
+cd /home/everybot/workspace/ondevice-voice-agent/repo
 python stt/experiments/stt_trt_collect_jetson_profile.py \
-  --output-dir /home/everybot/workspace/ondevice-voice-agent/project/results/jetson_trt_profiles \
+  --output-dir /home/everybot/workspace/ondevice-voice-agent/results/jetson_trt_profiles \
   --tag agx_orin
 ```
 
 실행 후 다음 두 파일이 생성된다.
 
-- `/home/everybot/workspace/ondevice-voice-agent/project/results/jetson_trt_profiles/jetson_trt_profile_agx_orin_<YYYYMMDD_HHMMSS>.json`
-- `/home/everybot/workspace/ondevice-voice-agent/project/results/jetson_trt_profiles/jetson_trt_profile_agx_orin_latest.json`
+- `/home/everybot/workspace/ondevice-voice-agent/results/jetson_trt_profiles/jetson_trt_profile_agx_orin_<YYYYMMDD_HHMMSS>.json`
+- `/home/everybot/workspace/ondevice-voice-agent/results/jetson_trt_profiles/jetson_trt_profile_agx_orin_latest.json`
 
 Codex는 `latest` 파일을 먼저 읽고 판단한다.
 
@@ -51,11 +51,11 @@ Codex는 `latest` 파일을 먼저 읽고 판단한다.
 
 아래 경로는 예시이며, 필요 시 경로만 동일하게 바꿔도 된다.
 
-- venv: `/home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment_agx`
+- venv: `/home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment_agx`
 
 ```bash
-python3 -m virtualenv /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment_agx
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment_agx/bin/activate
+python3 -m virtualenv /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment_agx
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment_agx/bin/activate
 
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install --no-cache-dir numpy==1.26.4 soundfile sounddevice psutil pydantic onnx>=1.17,<1.20
@@ -99,13 +99,13 @@ python -m pip install --no-build-isolation \
 - `--max-text-ctx 64`
 
 ```bash
-cd /home/everybot/workspace/ondevice-voice-agent/project/repo
-source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment_agx/bin/activate
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment_agx/bin/activate
 python stt/experiments/stt_trt_builder_experiment.py \
   --step run \
   --model-name base \
   --language ko \
-  --work-dir /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_agx_base_ctx64_ws128 \
+  --work-dir /home/everybot/workspace/ondevice-voice-agent/results/stt_trt_split_agx_base_ctx64_ws128 \
   --workspace-mb 128 \
   --max-text-ctx 64 \
   --disable-fp16
@@ -125,7 +125,7 @@ python stt/experiments/stt_trt_builder_experiment.py \
 
 ```bash
 python stt/experiments/stt_trt_benchmark_experiment.py \
-  --checkpoint /home/everybot/workspace/ondevice-voice-agent/project/results/stt_trt_split_agx_base_ctx64_ws128/whisper_trt_split.pth \
+  --checkpoint /home/everybot/workspace/ondevice-voice-agent/results/stt_trt_split_agx_base_ctx64_ws128/whisper_trt_split.pth \
   --model-name base \
   --language ko \
   --workspace-mb 128 \
@@ -160,9 +160,9 @@ python stt/experiments/stt_trt_benchmark_experiment.py \
 ## Codex 실행 예시 (AGX Orin)
 
 ```text
-/home/everybot/workspace/ondevice-voice-agent/project/repo/docs/envs/jetson/stt_trt_agx_orin_experiment.md
+/home/everybot/workspace/ondevice-voice-agent/repo/docs/envs/jetson/stt_trt_agx_orin_experiment.md
 이 문서를 먼저 읽고, 아래 3개 명령을 순서대로 실행해.
 - python stt/experiments/stt_trt_collect_jetson_profile.py ...
-- source /home/everybot/workspace/ondevice-voice-agent/project/env/stt_trt_experiment_agx/bin/activate
+- source /home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment_agx/bin/activate
 - python stt/experiments/stt_trt_builder_experiment.py --step run ...
 ```

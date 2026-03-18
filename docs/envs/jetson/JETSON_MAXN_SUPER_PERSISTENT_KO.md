@@ -143,7 +143,7 @@ sudo -S systemctl restart nvfancontrol
 아래처럼 말하면 된다.
 
 ```text
-/home/everybot/workspace/ondevice-voice-agent/project/repo/docs/envs/jetson/JETSON_MAXN_SUPER_PERSISTENT_KO.md
+/home/everybot/workspace/ondevice-voice-agent/repo/docs/envs/jetson/JETSON_MAXN_SUPER_PERSISTENT_KO.md
 이 문서를 읽고, 문서 기준대로 지금 Jetson을 설정해. 적용 후 검증 결과도 같이 정리해.
 ```
 

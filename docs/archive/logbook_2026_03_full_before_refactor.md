@@ -873,7 +873,7 @@
 ### Result
 
 - Jetson runtime 기준 venv 경로:
-  - `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_jetson`
+  - `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_jetson`
 - ORT 검증 결과:
   - `RESULT: GPU_OK`
 - 실제 session provider:
@@ -955,7 +955,7 @@
 
 - `python3 -m py_compile`로 관련 Python 파일 문법 검증을 통과했다.
 - `wake_word_gui_demo.py --help`가 정상 출력되는 것을 확인했다.
-- `PYTHONPATH=/home/everybot/workspace/ondevice-voice-agent/project/repo` 기준으로 `wake_word` 패키지 import가 정상인 것도 확인했다.
+- `PYTHONPATH=/home/everybot/workspace/ondevice-voice-agent/repo` 기준으로 `wake_word` 패키지 import가 정상인 것도 확인했다.
 
 ### Result
 
@@ -1144,7 +1144,7 @@
 ### Result
 
 - Jetson 학습 smoke 전용 env 경로가 확정됐다.
-  - `/home/everybot/workspace/ondevice-voice-agent/project/env/wake_word_train_smoke`
+  - `/home/everybot/workspace/ondevice-voice-agent/env/wake_word_train_smoke`
 - 추론용 env와 학습 smoke env의 역할이 분리됐다.
 - 다음부터는 Jetson에서 학습 관련 리팩토링을 건드려도, 최소한 `feature extraction -> train -> export` smoke까지는 바로 확인할 수 있게 됐다.
 
