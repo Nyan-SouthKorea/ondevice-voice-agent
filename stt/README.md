@@ -43,8 +43,6 @@
   - 기존 base TRT artifact 경로
 - `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/`
   - Orin Nano 기준 safe small TRT artifact 경로
-- `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device/`
-  - AGX Orin 기준 교차 장치 확인 메모 경로
 
 공통 사용 방식:
 
@@ -73,7 +71,6 @@ print(transcriber.last_duration_sec)
 |---|---|---|
 | `models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/` | 기존 한국어 `base` TRT 자산 | 로컬 체크포인트 유지 가능, git 비추적 |
 | `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe/` | Orin Nano 8GB에서 직접 생성한 safe `small` TRT 자산 | 운영/재현용 로컬 체크포인트 유지 |
-| `models/whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device/` | AGX Orin에서 빌드했던 교차 장치 확인 기준 | 문서만 유지, checkpoint 상시 보관 대상 아님 |
 
 `small nano safe` 기준:
 
@@ -316,7 +313,6 @@ API는 과금이 발생하므로 꼭 필요한 횟수만 실행한다.
 WhisperTRT 실험은 기존 smoke env가 아니라 별도 env에서 돌린다.
 
 - env: `/home/everybot/workspace/ondevice-voice-agent/env/stt_trt_experiment`
-- AGX Orin에서 codex로 동일 작업할 때는 [`docs/envs/jetson/stt_trt_agx_orin_experiment.md`](../docs/envs/jetson/stt_trt_agx_orin_experiment.md) 우선 참조
 - builder 실험:
 
 ```bash
@@ -383,7 +379,7 @@ python stt/experiments/stt_trt_benchmark_experiment.py \
   --max-text-ctx 64
 ```
 
-즉 레포에는 재현 코드와 요약 스냅샷만 남기고, 대용량 checkpoint는 각 개발 환경에서 다시 만든다. AGX Orin 교차 장치 확인용 `small`은 문서 기준만 남기고 checkpoint 자체는 상시 보관 대상으로 두지 않는다.
+즉 레포에는 재현 코드와 요약 스냅샷만 남기고, 대용량 checkpoint는 각 개발 환경에서 다시 만든다.
 
 ### 6. API 사용 로그 확인
 
@@ -430,7 +426,7 @@ python stt/tools/stt_benchmark.py \
 기준:
 
 - 데이터셋: `stt/datasets/korean_eval_50/`
-- 최종 6모델 아카이브:
+- 현재 active 비교 기준 아카이브:
   - `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/`
 - 사람이 읽는 요약 문서:
   - `docs/reports/stt_korean_eval50_six_model_overview.md`
@@ -441,7 +437,6 @@ python stt/tools/stt_benchmark.py \
 | `whisper base fp16` | `cuda` | 50 | 1.5342 | 0.7017 | 0.9329 | 0.1442 | 0.1800 | 0.1653 |
 | `whisper base fp16e_fp16w` | `trt, legacy` | 50 | 3.4855 | 0.1957 | 0.2543 | 0.0402 | 0.1600 | 0.1759 |
 | `whisper small fp16e_fp32w` | `trt, nano safe` | 50 | 31.6285 | 0.3823 | 0.5129 | 0.0786 | 0.4600 | 0.0886 |
-| `whisper small fp16e_fp32w` | `trt, agx cross-device` | 50 | 31.5101 | 0.7826 | 1.0321 | 0.1608 | 0.4600 | 0.0873 |
 | `gpt-4o-mini-transcribe` | `api` | 50 | 2.3201 | 1.0512 | 1.8980 | 0.2160 | 0.6800 | 0.0693 |
 
 현재 선택 결론:
@@ -455,17 +450,16 @@ python stt/tools/stt_benchmark.py \
 
 - 정확도는 `API`가 가장 좋다.
 - 로컬 Whisper 중 정확도는 `whisper base fp16 (cuda)`가 가장 좋다.
-- 로컬 온디바이스 기준 정확도는 `whisper small fp16e_fp32w (trt, nano safe)`와 `whisper small fp16e_fp32w (trt, agx cross-device)`가 가장 좋다.
+- 로컬 온디바이스 기준 정확도는 `whisper small fp16e_fp32w (trt, nano safe)`가 가장 좋다.
 - 속도는 `whisper base fp16e_fp16w (trt, legacy)`가 가장 빠르다.
 - `whisper base fp16e_fp16w (trt, legacy)`는 `whisper base fp16 (cuda)`보다 CER이 약간 불리하지만, 지연 시간은 크게 줄어든다.
 - `whisper small fp16e_fp32w (trt, nano safe)`는 `small` 계열 중에서 Nano에서 직접 생성한 안전 경로다.
-- `whisper small fp16e_fp32w (trt, agx cross-device)`는 CER이 약간 더 낮지만, AGX에서 만든 교차 장치 엔진이라 운영 기본값으로 두기에는 보수적 검토가 필요하다.
 
 원본 결과 경로:
 
-- 최종 6모델 요약:
+- 현재 active 비교 기준 요약:
   - `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/summary.json`
-- 최종 6모델 overview:
+- 현재 active 비교 기준 overview:
   - `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/overview.md`
 - 단독 재실행된 `small nano safe`:
   - `stt/eval_results/korean_eval_50/20260317_171922/summary.json`

@@ -70,16 +70,6 @@ STT_MODEL_OPTIONS = [
         "max_text_ctx": 64,
     },
     {
-        "key": "whisper_small_trt_unsafe",
-        "label": "whisper small fp16e_fp32w (trt, agx cross-device)",
-        "model": "whisper_trt",
-        "model_name": "small",
-        "device": None,
-        "checkpoint_path": Path("stt/models/whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device/whisper_trt_split.pth"),
-        "workspace_mb": 128,
-        "max_text_ctx": 64,
-    },
-    {
         "key": "api_gpt4o_mini",
         "label": "gpt-4o-mini-transcribe (api)",
         "model": "api",

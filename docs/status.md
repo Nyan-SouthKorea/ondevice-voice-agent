@@ -42,12 +42,8 @@
 - 현재 로컬에 유지하는 TRT 자산 기준은 아래와 같다.
   - `whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy`
   - `whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe`
-- 50문장 최종 6모델 비교 기준은 아래 문서를 본다.
+- 50문장 현재 active 비교 기준은 아래 문서를 본다.
   - `docs/reports/stt_korean_eval50_six_model_overview.md`
-- AGX Orin 교차 장치 확인 경로는 문서 기준만 유지하고, checkpoint 자체는 상시 보관 대상으로 두지 않는다.
-- AGX Orin에서 TRT 빌드를 다시 시도할 때는 장비 프로파일 수집 스크립트와 AGX 전용 handoff 문서를 먼저 사용한다.
-  - `stt/experiments/stt_trt_collect_jetson_profile.py`
-  - `docs/envs/jetson/stt_trt_agx_orin_experiment.md`
 - 현재 로컬 워크스페이스 기준은 `repo / env / secrets` sibling 구조다.
   - A100에서는 `env`를 비워 두고 필요할 때만 다시 만든다.
   - Jetson에서는 같은 repo branch를 기준으로 실기 검증과 TRT 빌드를 진행한다.

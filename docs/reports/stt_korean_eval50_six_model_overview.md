@@ -3,7 +3,7 @@
 - 결과 디렉토리: `/home/everybot/workspace/ondevice-voice-agent/repo/stt/eval_results/korean_eval_50`
 - 생성 시각: `2026-03-17 17:21:11`
 - 원본 산출물: 각 run 디렉토리의 `summary.json`
-- 최종 6모델 세트는 `20260317_172300_six_model_final` 기준이다.
+- 현재 active 비교 세트는 historical run `20260317_172300_six_model_final`에서 `agx cross-device`를 제외한 5모델 기준이다.
 - `small_trt_nano_safe`는 혼합 배치 실행 중 allocator assert가 있어, fresh process 단독 재실행 결과를 최종 세트에 합쳤다.
 - 자동 선택 규칙:
   - 정확도 우선: `Normalized Exact Match` 내림차순, `Normalized CER` 오름차순, `Mean STT (s)` 오름차순
@@ -78,5 +78,4 @@
 | 완료 | whisper base fp16 (cuda) | 50 | 1.5342 | 0.7017 | 0.9329 | 0.1442 | 0.1800 | 0.1653 | `20260317_172300_six_model_final` |  |
 | 완료 | whisper base fp16e_fp16w (trt, legacy) | 50 | 3.4855 | 0.1957 | 0.2543 | 0.0402 | 0.1600 | 0.1759 | `20260317_172300_six_model_final` |  |
 | 완료 | whisper small fp16e_fp32w (trt, nano safe) | 50 | 31.6285 | 0.3823 | 0.5129 | 0.0786 | 0.4600 | 0.0886 | `20260317_172300_six_model_final` |  |
-| 완료 | whisper small fp16e_fp32w (trt, agx cross-device) | 50 | 31.5101 | 0.7826 | 1.0321 | 0.1608 | 0.4600 | 0.0873 | `20260317_172300_six_model_final` |  |
 | 완료 | gpt-4o-mini-transcribe (api) | 50 | 2.3201 | 1.0512 | 1.8980 | 0.2160 | 0.6800 | 0.0693 | `20260317_172300_six_model_final` |  |

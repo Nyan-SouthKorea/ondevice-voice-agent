@@ -21,7 +21,6 @@
 - `whisper base fp16 (cuda)`
 - `whisper base fp16e_fp16w (trt, legacy)`
 - `whisper small fp16e_fp32w (trt, nano safe)`
-- `whisper small fp16e_fp32w (trt, agx cross-device)`
 - `gpt-4o-mini-transcribe`
 
 ### 핵심 요구사항

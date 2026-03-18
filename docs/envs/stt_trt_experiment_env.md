@@ -257,10 +257,6 @@ split builder 내부에서 아래 두 지점을 추가로 줄였다.
   - `encoder chunk 1`
   - `workspace 64MB`
   - `max_text_ctx 64`
-- `whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device`
-  - AGX Orin에서 생성한 교차 장치 확인용 모델
-  - Nano에서 로드될 수 있지만 TensorRT cross-device 경고가 날 수 있다
-  - checkpoint 자체는 상시 보관하지 않고, 문서 기준과 재현 절차만 유지한다
 
 핵심:
 
