@@ -2,6 +2,20 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-18 | Human + Codex | OpenVoice rerun 반영과 TTS full benchmark 확정
+
+- OpenVoice reference 재선정 뒤 A100 full rerun을 완료했다.
+- 최종 active reference는 아래로 고정했다.
+  - 한국어: `stt/datasets/korean_eval_50/021.wav` -> `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
+  - 영어: `gpt-4o-mini-tts / marin` -> `../results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav`
+- rerun 원본은 `../results/tts/openvoice_rerun_tmp_20260318/`에 보관했다.
+- canonical benchmark `../results/tts/benchmark_full_v1_20260318/`에는 OpenVoice audio, listening sample, per_prompt, per_entry_summary를 새 결과로 교체했다.
+- 결과는 `docs/reports/tts_benchmark_full_v1_20260318.md`로 승격했다.
+- 자동 평가 기준 결론은 아래다.
+  - 한국어 로컬 후보: `MeloTTS` 우위 유지
+  - 영어 로컬 후보: `Kokoro`, `Piper` 우선
+  - `OpenVoice V2`는 ref 재선정 뒤에도 이번 자동 평가 기준에서는 상위권으로 올라오지 못했다
+
 ## 2026-03-18 | Human + Codex | 진행 보고 빈도와 마일스톤 commit 규칙 보강
 
 - 사용자가 장시간 작업에서 진행 보고를 더 자주 받고 싶어 했고, 중간 커밋 규칙이 문서에 명시적으로 없다는 점을 지적했다.
@@ -11,6 +25,14 @@
   - 장시간 작업의 마일스톤별 local commit 필요 여부 점검
   - push 시점은 별도 판단
   - 가능하면 `local commit 2회당 push 1회` 정도의 기본 cadence 유지
+
+## 2026-03-18 | Human + Codex | OpenVoice reference 재선정 기준 변경
+
+- 사용자가 현재 OpenVoice 결과가 reference 음성 때문에 불공정하다고 판단했고, 재평가 전에 후보 음성을 직접 듣고 고르길 원했다.
+- `wake_word/data/hi_popo/positive/recorded`는 비어 있다는 점을 확인했다.
+- 한국어 reference 후보는 `stt/datasets/korean_eval_50/` 직접 녹음 세트에서 다시 고르기로 했다.
+- 영어 reference 후보는 직접 녹음한 영어 세트가 없으므로 `OpenAI Audio Speech API`의 `gpt-4o-mini-tts`로 생성하되, 공식 guide가 best quality로 권장하는 `marin`, `cedar`를 우선 후보로 두기로 했다.
+- 후보 파일은 적용 전 검토용으로만 `../results/tts_assets/openvoice_v2/ref_candidates/20260318_stt_openai_v1/` 아래에 정리하고, 사용자가 선택하기 전까지는 기존 benchmark 결과나 active reference 파일을 교체하지 않기로 했다.
 
 ## 2026-03-18 | Human + Codex | TTS benchmark harness 구현과 A100 1-prompt smoke 검증
 

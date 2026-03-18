@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 benchmark harness 준비 완료, 1-prompt smoke 검증 완료 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference benchmark registry, local STT scorer, listening sample 구조 준비 |
+| TTS | A100 full benchmark 확정, listening 수기 평가 대기, Jetson 이식 준비 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비 |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -129,6 +129,31 @@
 - 현재 canonical benchmark registry는 `tts/evaluation/benchmark_registry_v1.json`이다.
 - 현재 canonical listening subset은 `tts/evaluation/prompts/tts_listening_subset_v1.tsv`다.
 - 사람 청취 평가는 사용자가 모델별 샘플을 직접 듣고 10점 만점으로 입력하는 방식으로 진행한다.
+- 현재 canonical full benchmark 결과 루트는 `../results/tts/benchmark_full_v1_20260318/`다.
+  - 자동 요약: `../results/tts/benchmark_full_v1_20260318/per_entry_summary.tsv`
+  - 자동 상세: `../results/tts/benchmark_full_v1_20260318/per_prompt.tsv`
+  - 사람 청취 템플릿: `../results/tts/benchmark_full_v1_20260318/listening_scores_template.tsv`
+- `OpenVoice V2`는 reference 재선정 뒤 canonical benchmark에 다시 반영했다.
+  - active 한국어 reference: `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
+  - source: `stt/datasets/korean_eval_50/021.wav`
+  - active 영어 reference: `../results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav`
+  - source: `OpenAI Audio Speech API gpt-4o-mini-tts / marin`
+- 현재 자동 평가 기준 요약은 아래처럼 본다.
+  - 한국어 제품성:
+    - `OpenAI API TTS (KO)` CER `0.0496`, exact `0.50`, RTF `0.2799`
+    - `Edge TTS (KO)` CER `0.0803`, exact `0.39`, RTF `0.1811`
+    - `MeloTTS (KO)` CER `0.0999`, exact `0.42`, RTF `0.1462`
+    - `OpenVoice V2 (KO)` CER `0.1130`, exact `0.33`, RTF `0.1970`
+  - 영어 엔진:
+    - `OpenAI API TTS (EN)` CER `0.0483`, exact `0.67`, RTF `0.2696`
+    - `Kokoro (EN)` CER `0.0541`, exact `0.68`, RTF `0.0483`
+    - `Piper (EN)` CER `0.0590`, exact `0.66`, RTF `0.0645`
+    - `Edge TTS (EN)` CER `0.0622`, exact `0.64`, RTF `0.4051`
+    - `MeloTTS (EN)` CER `0.0647`, exact `0.60`, RTF `0.0712`
+    - `OpenVoice V2 (EN)` CER `0.0776`, exact `0.53`, RTF `0.1516`
+- 숫자/금액/영문 혼합 prompt는 거의 모든 엔진에서 공통적으로 STT 역전사 오차가 크게 튀었다.
+  - 예: `EN017`, `EN050`, `KO055`, `KO076`
+  - 따라서 `large-v3` 역전사 평가는 주로 발음 명료도와 문장 보존성 지표로 해석하고, 최종 품질 판단은 listening score를 함께 본다.
 - STT 역전사 scorer는 이번 benchmark 기본 경로에서 API를 제외하고, A100 로컬 `STTTranscriber(model="whisper", model_name="large-v3")` 경로를 우선 사용한다.
 - benchmark 실행 코드는 아래를 기준으로 본다.
   - `tts/tools/tts_benchmark.py`
@@ -149,12 +174,13 @@
 
 ## 다음 작업
 
-1. `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`, `Edge TTS`, `OpenAI API TTS` full prompt benchmark를 실행한다.
-2. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
-3. A100 비교 결과를 바탕으로 Jetson 실측 shortlist를 정한다.
-4. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
-5. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
-6. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
+1. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
+2. `OpenVoice V2`를 제외한 후보의 Jetson 이식 계획을 문서화하고 runtime 경로를 좁힌다.
+3. Jetson에서 `MeloTTS`, `Piper`, `Kokoro`, `Edge TTS`, `OpenAI API TTS`를 실제로 부를 수 있는 공통 추론 경로와 demo를 만든다.
+4. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 정리한다.
+5. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
+6. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
+7. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
 
 ## 참조 문서
 

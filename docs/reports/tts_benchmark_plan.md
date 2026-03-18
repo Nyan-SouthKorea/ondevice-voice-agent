@@ -210,7 +210,12 @@ generated/<model>/<language>/<voice_id>/<prompt_id>.wav
   - A100 로컬 STT scorer `large-v3` 초기화 확인
   - `tts/tools/tts_benchmark.py`, `tts/tools/tts_benchmark_worker.py` 작성
   - 1-prompt smoke로 전체 파이프라인 검증
+  - full prompt benchmark 실행 완료
+  - OpenVoice V2 reference 재선정 후보 정리
+  - OpenVoice V2 rerun 수행
+  - rerun 결과를 canonical benchmark에 반영
+  - 최종 benchmark 보고서 `docs/reports/tts_benchmark_full_v1_20260318.md` 작성
 - 다음:
-  - full prompt benchmark 실행
   - listening score 수기 입력
-  - 3개 비교 표 정리
+  - `OpenVoice V2`를 제외한 후보의 Jetson 이식 계획 수립
+  - Jetson shortlist runtime/demo 구현

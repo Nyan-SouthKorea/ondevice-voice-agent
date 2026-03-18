@@ -13,6 +13,28 @@
 현재 canonical registry는 `benchmark_registry_v1.json`이고, 사람 청취용 subset은 `prompts/tts_listening_subset_v1.tsv`를 기준으로 본다.
 실행 코드는 `../tools/tts_benchmark.py`, env별 worker는 `../tools/tts_benchmark_worker.py`를 사용한다.
 
+## OpenVoice Reference 재선정 기준
+
+- `OpenVoice V2`는 reference 음성 선택에 민감하므로, full benchmark 이후 별도 재평가를 허용한다.
+- 한국어 reference 후보는 `../stt/datasets/korean_eval_50/`의 사용자가 직접 녹음한 문장 세트에서 고른다.
+- 영어 reference 후보는 직접 녹음한 영어 세트가 없으므로 `OpenAI Audio Speech API`로 생성한 음성을 임시 후보로 사용한다.
+- 현재 영어 후보 생성 기본값은 `gpt-4o-mini-tts` + `marin` 또는 `cedar`다.
+- 근거:
+  - OpenAI 공식 TTS guide는 `gpt-4o-mini-tts`를 최신 기본 text-to-speech 모델로 안내한다.
+  - 같은 guide는 best quality voice로 `marin`, `cedar`를 권장한다.
+- 후보 파일은 먼저 `../results/tts_assets/openvoice_v2/ref_candidates/` 아래에만 임시 저장하고, 사용자가 직접 청취해 결정한 뒤에만 실제 OpenVoice 재평가에 반영한다.
+- 현재 active benchmark reference는 아래로 고정했다.
+  - 한국어:
+    - `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
+    - source: `stt/datasets/korean_eval_50/021.wav`
+  - 영어:
+    - `../results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav`
+    - source: `gpt-4o-mini-tts / marin`
+- rerun 뒤 canonical benchmark는 `../results/tts/benchmark_full_v1_20260318/`를 기준으로 읽는다.
+- STT 역전사 결과는 아래 두 파일을 기준으로 확인한다.
+  - prompt별 상세: `../results/tts/benchmark_full_v1_20260318/per_prompt.tsv`
+  - entry별 요약: `../results/tts/benchmark_full_v1_20260318/per_entry_summary.tsv`
+
 ## 평가 순서
 
 1. A100 cold start 측정
