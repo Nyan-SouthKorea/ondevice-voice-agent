@@ -17,6 +17,7 @@
 - STT 사용법: [../stt/README.md](../stt/README.md)
 - TTS 사용법: [../tts/README.md](../tts/README.md)
 - Jetson runtime env: [envs/jetson_wake_word_env.md](envs/jetson_wake_word_env.md)
+- Jetson TTS env: [envs/jetson_tts_env.md](envs/jetson_tts_env.md)
 - Jetson smoke train env: [envs/wake_word_train_smoke_env.md](envs/wake_word_train_smoke_env.md)
 - STT TRT 실험 env (AGX 대응): [envs/jetson/stt_trt_agx_orin_experiment.md](envs/jetson/stt_trt_agx_orin_experiment.md)
 
@@ -35,14 +36,17 @@
 1. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값 확정
 2. hard negative 문구와 연속 배경 오디오 기준 false accept 점검
 3. wake word 뒤에 VAD를 연결하고 utterance cut 기준 확정
-4. Jetson에서 `MeloTTS` 설치와 한국어 합성 smoke 검증
-5. `WhisperTRT small nano safe` 기준으로 통합 GUI 실마이크 조건을 점검
-6. 상위 SDK 연결용 공통 음성 파이프라인 인터페이스 정리
+4. `OpenVoice V2`를 제외한 TTS 후보의 Jetson 이식 계획 확정
+5. Jetson에서 `MeloTTS`, `Piper`, `Kokoro`, `Edge TTS`, `OpenAI API TTS` smoke 검증
+6. benchmark 코드를 깨지 않도록 TTS SDK import 구조를 env 분리 친화적으로 정리
+7. Jetson용 TTS demo 경로를 만들고 상위 SDK 연결 포인트를 고정
+8. `WhisperTRT small nano safe` 기준으로 통합 GUI 실마이크 조건을 점검
 
 ## 성공 기준
 
 - wake word와 VAD가 Jetson 마이크 환경에서 연속 실행 기준으로 안정적이다.
 - STT 기본 모델과 TTS 기본 경로가 Jetson 제약을 고려한 실제 선택지로 좁혀져 있다.
+- TTS backend별 smoke env와 최종 통합 대상 env가 구분돼 있고, benchmark 코드와 충돌하지 않는다.
 - 다음 세션에서 필요한 문서가 `status / envs / module README` 기준으로 빠르게 복구된다.
 
 ## 새 세션 시작 순서

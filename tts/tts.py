@@ -5,16 +5,8 @@ TTS 공통 진입점.
 여러 TTS 백엔드를 갈아끼울 수 있게 한다.
 """
 
+from importlib import import_module
 from pathlib import Path
-
-from .backends import (
-    EdgeTTSModel,
-    KokoroTTSModel,
-    MeloTTSModel,
-    OpenAIAPITTSModel,
-    OpenVoiceV2Model,
-    PiperTTSModel,
-)
 
 IMPLEMENTED_TTS_MODELS = (
     "api",
@@ -27,6 +19,36 @@ IMPLEMENTED_TTS_MODELS = (
     "kokoro",
 )
 PLANNED_TTS_MODELS = ()
+
+_BACKEND_SPECS = {
+    "api": ("tts.backends.openai_api", "OpenAIAPITTSModel"),
+    "openai_api": ("tts.backends.openai_api", "OpenAIAPITTSModel"),
+    "chatgpt_api": ("tts.backends.openai_api", "OpenAIAPITTSModel"),
+    "edge_tts": ("tts.backends.edge_tts", "EdgeTTSModel"),
+    "melotts": ("tts.backends.melotts", "MeloTTSModel"),
+    "openvoice_v2": ("tts.backends.openvoice_v2", "OpenVoiceV2Model"),
+    "piper": ("tts.backends.piper", "PiperTTSModel"),
+    "kokoro": ("tts.backends.kokoro", "KokoroTTSModel"),
+}
+
+
+def _load_backend_class(model_name):
+    """
+    기능:
+    - 선택한 backend 클래스만 지연 import한다.
+
+    입력:
+    - `model_name`: backend key 문자열.
+
+    반환:
+    - 해당 backend 클래스 객체를 반환한다.
+    """
+    if model_name not in _BACKEND_SPECS:
+        raise ValueError(f"지원하지 않는 TTS 모델입니다: {model_name}")
+
+    module_name, class_name = _BACKEND_SPECS[model_name]
+    module = import_module(module_name)
+    return getattr(module, class_name)
 
 
 class TTSSynthesizer:
@@ -70,7 +92,8 @@ class TTSSynthesizer:
         """
         self.model = model
         if model in {"api", "openai_api", "chatgpt_api"}:
-            self.backend = OpenAIAPITTSModel(
+            backend_cls = _load_backend_class(model)
+            self.backend = backend_cls(
                 model_name=model_name or "gpt-4o-mini-tts",
                 voice=voice or "alloy",
                 instructions=instructions,
@@ -80,21 +103,24 @@ class TTSSynthesizer:
                 usage_purpose=usage_purpose,
             )
         elif model == "edge_tts":
-            self.backend = EdgeTTSModel(
+            backend_cls = _load_backend_class(model)
+            self.backend = backend_cls(
                 voice=voice or "ko-KR-SunHiNeural",
                 rate=rate,
                 pitch=pitch,
                 speed=speed,
             )
         elif model == "melotts":
-            self.backend = MeloTTSModel(
+            backend_cls = _load_backend_class(model)
+            self.backend = backend_cls(
                 language_code=model_name or "KR",
                 voice=voice or "KR",
                 speed=speed,
                 device=device or "cuda:0",
             )
         elif model == "openvoice_v2":
-            self.backend = OpenVoiceV2Model(
+            backend_cls = _load_backend_class(model)
+            self.backend = backend_cls(
                 language_code=model_name or "KR",
                 voice=voice or "KR",
                 reference_audio_path=reference_audio_path,
@@ -103,7 +129,8 @@ class TTSSynthesizer:
                 checkpoint_root=checkpoint_root,
             )
         elif model == "piper":
-            self.backend = PiperTTSModel(
+            backend_cls = _load_backend_class(model)
+            self.backend = backend_cls(
                 model_name=model_name or "en_US-lessac-medium",
                 voice=voice,
                 speed=speed,
@@ -111,7 +138,8 @@ class TTSSynthesizer:
                 checkpoint_root=checkpoint_root,
             )
         elif model == "kokoro":
-            self.backend = KokoroTTSModel(
+            backend_cls = _load_backend_class(model)
+            self.backend = backend_cls(
                 language_code=model_name or "a",
                 voice=voice or "af_heart",
                 speed=speed,
