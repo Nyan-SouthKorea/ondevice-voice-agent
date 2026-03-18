@@ -22,6 +22,16 @@ JETSON_ENV_BY_MODEL = {
     "kokoro": "tts_kokoro_jetson",
 }
 
+JETSON_RECOMMENDED_DEVICE_BY_MODEL = {
+    "api": None,
+    "openai_api": None,
+    "chatgpt_api": None,
+    "edge_tts": None,
+    "melotts": "cpu",
+    "piper": "cpu",
+    "kokoro": "cuda",
+}
+
 DEFAULT_TEXT_BY_MODEL = {
     "api": "안녕하세요. Jetson TTS API 경로 테스트입니다.",
     "openai_api": "안녕하세요. Jetson TTS API 경로 테스트입니다.",
@@ -115,13 +125,17 @@ def build_command(args):
         str(args.speed),
     ]
 
+    effective_device = args.device
+    if effective_device is None:
+        effective_device = JETSON_RECOMMENDED_DEVICE_BY_MODEL.get(args.model)
+
     optional_pairs = [
         ("--model-name", args.model_name),
         ("--voice", args.voice),
         ("--instructions", args.instructions),
         ("--rate", args.rate),
         ("--pitch", args.pitch),
-        ("--device", args.device),
+        ("--device", effective_device),
         ("--usage-purpose", args.usage_purpose),
     ]
     for key, value in optional_pairs:

@@ -67,6 +67,40 @@
 - `Kokoro`:
   - 영어 품질/속도 우수 후보지만 Jetson aarch64 설치 난이도는 직접 확인이 필요하다.
 
+## 2026-03-18 screening 결과
+
+- 결과 보고서:
+  - `docs/reports/tts_jetson_screening_20260318.md`
+- Jetson 산출물 루트:
+  - `/home/everybot/workspace/ondevice-voice-agent/results/tts/jetson_demo/`
+
+### env별 관찰
+
+- `../env/tts_network_jetson`
+  - `Edge TTS`, `OpenAI API TTS` 성공
+  - local GPU 최적화 대상은 아니고, network fallback/demo 경로로 유지
+- `../env/tts_piper_jetson`
+  - 공식 영어 voice 성공
+  - pip가 설치한 CPU `onnxruntime`를 제거해 system CUDA/TensorRT provider를 다시 보게 해야 했다
+  - 짧은 영어 문장에서는 `cpu`가 `cuda:0`보다 더 빨랐다
+- `../env/tts_melotts_jetson`
+  - `MeloTTS` 자체는 설치 성공
+  - GPU 경로는 `NvMapMemAlloc error 12`로 실패
+  - CPU 경로는 성공하지만 warm run도 약 `19.6s`라 Jetson 실시간 후보로는 무겁다
+- `../env/tts_kokoro_jetson`
+  - warm GPU 경로가 성공했고 `elapsed_sec 2.013`까지 내려왔다
+  - 첫 실행에는 model, voice, `en_core_web_sm` 다운로드 비용이 크다
+
+### 현재 권장 device
+
+- `edge_tts`: network
+- `openai_api`: network
+- `piper`: `cpu`
+- `melotts`: `cpu`
+- `kokoro`: `cuda`
+
+현재 `tts/tools/tts_jetson_demo.py`는 위 권장 device를 기본값으로 사용한다. 필요한 경우 `--device`로 덮어쓴다.
+
 ## 성공 기준
 
 - 각 후보가 최소 1문장 이상 Jetson에서 실제 합성된다.

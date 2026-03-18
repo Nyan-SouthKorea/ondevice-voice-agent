@@ -2,6 +2,36 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-18 | Human + Codex | Jetson TTS 1차 screening 완료
+
+- 기준은 `OpenVoice V2`를 제외한 후보를 Jetson split env + thin demo wrapper로 직접 호출해 보는 것이었다.
+- `tts/tools/tts_jetson_demo.py`와 split env 구조를 기준으로 아래 경로를 확인했다.
+  - `tts_network_jetson`
+  - `tts_piper_jetson`
+  - `tts_melotts_jetson`
+  - `tts_kokoro_jetson`
+- network backend:
+  - `Edge TTS` 성공, `elapsed_sec 2.213`
+  - `OpenAI API TTS` 성공, `elapsed_sec 2.087`
+- `Piper`:
+  - 공식 영어 voice 성공
+  - CPU `elapsed_sec 0.463`
+  - GPU `elapsed_sec 1.802`
+  - Jetson short-form 영어에는 CPU가 더 유리했다
+- `MeloTTS`:
+  - GPU는 `NvMapMemAlloc error 12`로 실패
+  - CPU cold `elapsed_sec 105.405`
+  - CPU warm `elapsed_sec 19.569`
+  - 현재 Jetson 실시간 한국어 local 후보로는 무겁다고 판단했다
+- `Kokoro`:
+  - GPU cold `elapsed_sec 41.600`
+  - GPU warm `elapsed_sec 2.013`
+  - 영어 local 후보로 유지 가치가 높다
+- screening 결론은 `docs/reports/tts_jetson_screening_20260318.md`로 승격했다.
+- 현재 Jetson shortlist는 아래다.
+  - 영어 local: `Piper cpu`, `Kokoro cuda`
+  - 한국어는 일단 network fallback 유지
+
 ## 2026-03-18 | Human + Codex | OpenVoice rerun 반영과 TTS full benchmark 확정
 
 - OpenVoice reference 재선정 뒤 A100 full rerun을 완료했다.

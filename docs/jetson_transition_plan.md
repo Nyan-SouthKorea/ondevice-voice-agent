@@ -30,23 +30,31 @@
 - STT recorder / benchmark 준비
 - STT 50문장 비교와 기본 모델 확정 (`WhisperTRT small nano safe`)
 - TTS 공통 래퍼와 API 최소 경로 확보
+- TTS SDK lazy import 정리
+- `OpenVoice V2` 제외 후보 Jetson smoke 검증
+  - `Edge TTS`, `OpenAI API TTS`
+  - `Piper`
+  - `MeloTTS`
+  - `Kokoro`
 
 ## 남은 항목
 
 1. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값 확정
 2. hard negative 문구와 연속 배경 오디오 기준 false accept 점검
 3. wake word 뒤에 VAD를 연결하고 utterance cut 기준 확정
-4. `OpenVoice V2`를 제외한 TTS 후보의 Jetson 이식 계획 확정
-5. Jetson에서 `MeloTTS`, `Piper`, `Kokoro`, `Edge TTS`, `OpenAI API TTS` smoke 검증
-6. benchmark 코드를 깨지 않도록 TTS SDK import 구조를 env 분리 친화적으로 정리
-7. Jetson용 TTS demo 경로를 만들고 상위 SDK 연결 포인트를 고정
-8. `WhisperTRT small nano safe` 기준으로 통합 GUI 실마이크 조건을 점검
+4. Jetson TTS shortlist를 상위 voice pipeline 통합 대상으로 고정
+  - 영어 local: `Piper cpu`, `Kokoro cuda`
+  - 한국어는 일단 network fallback 유지
+5. Jetson용 TTS demo 경로를 상위 SDK 연결 포인트와 함께 정리
+6. 영어 local 후보가 우세하다고 판단되면 custom training 계획을 별도 문서로 연다
+7. `WhisperTRT small nano safe` 기준으로 통합 GUI 실마이크 조건을 점검
 
 ## 성공 기준
 
 - wake word와 VAD가 Jetson 마이크 환경에서 연속 실행 기준으로 안정적이다.
 - STT 기본 모델과 TTS 기본 경로가 Jetson 제약을 고려한 실제 선택지로 좁혀져 있다.
 - TTS backend별 smoke env와 최종 통합 대상 env가 구분돼 있고, benchmark 코드와 충돌하지 않는다.
+- Jetson TTS screening 결과와 상위 통합 shortlist가 문서에 숫자와 경로 기준으로 정리돼 있다.
 - 다음 세션에서 필요한 문서가 `status / envs / module README` 기준으로 빠르게 복구된다.
 
 ## 새 세션 시작 순서

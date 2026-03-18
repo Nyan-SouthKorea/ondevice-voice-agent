@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, listening 수기 평가 대기, Jetson 이식 준비 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비 |
+| TTS | A100 full benchmark 확정, Jetson 1차 screening 완료, shortlist 통합 준비 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson split env + thin demo 완료, `OpenVoice V2` 제외 후보 smoke 완료 |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -117,6 +117,26 @@
   - CLI smoke output: `../results/tts/20260318_kokoro_smoke/demo_cli.wav`
   - 구현 메모: 첫 영어 실행에서 `en_core_web_sm` 자동 설치, 현재 env에서는 `espeakng-loader`가 함께 설치되어 system `espeak-ng` 없이도 공식 영어 경로가 동작했다
   - 결론 메모: A100 비교 후보로는 유지하되, 현재 공식 Korean path가 없으므로 한국어 제품 기본 후보로 바로 올리지는 않는다
+- Jetson TTS screening 1차 결과는 `docs/reports/tts_jetson_screening_20260318.md`를 기준으로 본다.
+  - thin demo wrapper: `tts/tools/tts_jetson_demo.py`
+  - split env:
+    - `../env/tts_network_jetson`
+    - `../env/tts_piper_jetson`
+    - `../env/tts_melotts_jetson`
+    - `../env/tts_kokoro_jetson`
+  - Jetson remote output root:
+    - `/home/everybot/workspace/ondevice-voice-agent/results/tts/jetson_demo/`
+  - screening 요약:
+    - `Edge TTS (KO)` 성공, `elapsed_sec 2.213`
+    - `OpenAI API TTS (KO)` 성공, `elapsed_sec 2.087`
+    - `Piper (EN, cpu)` 성공, `elapsed_sec 0.463`
+    - `Piper (EN, cuda:0)` 성공, `elapsed_sec 1.802`
+    - `MeloTTS (KO, cuda:0)` 실패, `NvMapMemAlloc error 12`
+    - `MeloTTS (KO, cpu warm)` 성공, `elapsed_sec 19.569`
+    - `Kokoro (EN, cuda warm)` 성공, `elapsed_sec 2.013`
+  - 현재 Jetson shortlist:
+    - 영어 local: `Piper cpu`, `Kokoro cuda`
+    - 한국어는 일단 network fallback 유지
 - TTS 개발 판단은 아래 순서를 따른다.
   - 1차: A100에서 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`를 모두 같은 기준으로 구현하고 비교한다.
   - 2차: A100 결과를 바탕으로 Jetson 실측 후보를 좁힌다.
@@ -175,9 +195,9 @@
 ## 다음 작업
 
 1. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
-2. `OpenVoice V2`를 제외한 후보의 Jetson 이식 계획을 문서화하고 runtime 경로를 좁힌다.
-3. Jetson에서 `MeloTTS`, `Piper`, `Kokoro`, `Edge TTS`, `OpenAI API TTS`를 실제로 부를 수 있는 공통 추론 경로와 demo를 만든다.
-4. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 정리한다.
+2. Jetson TTS shortlist를 상위 voice pipeline 통합 대상으로 고정한다.
+3. 영어 local 후보가 우세하다고 판단되면 custom training 계획 문서를 연다.
+4. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
 5. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
 6. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
 7. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.

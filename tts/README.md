@@ -159,6 +159,22 @@ python tts/tts_demo.py \
   --output /data2/iena/260318_ondevice-voice-agent/results/tts/20260318_melotts_smoke/hello.wav
 ```
 
+Jetson thin demo:
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+python tts/tools/tts_jetson_demo.py --model piper
+python tts/tools/tts_jetson_demo.py --model kokoro
+```
+
+- `tts_jetson_demo.py`는 backend별 Jetson env python을 골라 `tts/tts_demo.py`를 호출한다.
+- 현재 Jetson 권장 기본 device는 아래와 같다.
+  - `melotts`: `cpu`
+  - `piper`: `cpu`
+  - `kokoro`: `cuda`
+  - `edge_tts`, `openai_api`: network
+- 필요하면 `--device`로 직접 덮어쓴다.
+
 현재 v1 방향:
 
 - 빠른 end-to-end 연결용:
@@ -220,6 +236,11 @@ python tts/tts_demo.py \
 - `Piper` backend A100 1차 연결 완료
 - `Kokoro` backend A100 1차 연결 완료
 - 서드파티 한국어 Piper 모델은 품질 무효, 비교 연구 전용
+- Jetson split env + thin demo wrapper 연결 완료
+- Jetson screening 1차 결과:
+  - `Piper cpu`와 `Kokoro cuda`가 영어 local 후보
+  - `MeloTTS`는 Jetson CPU에서만 동작했고 warm run도 느려 한국어 local 기본 후보로는 보류
+  - `Edge TTS`, `OpenAI API TTS`는 network fallback/demo 경로로 유지
 - 다음 단계는 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`를 공통 문장셋 기준 benchmark 수집 구조로 넘기는 것이다.
   - 필요하면 `Edge TTS`, `OpenAI API TTS`도 reference 청취 baseline으로 함께 듣는다.
 
