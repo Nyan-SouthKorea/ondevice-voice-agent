@@ -15,6 +15,12 @@
 - 사용자는 현재 활성 모드와 현재 목표를 놓치지 않기 위해, `docs/README.md` 다음에는 항상 `docs/status.md`를 즉시 읽도록 더 강하게 반영하길 원했다.
 - 이에 따라 `docs/README.md`와 `docs/개발방침.md`에 `docs/status.md`를 시작 직후 반드시 읽는 규칙을 추가했고, `docs/status.md` 상단에는 현재 작업 모드를 직접 적어 두었다.
 
+## 2026-03-19 | Human + Codex | 답변 prefix도 작업 모드에 따라 고정
+
+- 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`였다.
+- 사용자는 assistant가 현재 모드를 잊지 않도록, 협업 모드에서는 `협업)`, 에이전트 모드에서는 `AI)`를 답변 앞에 붙이길 원했다.
+- 이에 따라 `docs/개발방침.md`의 작업 모드 섹션에 답변 prefix 규칙을 추가했고, 현재 `docs/status.md` 기준 활성 모드가 `에이전트 모드`이므로 이후 답변은 `AI)`로 시작한다.
+
 ## 2026-03-19 | Human + Codex | 남성 ref 전체 synthetic generation을 resume-safe 방식으로 전환
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`였다.
