@@ -98,6 +98,13 @@
   - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/en_grouped_score_sheet.tsv`
 - prompt pack:
   - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/prompt_packs/`
+- Jetson Nano GUI:
+  - script: `tts/tools/tts_listening_review_gui.py`
+  - env: `../env/wake_word_jetson`
+  - save target:
+    - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/ko_grouped_score_sheet.tsv`
+    - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/en_grouped_score_sheet.tsv`
+    - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/human_scores_flat.tsv`
 
 권장 수기 항목:
 

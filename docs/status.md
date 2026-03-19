@@ -173,6 +173,13 @@
   - 자동 요약: `../results/tts/benchmark_full_v1_20260318/per_entry_summary.tsv`
   - 자동 상세: `../results/tts/benchmark_full_v1_20260318/per_prompt.tsv`
   - 사람 청취 템플릿: `../results/tts/benchmark_full_v1_20260318/listening_scores_template.tsv`
+  - Jetson Nano GUI 수기 입력:
+    - script: `tts/tools/tts_listening_review_gui.py`
+    - grouped score sheet:
+      - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/ko_grouped_score_sheet.tsv`
+      - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/en_grouped_score_sheet.tsv`
+    - flat export:
+      - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/human_scores_flat.tsv`
 - `OpenVoice V2`는 reference 재선정 뒤 canonical benchmark에 다시 반영했다.
   - active 한국어 reference: `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
   - source: `stt/datasets/korean_eval_50/021.wav`

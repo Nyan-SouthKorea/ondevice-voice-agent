@@ -2,6 +2,18 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Jetson Nano TTS listening review GUI 실행
+
+- 기준 문서는 `tts/evaluation/README.md`, `docs/status.md`, 기존 benchmark 결과물이었다.
+- `tts/tools/tts_listening_review_gui.py`를 추가했다.
+- `tkinter + sounddevice + soundfile` 조합으로 같은 prompt를 모델별로 재생하고 10점 점수를 남길 수 있게 했다.
+- Nano에서는 `env/wake_word_jetson`이 GUI와 오디오 재생 의존성을 모두 만족해 그 env로 실행했다.
+- benchmark listening 오디오와 grouped sheet를 Nano workspace로 복사했고, GUI는 `DISPLAY=:0`로 실제 화면에 띄웠다.
+- 현재 저장 위치는 아래다.
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/ko_grouped_score_sheet.tsv`
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/en_grouped_score_sheet.tsv`
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/human_scores_flat.tsv`
+
 ## 2026-03-19 | Human + Codex | Orin Nano에서 TTS 4모델 bring-up 완료
 
 - 기준 문서는 `docs/envs/jetson_tts_env.md`, `docs/reports/tts_agx_bringup_20260319.md`였다.
