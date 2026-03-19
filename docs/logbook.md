@@ -2,6 +2,30 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Piper pilot 학습 진행 + 자동 후처리 연결
+
+- 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`, `tts/docs/환경/260319_1100_Piper_학습환경.md`였다.
+- `Piper` pilot 학습은 현재 실제로 진행 중이며, `epoch=9-step=1180`까지 올라왔다.
+- 중요한 checkpoint 정책은 실제로 동작 중이다.
+  - 별도 보관된 checkpoint:
+    - `epoch=0-step=118`
+    - `epoch=1-step=236`
+    - `epoch=5-step=708`
+  - 각 checkpoint별 review sample root:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/checkpoint_review/review_samples/`
+- 학습 종료 후 자동 후처리를 이어주는 스크립트를 추가했다.
+  - repo script:
+    - `tts/tools/piper_training_postprocess.py`
+  - local launcher:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/start_postprocess.sh`
+  - 상태 파일:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/postprocess_status.local.md`
+- 후처리 단계는 아래를 자동으로 수행한다.
+  - 중요한 checkpoint와 latest checkpoint를 ONNX로 export
+  - runtime config를 `.onnx.json`으로 복사
+  - 기존 `tts_benchmark.py`를 재사용해 checkpoint별 Korean benchmark를 수행
+- 이 묶음에서 repo에 남은 코드 변경은 `piper_checkpoint_sampler.py`의 recursive checkpoint 감시, `piper_training_postprocess.py` 추가, 관련 문서 갱신이다.
+
 ## 2026-03-19 | Human + Codex | Piper pilot 학습 실행계획과 checkpoint review 정책 고정
 
 - 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`, `tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`, `tts/docs/환경/260319_1100_Piper_학습환경.md`였다.

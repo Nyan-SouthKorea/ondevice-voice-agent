@@ -199,6 +199,23 @@
   - `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `tts/docs/환경/260319_1100_Piper_학습환경.md`
+- 현재 `Piper` pilot 학습은 실제로 실행 중이다.
+  - root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
+  - GPU: `GPU0`
+  - dataset snapshot: `2.0시간 / 1,928문장`
+  - 현재 중요한 checkpoint review 정책은 실제로 동작 중이다.
+    - 별도 보관된 checkpoint:
+      - `epoch=0-step=118`
+      - `epoch=1-step=236`
+      - `epoch=5-step=708`
+    - review sample root:
+      - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/checkpoint_review/review_samples/`
+  - 학습 종료 후 자동 후처리도 걸어뒀다.
+    - 상태 파일:
+      - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/postprocess_status.local.md`
+    - 완료 후 생성 예정:
+      - `exported_onnx/`
+      - `benchmark_postprocess/`
 - 현재 active 역할 분리는 아래와 같다.
   - Jetson runtime winner 후보: `Piper`, `Kokoro`
   - voice audition / synthetic dataset 생성기: `OpenVoice V2`
@@ -218,6 +235,13 @@
   - 실제 다음 관문은 synthetic dataset와 pilot training 본 실행이다
 - 현재 synthetic inventory snapshot은 아래를 기준으로 본다.
   - root: `../results/tts_custom/synthetic_dataset/260319_1308_합성데이터_인벤토리/`
+- 현재 active 대규모 생성 run은 아래다.
+  - `../results/tts_custom/synthetic_dataset/full_v2_tts_only/openvoice_ko_female_announcer_speed_1p1/`
+  - 진행률 파일:
+    - `progress.local.md`
+  - 다음 run은 `v3` corpus 기준으로 supervisor가 자동 연결한다.
+    - supervisor 상태:
+      - `../results/tts_custom/synthetic_dataset/_local_supervisor/run_openvoice_v3_after_v2.local.md`
   - usable unique: `7,876문장 / 9.398시간`
   - archive/reference 전용 row: `1,058`
 - 현재 active Piper pilot run은 아래다.

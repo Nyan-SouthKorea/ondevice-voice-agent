@@ -9,6 +9,7 @@ TTS 문서 허브:
 - 현재 active custom training 계획: `../tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`
 - 현재 Piper pilot 실행 계획: `../tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
 - 현재 학습 가능성 점검: `../tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
+- 현재 active Piper pilot run root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
 - Jetson Nano 구동 기록: `../tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`
 - AGX Orin 구동 기록: `../tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`
 - A100 전체 benchmark 결과: `../tts/docs/보고서/260318_1824_TTS_전체_벤치마크_결과_v1.md`
@@ -246,6 +247,15 @@ python tts/tools/tts_jetson_demo.py --model kokoro
 - 한국어 custom training은 `1~3시간 pilot dataset -> pilot 학습 -> 확대` 순서로 진행한다.
 - `runtime winner`와 `training winner`는 같다고 가정하지 않는다.
 - 현재 training feasibility audit 기준으로는 `Piper`를 custom training 1순위, `Kokoro`를 runtime 우선 후보로 본다.
+- 현재 `Piper` pilot은 실제로 학습 중이며, 중요한 checkpoint와 review sample을 자동 보관한다.
+  - important checkpoint root:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/checkpoint_review/important_checkpoints/`
+  - review sample root:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/checkpoint_review/review_samples/`
+  - 학습 종료 후 자동 후처리:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/postprocess_status.local.md`
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/exported_onnx/`
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/benchmark_postprocess/`
 
 즉, 지금은 A100에서 4개 후보를 모두 붙여 보되, Jetson 최종 후보를 고를 때는 여전히 "음색 + 지연 + 메모리 + 운영 단순성" 기준으로 좁힌다.
 `Edge TTS`와 `OpenAI API TTS`는 이 4개 로컬 후보와 별개로 reference backend로 유지한다.

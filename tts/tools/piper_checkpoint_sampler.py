@@ -216,7 +216,7 @@ def main():
     status_path = args.output_dir / "sampler_status.local.md"
 
     while True:
-        checkpoint_paths = sorted(args.checkpoint_dir.glob("*.ckpt"))
+        checkpoint_paths = sorted(args.checkpoint_dir.rglob("*.ckpt"))
         for checkpoint_path in checkpoint_paths:
             if checkpoint_path.name in processed:
                 continue
