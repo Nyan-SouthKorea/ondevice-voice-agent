@@ -2,6 +2,14 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-20 | Human + Codex | 에이전트 시작 게이트를 `AGENT.md`로 강화하고 stale reminder를 정리
+
+- 기준 문서는 `docs/AGENT.md`, `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `docs/decisions.md`였다.
+- 사용자는 에이전트 모드에서 매 행동 앞에 `AGENT.md`를 읽게 하는 쪽이 더 명확한지 물었고, stale했던 `results/_local_supervisor` 정리 가능 여부도 함께 확인하길 원했다.
+- 실제 확인 결과 root `results/_local_supervisor`에는 죽은 `agent_mode_reminder_260320.*`만 남아 있었고, 살아 있는 프로세스는 없었다.
+- 이에 따라 에이전트 모드의 모든 비사소한 행동은 `docs/AGENT.md`에서 시작해 `docs/README.md -> docs/status.md`로 진입한다는 규칙을 `README`, `개발방침`, `decisions`, `AGENT`에 명시적으로 강화했다.
+- stale reminder 파일은 정리했고, root `results/_local_supervisor`에는 빈 디렉토리만 남겼다.
+
 ## 2026-03-19 | Human + Codex | 작업 모드에 `에이전트 모드`를 추가
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/decisions.md`였다.
