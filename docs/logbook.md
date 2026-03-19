@@ -2,6 +2,19 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | OpenVoice active reference와 speed 고정
+
+- 기준 문서는 `docs/status.md`, `docs/reports/tts_custom_training_plan_v1.md`, `tts/experiments/custom_training/README.md`였다.
+- 사용자가 OpenVoice selection 샘플 중 `ko_female_announcer + speed 1.1` 조합을 최종 승인했다.
+- 이번 승인에서 바뀐 것은 speed뿐이고, `tau`, `sdp_ratio`, `noise_scale`, `noise_scale_w`는 건드리지 않았다.
+- 이후 synthetic dataset 생성 기본값이 흔들리지 않도록 아래를 같이 반영했다.
+  - `tts/tools/openvoice_audition.py` 기본 `speed=1.1`
+  - `tts/tools/openvoice_generate_dataset.py` 기본 `speed=1.1`
+  - active selection manifest: `tts/experiments/custom_training/openvoice_active_selection_20260319.json`
+- source mp4는 이름을 바꾸지 않고 아래에 아카이빙했다.
+  - `../results/tts_custom/references/source_videos/20260319/ref 음성-여성 아나운서.mp4`
+  - `../results/tts_custom/references/source_videos/20260319/ref 음성-남성 이션균 배우.mp4`
+
 ## 2026-03-19 | Human + Codex | OpenVoice audition 후보 준비와 pilot 생성 시간 추정
 
 - 기준 문서는 `docs/status.md`, `docs/reports/tts_custom_training_plan_v1.md`, `tts/experiments/custom_training/README.md`였다.

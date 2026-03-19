@@ -236,6 +236,13 @@
   - 남성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_male_lee_sunkyun/`
   - 여성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_female_announcer/`
   - prompt 기준: `tts/evaluation/prompts/openvoice_audition_prompts_ko_v2.tsv`
+- OpenVoice custom training active selection은 아래로 고정한다.
+  - reference: `ko_female_announcer`
+  - reference audio: `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
+  - source archive: `../results/tts_custom/references/source_videos/20260319/ref 음성-여성 아나운서.mp4`
+  - approved speed: `1.1`
+  - 이번 승인 과정에서는 speed만 바꿨고, `tau`, `sdp_ratio`, `noise_scale`, `noise_scale_w`는 건드리지 않았다.
+  - canonical selection manifest: `tts/experiments/custom_training/openvoice_active_selection_20260319.json`
 - 한국어 custom training은 아래 순서를 따른다.
   - `1~3시간 pilot synthetic dataset`
   - pilot 학습

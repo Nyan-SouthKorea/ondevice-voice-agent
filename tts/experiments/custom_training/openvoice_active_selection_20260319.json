@@ -1,0 +1,16 @@
+{
+  "selection_id": "openvoice_active_selection_20260319",
+  "language": "ko",
+  "status": "approved",
+  "reference_id": "ko_female_announcer",
+  "reference_audio_path": "/data2/iena/260318_ondevice-voice-agent/results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav",
+  "source_video_path": "/data2/iena/260318_ondevice-voice-agent/results/tts_custom/references/source_videos/20260319/ref 음성-여성 아나운서.mp4",
+  "approved_speed": 1.1,
+  "selection_summary_path": "/data2/iena/260318_ondevice-voice-agent/results/tts_custom/audition/openvoice_speed_selection_20260319/selection_summary.tsv",
+  "approved_sample_dir": "/data2/iena/260318_ondevice-voice-agent/results/tts_custom/audition/openvoice_speed_selection_20260319/speed_1p1/ko_female_announcer",
+  "notes": [
+    "사용자가 ko_female_announcer + speed 1.1 조합을 최종 승인했다.",
+    "이 값은 이후 OpenVoice synthetic dataset 생성 기본값으로 유지한다.",
+    "속도 외의 tone conversion 파라미터는 이번 승인 과정에서 변경하지 않았다."
+  ]
+}

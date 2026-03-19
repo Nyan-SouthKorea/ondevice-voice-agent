@@ -112,6 +112,15 @@
 - audition output
 - 승인된 active reference manifest
 
+### 현재 승인된 active selection
+
+- `reference_id`: `ko_female_announcer`
+- `reference_audio_path`: `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
+- `source archive`: `../results/tts_custom/references/source_videos/20260319/ref 음성-여성 아나운서.mp4`
+- `approved speed`: `1.1`
+- `tone 파라미터 변경 여부`: 없음
+- canonical manifest: `tts/experiments/custom_training/openvoice_active_selection_20260319.json`
+
 ## Track D. 한국어 text-only corpus 구축
 
 ### 목적
@@ -161,6 +170,11 @@
 - CER / normalized exact match
 - 금지 패턴 규칙
 - 샘플 청취
+
+### 기본 generation 설정
+
+- OpenVoice synthetic dataset 생성 기본값은 `ko_female_announcer + speed 1.1`로 둔다.
+- 이 기본값은 `tts/tools/openvoice_generate_dataset.py` 기본 인자와 `tts/experiments/custom_training/openvoice_active_selection_20260319.json` 기준으로 유지한다.
 
 ### 메타데이터
 
@@ -277,4 +291,3 @@
   - fine-tuning from existing checkpoint
   - `export_onnx`
 - 다만 공식 저장소가 archived 상태이므로, runtime 후보성과 training 후보성은 분리해서 본다.
-

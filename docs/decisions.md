@@ -67,6 +67,11 @@
 - 결정: TTS는 A100에서 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`를 모두 같은 공통 인터페이스 아래에 붙여 비교한 뒤, Jetson 실측 후보를 좁힌다.
 - 이유: A100에서는 비교 비용을 감당할 수 있고, 조기 탈락을 줄이면서도 Jetson에는 상위 후보만 가져가 오버엔지니어링을 피할 수 있다.
 
+## 2026-03-19 | OpenVoice custom training active reference는 `ko_female_announcer`, 기본 속도는 `1.1`로 고정한다
+
+- 결정: OpenVoice V2를 synthetic dataset 생성기로 사용할 때 active reference는 `ko_female_announcer`로 고정하고, 기본 generation speed는 `1.1`로 유지한다. 이번 결정에서는 speed만 바꿨고, `tau`, `sdp_ratio`, `noise_scale`, `noise_scale_w` 같은 tone 파라미터는 기본값을 유지한다.
+- 이유: 사용자가 reference/speed 조합을 직접 청취한 뒤 `ko_female_announcer + speed 1.1`을 최종 승인했고, 이후 파일럿 학습과 full 학습에서 같은 기준을 재사용해야 컨텍스트가 길어져도 방향이 흔들리지 않는다.
+
 ## 2026-03-13 | 민감한 운영 정보는 `secrets/` 로컬 문서로 분리한다
 
 - 결정: 공개 레포 문서에는 일반화된 설명만 남기고, 실제 운영 정보는 리포 바깥 `../secrets/` 아래 로컬 문서에서 관리한다.

@@ -20,6 +20,11 @@
 - OpenVoice 10문장 샘플:
   - `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_male_lee_sunkyun/`
   - `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_female_announcer/`
+- 현재 승인된 active selection:
+  - `reference_id`: `ko_female_announcer`
+  - `reference_audio_path`: `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
+  - `approved speed`: `1.1`
+  - manifest: `tts/experiments/custom_training/openvoice_active_selection_20260319.json`
 - pilot synthetic dataset 예상 시간:
   - 현재 부분 생성본 실측 기준 `1.5시간 pilot audio -> 약 24분`, 안전하게는 `25~30분`
 

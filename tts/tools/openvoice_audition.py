@@ -32,6 +32,7 @@ def parse_args():
     parser.add_argument("--prompt-file", type=Path, default=REPO_ROOT / "tts" / "evaluation" / "prompts" / "openvoice_audition_prompts_ko_v1.tsv")
     parser.add_argument("--model-name", default="KR")
     parser.add_argument("--voice", default="KR")
+    parser.add_argument("--speed", type=float, default=1.1)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument(
         "--output-root",
@@ -77,6 +78,7 @@ def main():
         model="openvoice_v2",
         model_name=args.model_name,
         voice=args.voice,
+        speed=args.speed,
         device=args.device,
         reference_audio_path=args.reference_audio_path,
     )
@@ -92,6 +94,7 @@ def main():
                 "language": prompt["language"],
                 "text": prompt["text"],
                 "output_path": str(saved_path),
+                "speed": args.speed,
                 "elapsed_sec": round(float(synthesizer.last_duration_sec), 3),
                 "model_load_sec": round(float(synthesizer.model_load_sec), 3),
             }

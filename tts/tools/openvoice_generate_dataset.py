@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--model-name", default="KR")
     parser.add_argument("--voice", default="KR")
+    parser.add_argument("--speed", type=float, default=1.1)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--max-items", type=int, default=32)
     parser.add_argument("--shard-index", type=int, default=0)
@@ -131,6 +132,7 @@ def main():
         model="openvoice_v2",
         model_name=args.model_name,
         voice=args.voice,
+        speed=args.speed,
         device=args.device,
         reference_audio_path=args.reference_audio_path,
     )
@@ -155,6 +157,7 @@ def main():
                 "category": row.get("category", ""),
                 "reference_id": args.reference_id,
                 "reference_audio_path": str(args.reference_audio_path),
+                "speed": args.speed,
                 "output_path": str(output_path),
                 "success": False,
                 "generation_sec": None,
@@ -197,6 +200,7 @@ def main():
 
     summary = {
         "reference_id": args.reference_id,
+        "speed": args.speed,
         "shard_index": args.shard_index,
         "shard_count": args.shard_count,
         "item_count": len(result_rows),
