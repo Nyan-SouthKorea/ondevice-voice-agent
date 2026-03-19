@@ -241,15 +241,17 @@
     - `20`개 한국어 prompt 기준 모든 checkpoint의 exact match가 `0.0`
     - best `mean_normalized_cer`도 `0.9149`로 아직 품질이 부족하다
   - 따라서 현재 pilot은 파이프라인 성립 검증에는 성공했지만, full training 확대는 보류한다.
-- 현재 `Piper` 공식 파인튜닝 control run은 진행 중이다.
+- 현재 `Piper` 공식 파인튜닝 control run은 완료됐다.
   - root: `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`
   - base checkpoint: `../results/tts_assets/piper_checkpoints/en_US_lessac_medium/epoch=2164-step=1355540.ckpt`
-  - 현재 단계: `training`
+  - final checkpoint:
+    - `train_root/lightning_logs/version_1/checkpoints/epoch=2183-step=1376858.ckpt`
   - 최신 synthetic inventory 기준 snapshot:
     - `18,477문장 / 21.568시간`
   - 목적:
     - `scratch` 실패 원인이 synthetic-only 데이터 자체인지, 공식 fine-tune 레시피를 따르지 않은 탓인지 분리해 확인한다.
-  - 현재는 `epoch 2164` base checkpoint에서 이어서 `20 epoch` 추가 학습을 수행 중이다.
+  - 결과:
+    - `공식 fine-tune` 경로로 학습, ONNX export, 자동 benchmark, A100 SDK smoke, Jetson Nano SDK smoke까지 닫았다.
 - 현재 `full_v3` OpenVoice TTS-only generation은 완료됐다.
   - root: `../results/tts_custom/synthetic_dataset/full_v3_tts_only/openvoice_ko_female_announcer_speed_1p1/`
   - 결과:
@@ -296,6 +298,14 @@
     - `checkpoint_review/review_samples/epoch=2183-step=1376858/`
   - final benchmark:
     - `benchmark_postprocess/20260319_173609/`
+  - A100 SDK smoke:
+    - `a100_sdk_smoke_20260319/sdk_smoke.wav`
+    - `model_load_sec 1.1268`
+    - `elapsed_sec 0.9715`
+  - Jetson Nano SDK smoke:
+    - `jetson_nano_sdk_smoke_20260319/sdk_smoke.wav`
+    - `model_load_sec 2.0032`
+    - `elapsed_sec 0.4569`
   - 핵심 결과:
     - `mean_normalized_cer 0.1247`
     - `exact_match_rate 0.30`

@@ -266,6 +266,14 @@ python tts/tools/tts_jetson_demo.py --model kokoro
     - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/checkpoint_review/review_samples/epoch=2183-step=1376858/`
   - final benchmark root:
     - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/benchmark_postprocess/20260319_173609/`
+  - A100 SDK smoke:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/a100_sdk_smoke_20260319/sdk_smoke.wav`
+    - `model_load_sec 1.1268`
+    - `elapsed_sec 0.9715`
+  - Jetson Nano SDK smoke:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/jetson_nano_sdk_smoke_20260319/sdk_smoke.wav`
+    - `model_load_sec 2.0032`
+    - `elapsed_sec 0.4569`
   - 핵심 자동지표:
     - `mean_normalized_cer 0.1247`
     - `exact_match_rate 0.30`

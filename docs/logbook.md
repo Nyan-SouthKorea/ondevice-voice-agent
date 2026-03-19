@@ -21,6 +21,13 @@
 - 후처리 중 발견한 운영 이슈도 같이 고쳤다.
   - `piper_training_postprocess.py`: 같은 checkpoint가 `important`와 `latest`로 중복 집계되지 않도록 stem 기준 dedupe
   - `piper_checkpoint_sampler.py`: 최종 checkpoint가 중요한 epoch 규칙에 걸리지 않아도 항상 review 대상에 포함
+- 이어서 `TTSSynthesizer(model="piper")` 경로의 runtime smoke도 닫았다.
+  - A100 smoke:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/a100_sdk_smoke_20260319/sdk_smoke.wav`
+    - `model_load_sec 1.1268`, `elapsed_sec 0.9715`
+  - Jetson Nano smoke:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/jetson_nano_sdk_smoke_20260319/sdk_smoke.wav`
+    - `model_load_sec 2.0032`, `elapsed_sec 0.4569`
 
 ## 2026-03-19 | Human + Codex | 커밋 메시지는 한국어 중심으로 고정
 
