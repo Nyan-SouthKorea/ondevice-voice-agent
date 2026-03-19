@@ -215,6 +215,8 @@
   - 즉 이후 데이터 생성과 학습 snapshot 설계는 이 통합 코퍼스를 canonical index로 보고 진행한다.
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `tts/docs/환경/260319_1100_Piper_학습환경.md`
+- 현재 `Piper` 한국어 전체학습 재현 기준 문서는 아래다.
+  - `tts/docs/환경/260319_1925_Piper_한국어_전체학습_재현가이드.md`
 - 현재 `Piper` pilot 학습은 완료됐다.
   - root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
   - GPU: `GPU0`

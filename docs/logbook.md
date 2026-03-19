@@ -2,6 +2,23 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Piper 한국어 전체학습 재현가이드 문서화
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.
+- `tts/docs/환경/260319_1925_Piper_한국어_전체학습_재현가이드.md`를 추가했다.
+- 이 문서는 아래를 한 번에 재현할 수 있도록 정리한다.
+  - reference 준비
+  - canonical text index / dataset 설명 archive
+  - OpenVoice synthetic generation
+  - synthetic inventory dedupe
+  - Piper dataset snapshot 생성
+  - 공식 fine-tune
+  - checkpoint sampler
+  - ONNX export + benchmark
+  - A100/Jetson smoke
+  - `repo/tts/models` 로컬 캐시 배치
+- exact reproduction은 `260319_1450_합성데이터_인벤토리_v3` snapshot 기준으로, 이후 scale-up은 `260319_1510_tts_텍스트코퍼스_통합_v1/master_union_unique_by_text.tsv` 기준으로 다시 시작하도록 분리해 적었다.
+
 ## 2026-03-19 | Human + Codex | Jetson voice pipeline TTS GUI를 STT 원문 발화 + TTS 램프/실행시간 기록형으로 보강
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.

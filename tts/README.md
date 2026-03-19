@@ -24,6 +24,7 @@ TTS 문서 허브:
 - Jetson 환경 문서: `../tts/docs/환경/260319_0930_Jetson_TTS_환경.md`
 - A100 실험 환경 문서: `../tts/docs/환경/260318_1708_A100_TTS_실험환경.md`
 - Piper 학습 환경 문서: `../tts/docs/환경/260319_1100_Piper_학습환경.md`
+- Piper 전체 재현 가이드: `../tts/docs/환경/260319_1925_Piper_한국어_전체학습_재현가이드.md`
 - custom training 실험 README: `experiments/custom_training/README.md`
 
 현재 상태:
