@@ -2,10 +2,60 @@
 MeloTTS backend.
 """
 
+import importlib.machinery
+import sys
+import types
 from pathlib import Path
 import time
 
 from .base import BaseTTSModel
+
+
+def _install_torchaudio_stub_if_needed():
+    """
+    기능:
+    - MeloTTS import 시 `torchaudio` ABI mismatch가 날 경우 최소 stub를 주입한다.
+
+    입력:
+    - 없음.
+
+    반환:
+    - 없음.
+    """
+    try:
+        import torchaudio  # noqa: F401
+        return
+    except Exception:
+        pass
+
+    import numpy as np
+    import soundfile as sf
+    import torch
+
+    stub = types.ModuleType("torchaudio")
+    stub.__dict__["__version__"] = "stub"
+    stub.__spec__ = importlib.machinery.ModuleSpec("torchaudio", loader=None)
+
+    def load(
+        path,
+        frame_offset=0,
+        num_frames=-1,
+        normalize=True,
+        channels_first=True,
+    ):
+        audio, sample_rate = sf.read(str(path), always_2d=True, dtype="float32")
+        start = int(frame_offset or 0)
+        end = None if num_frames in (-1, None) else start + int(num_frames)
+        audio = audio[start:end]
+        if audio.ndim == 1:
+            audio = audio[:, None]
+        tensor = torch.from_numpy(
+            np.ascontiguousarray(audio.T if channels_first else audio)
+        )
+        return tensor, sample_rate
+
+    stub.load = load
+    sys.modules["torchaudio"] = stub
 
 
 class MeloTTSModel(BaseTTSModel):
@@ -41,6 +91,7 @@ class MeloTTSModel(BaseTTSModel):
         반환:
         - 없음.
         """
+        _install_torchaudio_stub_if_needed()
         try:
             from melo.api import TTS
         except Exception as exc:

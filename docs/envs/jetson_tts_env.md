@@ -1,6 +1,6 @@
 # Jetson TTS Env
 
-> 목적: `OpenVoice V2`를 제외한 TTS 후보를 Jetson에서 검증하기 위한 env 구조와 실행 순서를 고정한다.
+> 목적: Jetson 계열 장비에서 TTS 후보를 backend별 split env로 검증하기 위한 구조와 실행 순서를 고정한다.
 
 ## 기본 원칙
 
@@ -14,12 +14,11 @@
 
 - 포함:
   - `MeloTTS`
+  - `OpenVoice V2`
   - `Piper`
   - `Kokoro`
   - `Edge TTS`
   - `OpenAI API TTS`
-- 제외:
-  - `OpenVoice V2`
 
 ## 왜 env를 나누는가
 
@@ -34,6 +33,8 @@
   - `Edge TTS`, `OpenAI API TTS`
 - `../env/tts_melotts_jetson`
   - `MeloTTS`
+- `../env/tts_openvoice_v2_jetson`
+  - `OpenVoice V2`
 - `../env/tts_piper_jetson`
   - `Piper`
 - `../env/tts_kokoro_jetson`
@@ -45,10 +46,11 @@
 2. TTS SDK lazy import 반영 여부 확인
 3. `tts_network_jetson` 생성 후 `Edge TTS`, `OpenAI API TTS` smoke
 4. `tts_melotts_jetson` 생성 후 한국어 smoke
-5. `tts_piper_jetson` 생성 후 영어 smoke
-6. `tts_kokoro_jetson` 생성 후 영어 smoke
-7. 모델별 추론 시간, 메모리, 실패 원인 기록
-8. 최종 채택 후보만 상위 voice pipeline 통합 대상으로 올림
+5. `tts_openvoice_v2_jetson` 생성 후 reference voice smoke
+6. `tts_piper_jetson` 생성 후 영어 smoke
+7. `tts_kokoro_jetson` 생성 후 영어 smoke
+8. 모델별 추론 시간, 메모리, 실패 원인 기록
+9. 최종 채택 후보만 상위 voice pipeline 통합 대상으로 올림
 
 ## demo 원칙
 
@@ -91,12 +93,41 @@
   - warm GPU 경로가 성공했고 `elapsed_sec 2.013`까지 내려왔다
   - 첫 실행에는 model, voice, `en_core_web_sm` 다운로드 비용이 크다
 
+### 당시 제외 대상
+
+- `OpenVoice V2`
+  - 2026-03-18 Orin Nano 1차 screening에서는 제외했다.
+  - 이후 AGX Orin bring-up에서 별도로 올렸다.
+
+## 2026-03-19 AGX bring-up 결과
+
+- 상세 결과:
+  - `docs/reports/tts_agx_bringup_20260319.md`
+- AGX result root:
+  - `/home/everybot/workspace/ondevice-voice-agent/results/tts/agx_smoke/`
+
+### env별 관찰
+
+- `../env/tts_melotts_jetson`
+  - `MeloTTS`는 CPU, CUDA 둘 다 성공
+  - `torchaudio` ABI mismatch는 repo fallback으로 우회
+- `../env/tts_openvoice_v2_jetson`
+  - 가장 빠른 재현 경로는 검증된 `tts_melotts_jetson` env를 복제한 뒤 OpenVoice extras를 추가하는 방식이었다
+  - `numpy==1.26.4`를 유지해야 `librosa/scipy`가 안 깨진다
+  - `wavmark==0.0.3`는 `--no-deps`로만 설치해 constructor import를 만족시켰다
+  - 한국어 reference smoke가 CUDA에서 성공했다
+- `../env/tts_piper_jetson`
+  - AGX에서도 영어 CPU smoke가 즉시 성공했다
+- `../env/tts_kokoro_jetson`
+  - AGX CUDA smoke가 성공했다
+
 ### 현재 권장 device
 
 - `edge_tts`: network
 - `openai_api`: network
 - `piper`: `cpu`
-- `melotts`: `cpu`
+- `melotts`: `cpu` 또는 AGX에서는 `cuda`
+- `openvoice_v2`: `cuda`
 - `kokoro`: `cuda`
 
 현재 `tts/tools/tts_jetson_demo.py`는 위 권장 device를 기본값으로 사용한다. 필요한 경우 `--device`로 덮어쓴다.

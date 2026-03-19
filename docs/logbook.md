@@ -2,6 +2,17 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | AGX Orin에서 TTS 4모델 bring-up 완료
+
+- 기준 문서는 `docs/envs/jetson_tts_env.md`, `docs/envs/jetson/stt_trt_agx_orin_experiment.md`였다.
+- AGX host `192.168.20.173`에서 새 root 구조 `/home/everybot/workspace/ondevice-voice-agent/{repo,env,results,secrets}`를 기준으로 작업했다.
+- `Piper`, `Kokoro`, `MeloTTS`, `OpenVoice V2` 4개 로컬 후보를 모두 실제 smoke 가능한 상태로 만들었다.
+- 핵심 우회 포인트는 아래였다.
+  - `MeloTTS`: `torchaudio` ABI mismatch를 repo fallback으로 우회
+  - `OpenVoice V2`: 검증된 `tts_melotts_jetson` env를 복제한 뒤 extras만 추가, `numpy==1.26.4` 유지, `wavmark`는 `--no-deps` 설치
+- 상세 숫자와 산출물 경로는 `docs/reports/tts_agx_bringup_20260319.md`로 승격했다.
+- 다음 단계는 같은 경로를 `Orin Nano`에 최소 변경으로 옮기는 것이다.
+
 ## 2026-03-18 | Human + Codex | Jetson TTS 1차 screening 완료
 
 - 기준은 `OpenVoice V2`를 제외한 후보를 Jetson split env + thin demo wrapper로 직접 호출해 보는 것이었다.

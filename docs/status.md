@@ -1,6 +1,6 @@
 # Status
 
-> 마지막 업데이트: 2026-03-18
+> 마지막 업데이트: 2026-03-19
 
 ## 현재 목표
 
@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, Jetson 1차 screening 완료, shortlist 통합 준비 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson split env + thin demo 완료, `OpenVoice V2` 제외 후보 smoke 완료 |
+| TTS | A100 full benchmark 확정, AGX 4모델 bring-up 완료, Orin Nano 확대 적용 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson split env + thin demo 완료, AGX에서 4개 로컬 후보 smoke 완료 |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -137,6 +137,19 @@
   - 현재 Jetson shortlist:
     - 영어 local: `Piper cpu`, `Kokoro cuda`
     - 한국어는 일단 network fallback 유지
+- AGX Orin 4모델 bring-up 결과는 `docs/reports/tts_agx_bringup_20260319.md`를 기준으로 본다.
+  - AGX result root:
+    - `/home/everybot/workspace/ondevice-voice-agent/results/tts/agx_smoke/`
+  - AGX smoke 요약:
+    - `Piper (EN, cpu)` 성공, `elapsed_sec 0.269`
+    - `Kokoro (EN, cuda)` 성공, `elapsed_sec 2.752`
+    - `MeloTTS (KO, cpu)` 성공, `elapsed_sec 10.504`
+    - `MeloTTS (KO, cuda:0)` 성공, `elapsed_sec 5.428`
+    - `OpenVoice V2 (KO, cuda:0)` 성공, `elapsed_sec 10.640`
+  - 구현 메모:
+    - `MeloTTS`는 `torchaudio` ABI mismatch를 repo fallback으로 우회했다
+    - `OpenVoice V2`는 `tts_melotts_jetson` env 복제 + extras 추가 + `numpy==1.26.4` 고정으로 살렸다
+  - 현재 `tts/tools/tts_jetson_demo.py`는 `openvoice_v2`도 포함하며, reference와 checkpoint root 기본값을 자동으로 채운다
 - TTS 개발 판단은 아래 순서를 따른다.
   - 1차: A100에서 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`를 모두 같은 기준으로 구현하고 비교한다.
   - 2차: A100 결과를 바탕으로 Jetson 실측 후보를 좁힌다.
@@ -194,13 +207,15 @@
 
 ## 다음 작업
 
-1. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
-2. Jetson TTS shortlist를 상위 voice pipeline 통합 대상으로 고정한다.
-3. 영어 local 후보가 우세하다고 판단되면 custom training 계획 문서를 연다.
-4. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
-5. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
-6. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
-7. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
+1. AGX에서 검증한 4모델 경로를 Orin Nano env에 최소 변경으로 옮긴다.
+2. `tts/tools/tts_jetson_demo.py` 기준으로 Orin Nano 4모델 smoke를 다시 확인한다.
+3. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
+4. Jetson TTS shortlist를 상위 voice pipeline 통합 대상으로 고정한다.
+5. 영어 local 후보가 우세하다고 판단되면 custom training 계획 문서를 연다.
+6. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
+7. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
+8. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
+9. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
 
 ## 참조 문서
 

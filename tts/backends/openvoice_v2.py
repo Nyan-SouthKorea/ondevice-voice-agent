@@ -2,12 +2,49 @@
 OpenVoice V2 backend.
 """
 
+import sys
+import types
 from pathlib import Path
 import tempfile
 import time
 
 from .base import BaseTTSModel
 from .melotts import MeloTTSModel
+
+
+def _install_wavmark_stub_if_needed():
+    """
+    기능:
+    - OpenVoice constructor가 `wavmark` import만 요구할 때 최소 stub를 주입한다.
+
+    입력:
+    - 없음.
+
+    반환:
+    - 없음.
+    """
+    try:
+        import wavmark  # noqa: F401
+        return
+    except Exception:
+        pass
+
+    class _DummyWatermarkModel:
+        def to(self, device):
+            return self
+
+        def encode(self, signal, message_tensor):
+            return signal
+
+        def decode(self, signal):
+            import torch
+
+            batch = signal.shape[0] if hasattr(signal, "shape") else 1
+            return torch.zeros((batch, 32), device=getattr(signal, "device", "cpu"))
+
+    stub = types.ModuleType("wavmark")
+    stub.load_model = lambda: _DummyWatermarkModel()
+    sys.modules["wavmark"] = stub
 
 
 class OpenVoiceV2Model(BaseTTSModel):
@@ -116,12 +153,14 @@ class OpenVoiceV2Model(BaseTTSModel):
             noise_scale=noise_scale,
             noise_scale_w=noise_scale_w,
         )
+        _install_wavmark_stub_if_needed()
         self.converter = ToneColorConverter(
             str(converter_config_path),
             device=self.device,
         )
         self.converter.load_ckpt(str(converter_ckpt_path))
-        self.converter.watermark_model = None
+        if hasattr(self.converter, "watermark_model"):
+            self.converter.watermark_model = None
         self.source_speaker_key = self._resolve_source_speaker_key(self.voice)
         self.src_se = self._load_source_speaker_embedding(self.source_speaker_key)
         self.model_load_sec = time.perf_counter() - started_at

@@ -18,6 +18,7 @@ JETSON_ENV_BY_MODEL = {
     "chatgpt_api": "tts_network_jetson",
     "edge_tts": "tts_network_jetson",
     "melotts": "tts_melotts_jetson",
+    "openvoice_v2": "tts_openvoice_v2_jetson",
     "piper": "tts_piper_jetson",
     "kokoro": "tts_kokoro_jetson",
 }
@@ -28,6 +29,7 @@ JETSON_RECOMMENDED_DEVICE_BY_MODEL = {
     "chatgpt_api": None,
     "edge_tts": None,
     "melotts": "cpu",
+    "openvoice_v2": "cuda",
     "piper": "cpu",
     "kokoro": "cuda",
 }
@@ -38,6 +40,7 @@ DEFAULT_TEXT_BY_MODEL = {
     "chatgpt_api": "안녕하세요. Jetson TTS API 경로 테스트입니다.",
     "edge_tts": "안녕하세요. Jetson Edge TTS 테스트입니다.",
     "melotts": "안녕하세요. Jetson MeloTTS 테스트입니다.",
+    "openvoice_v2": "안녕하세요. Jetson OpenVoice V2 테스트입니다.",
     "piper": "Hello. This is a Jetson Piper test.",
     "kokoro": "Hello. This is a Jetson Kokoro test.",
 }
@@ -110,6 +113,27 @@ def build_command(args):
             WORKSPACE_ROOT / "results" / "tts" / "jetson_demo" / args.model / "demo.wav"
         )
 
+    reference_audio = args.reference_audio
+    checkpoint_root = args.checkpoint_root
+    if args.model == "openvoice_v2":
+        if reference_audio is None:
+            reference_audio = (
+                WORKSPACE_ROOT
+                / "results"
+                / "tts_assets"
+                / "openvoice_v2"
+                / "references"
+                / "ko_benchmark_reference.wav"
+            )
+        if checkpoint_root is None:
+            checkpoint_root = (
+                WORKSPACE_ROOT
+                / "results"
+                / "tts_assets"
+                / "openvoice_v2"
+                / "checkpoints_v2"
+            )
+
     command = [
         str(env_python),
         str(REPO_ROOT / "tts" / "tts_demo.py"),
@@ -142,10 +166,10 @@ def build_command(args):
         if value is not None:
             command.extend([key, str(value)])
 
-    if args.reference_audio is not None:
-        command.extend(["--reference-audio", str(args.reference_audio)])
-    if args.checkpoint_root is not None:
-        command.extend(["--checkpoint-root", str(args.checkpoint_root)])
+    if reference_audio is not None:
+        command.extend(["--reference-audio", str(reference_audio)])
+    if checkpoint_root is not None:
+        command.extend(["--checkpoint-root", str(checkpoint_root)])
 
     return command
 
