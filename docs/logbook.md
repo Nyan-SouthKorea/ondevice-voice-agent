@@ -2,6 +2,39 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Piper/Kokoro training feasibility 1차 audit
+
+- 기준 문서는 `docs/status.md`, `tts/README.md`, `docs/reports/tts_custom_training_plan_v1.md`였다.
+- `Piper`, `Kokoro`를 한국어 custom training 후보 관점에서 다시 좁혔다.
+- 현재 결론은 아래다.
+  - `Piper`: archived지만 공식 `TRAINING.md`, `piper_train.preprocess`, `piper_train`, `export_onnx` 경로가 남아 있어 pilot training 1순위
+  - `Kokoro`: inference 문서는 강하지만 공식 fine-tune / dataset format / export workflow가 불명확해 training 후순위
+- 이를 `docs/reports/tts_training_feasibility_audit_20260319.md`로 고정했고, `status`, `tts/README.md`, `docs/research/tts.md`, `tts/experiments/custom_training/README.md`를 함께 갱신했다.
+
+## 2026-03-19 | Human + Codex | Piper pilot training env bring-up
+
+- 기준 문서는 `docs/reports/tts_training_feasibility_audit_20260319.md`, `docs/status.md`, `docs/개발방침.md`였다.
+- A100에서 `Piper` archived training stack을 실제로 살렸다.
+- 확인된 핵심은 아래다.
+  - `python 3.10`
+  - `pip<24.1`
+  - `setuptools<81`
+  - `numpy<2`
+  - `torchmetrics<0.12`
+  - `torch 1.13.1+cu117`
+  - `pytorch-lightning 1.7.7`
+  - `build_monotonic_align.sh`
+  - `python -m piper_train --help`
+  - `python -m piper_train.preprocess --help`
+  - `python -m piper_train.export_onnx --help`
+- 설치 중 발견한 실제 blocker는 아래였다.
+  - `pip 24.1+`에서 `pytorch-lightning 1.7.7` metadata 오류
+  - `setuptools` 최신판에서 `pkg_resources` 문제
+  - `numpy 2.x`와 old torch stack 충돌
+  - `torchmetrics 1.x`와 `pytorch-lightning 1.7.7` 충돌
+  - system `espeak-ng`는 아직 미설치
+- 위 내용을 `docs/envs/tts_piper_train_env.md`로 정리했다.
+
 ## 2026-03-19 | Human + Codex | 영어 runtime winner + 한국어 custom training 계획 고정
 
 - 기준 문서는 `docs/status.md`, `tts/README.md`, `docs/research/tts.md`였다.

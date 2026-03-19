@@ -227,6 +227,7 @@ python tts/tools/tts_jetson_demo.py --model kokoro
 - `OpenVoice V2`는 최종 runtime 후보가 아니라, 원하는 목소리 audition과 synthetic dataset 생성기로 본다.
 - 한국어 custom training은 `1~3시간 pilot dataset -> pilot 학습 -> 확대` 순서로 진행한다.
 - `runtime winner`와 `training winner`는 같다고 가정하지 않는다.
+- 현재 training feasibility audit 기준으로는 `Piper`를 custom training 1순위, `Kokoro`를 runtime 우선 후보로 본다.
 
 즉, 지금은 A100에서 4개 후보를 모두 붙여 보되, Jetson 최종 후보를 고를 때는 여전히 "음색 + 지연 + 메모리 + 운영 단순성" 기준으로 좁힌다.
 `Edge TTS`와 `OpenAI API TTS`는 이 4개 로컬 후보와 별개로 reference backend로 유지한다.
@@ -248,7 +249,8 @@ python tts/tools/tts_jetson_demo.py --model kokoro
   - `Edge TTS`, `OpenAI API TTS`는 network fallback/demo 경로로 유지
 - 다음 단계는 아래다.
   - `Piper`, `Kokoro` runtime winner 재검증
-  - `Piper`, `Kokoro` 학습 가능성 audit
+  - `Piper` training pilot 경로 구체화
+  - `Kokoro` training은 후순위 research 유지
   - `OpenVoice V2` reference audition pipeline
   - 한국어 synthetic dataset `1~3시간` pilot 생성과 pilot 학습
 

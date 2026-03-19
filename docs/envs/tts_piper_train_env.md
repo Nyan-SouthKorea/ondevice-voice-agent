@@ -1,0 +1,84 @@
+# TTS Piper Train Env
+
+> 마지막 업데이트: 2026-03-19
+> 목적: A100에서 `Piper` pilot training을 재현하기 위한 최소 환경을 고정한다.
+
+## 결론
+
+- `Piper` archived training stack은 A100 venv에서 실제로 살아난다.
+- 다만 최신 기본 툴체인으로는 바로 안 되고, 아래 pinning이 필요했다.
+  - `python 3.10`
+  - `pip < 24.1`
+  - `setuptools < 81`
+  - `numpy < 2`
+  - `torchmetrics < 0.12`
+
+## 실제 사용 경로
+
+- venv:
+  - `/data2/iena/260318_ondevice-voice-agent/env/tts_piper_train`
+- local source clone:
+  - `/data2/iena/260318_ondevice-voice-agent/results/tts_custom/tooling/piper_src`
+
+## 확인된 버전
+
+- `Python 3.10.12`
+- `pip 24.0`
+- `setuptools 80.10.2`
+- `torch 1.13.1+cu117`
+- `pytorch-lightning 1.7.7`
+- `numpy 1.26.4`
+- `torchmetrics 0.11.4`
+
+## 검증된 항목
+
+- `build_monotonic_align.sh` 실행 성공
+- `torch.cuda.is_available() == True`
+- A100 감지:
+  - `NVIDIA A100 80GB PCIe`
+- import 성공:
+  - `import piper_train`
+- CLI help 성공:
+  - `python -m piper_train --help`
+  - `python -m piper_train.preprocess --help`
+  - `python -m piper_train.export_onnx --help`
+
+## 실제 설치 순서
+
+```bash
+python3.10 -m venv /data2/iena/260318_ondevice-voice-agent/env/tts_piper_train
+source /data2/iena/260318_ondevice-voice-agent/env/tts_piper_train/bin/activate
+
+pip install 'pip<24.1'
+pip install 'setuptools<81'
+
+pip install --extra-index-url https://download.pytorch.org/whl/cu117 \
+  'torch==1.13.1' \
+  'pytorch-lightning==1.7.7'
+
+pip install 'numpy<2' 'torchmetrics<0.12' six
+
+pip install -e /data2/iena/260318_ondevice-voice-agent/results/tts_custom/tooling/piper_src/src/python
+
+cd /data2/iena/260318_ondevice-voice-agent/results/tts_custom/tooling/piper_src/src/python
+bash build_monotonic_align.sh
+```
+
+## 현재 남은 시스템 의존성
+
+- `espeak-ng`
+  - training guide는 system package 설치를 전제한다.
+  - 현재 이 머신에서는 `sudo apt-get install espeak-ng`를 바로 수행하지 못했다.
+- `piper-phonemize`
+  - Python package는 설치됐지만, 현재 shell `PATH`에서 `piper-phonemize` executable은 바로 보이지 않았다.
+  - 다만 `piper_train.preprocess --help`와 `piper_train.export_onnx --help`는 정상 동작했다.
+
+## 현재 판단
+
+- `Piper`는 “training path가 문서상 존재한다” 수준이 아니라, A100 pilot env에서 실제 CLI까지 살릴 수 있었다.
+- 즉 custom training 1순위 후보로 계속 가져갈 가치가 충분하다.
+- 다음 실제 작업은 아래다.
+  1. `espeak-ng` / phonemizer 런타임 경로를 확정
+  2. 한국어 text-only corpus 준비
+  3. `OpenVoice V2` synthetic dataset `1~3시간` pilot 생성
+  4. `Piper` preprocessing -> pilot training -> export smoke

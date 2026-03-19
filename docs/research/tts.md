@@ -7,6 +7,7 @@
 
 - 아래 내용은 초기 후보 비교와 선택 배경을 보존한 문서다.
 - 현재 active 실행 계획은 `docs/reports/tts_custom_training_plan_v1.md`를 기준으로 본다.
+- 현재 training feasibility audit 요약은 `docs/reports/tts_training_feasibility_audit_20260319.md`를 기준으로 본다.
 - 현재 active 방향은 아래다.
   - Jetson runtime winner 후보: `Piper`, `Kokoro`
   - `OpenVoice V2`는 최종 runtime이 아니라 voice audition + synthetic dataset 생성기

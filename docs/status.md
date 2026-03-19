@@ -193,10 +193,25 @@
   - 단, 영어는 `EN001` 한 문장만 평가했으므로 순위 확정 근거로 쓰지 않는다.
 - 현재 active TTS 후속 계획은 아래 문서를 기준으로 본다.
   - `docs/reports/tts_custom_training_plan_v1.md`
+- 현재 training feasibility audit 기준 문서는 아래다.
+  - `docs/reports/tts_training_feasibility_audit_20260319.md`
+- 현재 `Piper` pilot training env 기준 문서는 아래다.
+  - `docs/envs/tts_piper_train_env.md`
 - 현재 active 역할 분리는 아래와 같다.
   - Jetson runtime winner 후보: `Piper`, `Kokoro`
   - voice audition / synthetic dataset 생성기: `OpenVoice V2`
   - 기존 benchmark anchor와 비교용 후보: `MeloTTS`
+- 현재 training 우선순위 판단은 아래처럼 둔다.
+  - `Piper`: training pilot 1순위
+  - `Kokoro`: runtime 우선, training 후순위
+- 현재 `Piper` pilot training env는 A100에서 아래까지 확인했다.
+  - `torch 1.13.1+cu117`, `pytorch-lightning 1.7.7`
+  - `numpy<2`, `torchmetrics<0.12`, `setuptools<81`, `pip<24.1`
+  - `build_monotonic_align.sh`
+  - `piper_train`, `piper_train.preprocess`, `piper_train.export_onnx` help
+- 현재 남은 `Piper` training blocker는 아래다.
+  - system `espeak-ng` 설치 확인
+  - `piper-phonemize` 실행 경로 확정
 - 한국어 custom training은 아래 순서를 따른다.
   - `1~3시간 pilot synthetic dataset`
   - pilot 학습
@@ -250,13 +265,15 @@
 2. `Piper cpu`, `Kokoro cuda`를 Jetson 상위 voice pipeline local 후보로 먼저 유지한다.
 3. `MeloTTS`, `OpenVoice V2`는 Nano에서 기능 성공 경로를 기준으로 더 가벼운 runtime 변환 가능성을 검토한다.
 4. 현재 partial listening score를 기준으로 우선순위를 유지하고, 추가 수기 평가는 필요할 때만 다시 연다.
-5. `Piper`, `Kokoro`의 runtime winner와 학습 가능성을 audit한다.
+5. `Piper` training env에서 `espeak-ng`와 phonemizer runtime 경로를 먼저 확정한다.
 6. `OpenVoice V2` voice audition과 synthetic dataset `1~3시간` pilot 생성 파이프라인을 연다.
-7. pilot 학습 뒤에만 full training 확대 여부를 판단한다.
-8. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
-9. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
-10. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
-11. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
+7. `Piper` preprocessing -> pilot 학습 -> export smoke를 연결한다.
+8. `Piper` pilot 학습 뒤에만 full training 확대 여부를 판단한다.
+9. `Kokoro`는 runtime winner 재검증을 유지하고, training은 후순위 research로 남긴다.
+10. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
+11. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
+12. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
+13. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
 
 ## 참조 문서
 
