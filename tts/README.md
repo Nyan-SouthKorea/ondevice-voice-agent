@@ -219,6 +219,7 @@ tts/tools/voice_pipeline_tts_gui_jetson.sh
 
 - `voice_pipeline_tts_gui_demo.py`는 기존 `voice_pipeline_gui_demo.py`를 확장해 `wake word -> VAD -> STT -> TTS`를 한 번에 데모한다.
 - LLM은 넣지 않고, STT로 인식한 결과를 템플릿 문장으로 바로 한국어 Piper TTS가 읽는다.
+- GUI 본체는 `env/stt_trt_experiment/bin/python`으로 실행한다. 이유는 이 env가 Jetson에서 `wake_word + vad + stt + tkinter + torch`를 모두 함께 만족하기 때문이다.
 - TTS 합성은 `env/tts_piper_jetson/bin/python repo/tts/tts_demo.py`를 subprocess로 호출하고, 결과 wav는 `results/tts/jetson_demo/voice_pipeline_tts/` 아래에 저장한다.
 
 현재 v1 방향:

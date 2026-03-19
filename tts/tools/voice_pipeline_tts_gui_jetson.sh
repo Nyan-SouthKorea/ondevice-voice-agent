@@ -23,4 +23,4 @@ export QT_IM_MODULE="${QT_IM_MODULE:-ibus}"
 
 mkdir -p "$WORKSPACE_ROOT/results/tts/jetson_demo"
 
-exec "$WORKSPACE_ROOT/env/wake_word_jetson/bin/python" voice_pipeline_tts_gui_demo.py "$@"
+exec "$WORKSPACE_ROOT/env/stt_trt_experiment/bin/python" voice_pipeline_tts_gui_demo.py "$@"

@@ -1088,3 +1088,20 @@
 
 - Jetson에서 실제 wake word 호출부터 TTS 응답까지 end-to-end 동작을 사용자가 직접 확인한다.
 - 필요하면 응답 템플릿과 재생 장치 선택지를 짧게 조정한다.
+
+## 2026-03-19 | Human + Codex | voice pipeline TTS 데모 STT env 수정
+
+### Context
+
+- `voice_pipeline_tts_gui_demo.py` 초기 런처는 `env/wake_word_jetson`으로 GUI를 띄우고 있었다.
+- 이 env에는 `torch`가 없어 기본 STT 모델 `whisper_small_trt_safe` 로드가 실패했다.
+
+### Actions
+
+- Jetson에서 env별 import를 실제로 비교했고, `env/stt_trt_experiment`가 `wake_word`, `vad`, `stt`, `sounddevice`, `tkinter`, `torch`를 모두 만족하는 것을 확인했다.
+- `tts/tools/voice_pipeline_tts_gui_jetson.sh`를 `env/stt_trt_experiment/bin/python` 기준으로 수정했다.
+- 수정 후 Jetson에서 새 GUI 프로세스가 `voice_pipeline_tts_gui_demo.py`로 다시 올라온 것을 확인했다.
+
+### Next
+
+- 사용자가 새 GUI에서 STT 모델 로드와 end-to-end 응답을 다시 확인한다.
