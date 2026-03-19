@@ -213,6 +213,8 @@
   - 현재 active 생성은 기존 `ko_text_corpus_v1/v2/v3`별 코퍼스를 그대로 사용한다.
   - 단, 현재 run이 끝난 뒤 다음 generation/training 입력을 다시 고를 때는 통합본의 `master_union_unique_by_text.tsv`를 기본 출발점으로 삼는다.
   - 즉 이후 데이터 생성과 학습 snapshot 설계는 이 통합 코퍼스를 canonical index로 보고 진행한다.
+- 현재 남성 `ko_male_lee_sunkyun` ref 전체 synthetic generation은 `full_male_v1_tts_only` run root에서 진행 중이다.
+- OpenVoice generation 스크립트는 `--skip-existing`와 즉시 `manifest.tsv` append 방식을 지원하도록 바뀌어, 긴 run이 중간에 멈춰도 같은 run root에서 안전하게 resume할 수 있다.
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `tts/docs/환경/260319_1100_Piper_학습환경.md`
 - 현재 `Piper` 한국어 전체학습 재현 기준 문서는 아래다.

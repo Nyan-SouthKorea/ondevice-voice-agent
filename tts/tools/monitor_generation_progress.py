@@ -29,6 +29,8 @@ def parse_args():
     parser.add_argument("--start-epoch", type=float, default=None)
     parser.add_argument("--interval-sec", type=float, default=60.0)
     parser.add_argument("--shards", nargs="*", default=None)
+    parser.add_argument("--baseline-wavs", type=int, default=0)
+    parser.add_argument("--baseline-audio-hours", type=float, default=0.0)
     return parser.parse_args()
 
 
@@ -128,6 +130,8 @@ def write_progress(run_root, payload):
         f"- target_audio_hours: {payload['target_audio_hours']}",
         f"- total_wavs: {payload['total_wavs']}",
         f"- generated_audio_hours: {payload['generated_audio_hours']}",
+        f"- resumed_from_wavs: {payload['baseline_wavs']}",
+        f"- resumed_from_audio_hours: {payload['baseline_audio_hours']}",
         f"- progress_ratio: {payload['progress_ratio']}",
         f"- elapsed_wall: {payload['elapsed_wall_hms']}",
         f"- observed_rtf: {payload['observed_rtf']}",
@@ -162,12 +166,14 @@ def main():
     shards = args.shards or [path.name for path in sorted(run_root.glob("shard_*")) if path.is_dir()]
     start_epoch = args.start_epoch or time.time()
     target_audio_sec = float(args.target_audio_hours) * 3600.0
+    baseline_audio_sec = float(args.baseline_audio_hours) * 3600.0
 
     while True:
         shard_rows, total_count, total_audio_sec = scan_run(run_root, shards)
         now_epoch = time.time()
         elapsed_wall_sec = max(0.0, now_epoch - start_epoch)
-        observed_rtf = (elapsed_wall_sec / total_audio_sec) if total_audio_sec > 0 else None
+        generated_since_resume_sec = max(0.0, total_audio_sec - baseline_audio_sec)
+        observed_rtf = (elapsed_wall_sec / generated_since_resume_sec) if generated_since_resume_sec > 0 else None
         remaining_audio_sec = max(0.0, target_audio_sec - total_audio_sec)
         remaining_wall_sec = (remaining_audio_sec * observed_rtf) if observed_rtf is not None else None
         finish_epoch = (now_epoch + remaining_wall_sec) if remaining_wall_sec is not None else None
@@ -177,6 +183,8 @@ def main():
             "target_audio_hours": round(args.target_audio_hours, 3),
             "total_wavs": total_count,
             "generated_audio_hours": round(total_audio_sec / 3600.0, 3),
+            "baseline_wavs": args.baseline_wavs,
+            "baseline_audio_hours": round(args.baseline_audio_hours, 3),
             "progress_ratio": round((total_audio_sec / target_audio_sec), 4) if target_audio_sec > 0 else None,
             "elapsed_wall_hms": seconds_to_hms(elapsed_wall_sec),
             "observed_rtf": round(observed_rtf, 4) if observed_rtf is not None else None,

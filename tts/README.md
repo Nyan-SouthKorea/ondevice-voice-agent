@@ -336,6 +336,12 @@ tts/tools/voice_pipeline_tts_gui_jetson.sh
 - `설명 아카이브`: `../results/tts_custom/corpora/260319_1635_데이터셋_설명_아카이브_v1/`
 - 중복 파일 정리 후 현재 canonical TSV는 `master_union_unique_by_text.tsv` 하나만 유지한다.
 
+## OpenVoice synthetic generation 운영 메모
+
+- 긴 generation run은 [`openvoice_generate_dataset.py`](/data2/iena/260318_ondevice-voice-agent/repo/tts/tools/openvoice_generate_dataset.py)의 `--skip-existing`를 기본으로 사용한다.
+- 이 스크립트는 row 단위로 `manifest.tsv`를 즉시 append하므로, generation이 중간에 멈춰도 이미 생성된 `wav`와 `manifest.tsv`를 기준으로 안전하게 resume할 수 있다.
+- 현재 남성 ref 전체생성 run은 [`260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`](/data2/iena/260318_ondevice-voice-agent/repo/tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md) 기준으로 진행 중이다.
+
 중복 검사는 이렇게 했다.
 
 1. `v1` 생성 시에는 `prepare_ko_text_corpus.py`에서

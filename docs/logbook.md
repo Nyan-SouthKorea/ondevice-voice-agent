@@ -2,6 +2,14 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | 남성 ref 전체 synthetic generation을 resume-safe 방식으로 전환
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`였다.
+- 남성 `ko_male_lee_sunkyun` ref 전체생성 run은 초기 174개 생성 뒤 조용히 멈췄다.
+- 같은 구간의 175~181번 문장을 직접 probe한 결과, 특정 텍스트나 reference 자체가 blocker는 아니었다.
+- 운영 리스크를 줄이기 위해 `openvoice_generate_dataset.py`에 `--skip-existing`와 row 단위 `manifest.tsv` append를 추가했다.
+- 이후 같은 run root에서 generation을 다시 시작했고, 현재 `full_male_v1_tts_only/openvoice_ko_male_lee_sunkyun_speed_1p1/` 기준으로 이어서 진행 중이다.
+
 ## 2026-03-19 | Human + Codex | Piper 한국어 전체학습 재현가이드 문서화
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.

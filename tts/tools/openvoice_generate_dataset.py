@@ -47,6 +47,7 @@ def parse_args():
     parser.add_argument("--stt-model-name", default="large-v3")
     parser.add_argument("--stt-device", default="cuda")
     parser.add_argument("--accept-max-normalized-cer", type=float, default=0.15)
+    parser.add_argument("--skip-existing", action="store_true")
     return parser.parse_args()
 
 
@@ -127,6 +128,7 @@ def main():
     args.output_dir.mkdir(parents=True, exist_ok=True)
     wav_dir = args.output_dir / "wavs"
     wav_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = args.output_dir / "manifest.tsv"
 
     synthesizer = TTSSynthesizer(
         model="openvoice_v2",
@@ -146,9 +148,45 @@ def main():
         )
 
     result_rows = []
+    existing_output_paths = set()
+    fieldnames = [
+        "utterance_id",
+        "text_id",
+        "text",
+        "source_corpus",
+        "category",
+        "reference_id",
+        "reference_audio_path",
+        "speed",
+        "output_path",
+        "success",
+        "generation_sec",
+        "audio_sec",
+        "stt_prediction",
+        "normalized_exact_match",
+        "normalized_cer",
+        "accepted",
+        "error",
+    ]
+
+    if manifest_path.exists():
+        with open(manifest_path, "r", encoding="utf-8") as input_file:
+            for row in csv.DictReader(input_file, delimiter="\t"):
+                result_rows.append(row)
+                existing_output_paths.add(row["output_path"])
+
+    manifest_needs_header = not manifest_path.exists()
+    manifest_file = open(manifest_path, "a", encoding="utf-8", newline="")
+    manifest_writer = csv.DictWriter(manifest_file, fieldnames=fieldnames, delimiter="\t")
+    if manifest_needs_header:
+        manifest_writer.writeheader()
+        manifest_file.flush()
     try:
         for index, row in enumerate(rows, start=1):
             output_path = wav_dir / f"{row['text_id']}.wav"
+            output_path_str = str(output_path)
+            if output_path_str in existing_output_paths:
+                continue
             result = {
                 "utterance_id": f"{args.reference_id}_{index:06d}",
                 "text_id": row["text_id"],
@@ -158,7 +196,7 @@ def main():
                 "reference_id": args.reference_id,
                 "reference_audio_path": str(args.reference_audio_path),
                 "speed": args.speed,
-                "output_path": str(output_path),
+                "output_path": output_path_str,
                 "success": False,
                 "generation_sec": None,
                 "audio_sec": None,
@@ -169,34 +207,38 @@ def main():
                 "error": "",
             }
             try:
-                saved_path = synthesizer.synthesize_to_file(row["text"], output_path)
-                info = sf.info(str(saved_path))
-                result["success"] = True
-                result["generation_sec"] = round(float(synthesizer.last_duration_sec), 3)
-                result["audio_sec"] = round(float(info.frames / info.samplerate), 3)
-                if transcriber is not None:
-                    prediction = transcriber.transcribe(load_audio_for_stt(saved_path))
-                    norm_ref = normalize_text(row["text"], "ko")
-                    norm_pred = normalize_text(prediction, "ko")
-                    normalized_cer = round(float(compute_cer(norm_ref, norm_pred)), 4)
-                    normalized_exact = int(norm_ref == norm_pred)
-                    accepted = int(normalized_exact == 1 or normalized_cer <= args.accept_max_normalized_cer)
-                    result["stt_prediction"] = prediction
-                    result["normalized_exact_match"] = normalized_exact
-                    result["normalized_cer"] = normalized_cer
-                    result["accepted"] = accepted
+                if args.skip_existing and output_path.exists():
+                    info = sf.info(str(output_path))
+                    result["success"] = True
+                    result["generation_sec"] = ""
+                    result["audio_sec"] = round(float(info.frames / info.samplerate), 3)
+                else:
+                    saved_path = synthesizer.synthesize_to_file(row["text"], output_path)
+                    info = sf.info(str(saved_path))
+                    result["success"] = True
+                    result["generation_sec"] = round(float(synthesizer.last_duration_sec), 3)
+                    result["audio_sec"] = round(float(info.frames / info.samplerate), 3)
+                    if transcriber is not None:
+                        prediction = transcriber.transcribe(load_audio_for_stt(saved_path))
+                        norm_ref = normalize_text(row["text"], "ko")
+                        norm_pred = normalize_text(prediction, "ko")
+                        normalized_cer = round(float(compute_cer(norm_ref, norm_pred)), 4)
+                        normalized_exact = int(norm_ref == norm_pred)
+                        accepted = int(normalized_exact == 1 or normalized_cer <= args.accept_max_normalized_cer)
+                        result["stt_prediction"] = prediction
+                        result["normalized_exact_match"] = normalized_exact
+                        result["normalized_cer"] = normalized_cer
+                        result["accepted"] = accepted
             except Exception as exc:
                 result["error"] = f"{type(exc).__name__}: {exc}"
             result_rows.append(result)
+            existing_output_paths.add(output_path_str)
+            manifest_writer.writerow(result)
+            manifest_file.flush()
     finally:
+        manifest_file.close()
         if transcriber is not None:
             transcriber.close()
-
-    manifest_path = args.output_dir / "manifest.tsv"
-    with open(manifest_path, "w", encoding="utf-8", newline="") as output_file:
-        writer = csv.DictWriter(output_file, fieldnames=list(result_rows[0].keys()), delimiter="\t")
-        writer.writeheader()
-        writer.writerows(result_rows)
 
     summary = {
         "reference_id": args.reference_id,
