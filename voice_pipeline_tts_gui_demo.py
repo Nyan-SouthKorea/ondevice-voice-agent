@@ -3,12 +3,14 @@ wake word + VAD + STT + TTS 통합 GUI 데모.
 """
 
 import argparse
+import json
 import subprocess
 import threading
 import time
 from pathlib import Path
 
 from voice_pipeline_gui_demo import (
+    PhaseLamp,
     STT_MODEL_OPTIONS,
     VoicePipelineGuiDemo,
     describe_input_device,
@@ -144,7 +146,7 @@ def parse_args():
     )
     parser.add_argument(
         "--tts-prefix",
-        default="말씀하신 내용은 {text} 입니다.",
+        default="{text}",
         help="STT 결과를 TTS로 읽을 때 사용할 응답 템플릿. {text} placeholder 사용 가능",
     )
     return parser.parse_args()
@@ -190,8 +192,12 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         self.tts_model_path = args.tts_model_path or resolve_default_tts_model_path()
         self.tts_output_root = WORKSPACE_ROOT / "results" / "tts" / "jetson_demo" / "voice_pipeline_tts"
         self.tts_output_root.mkdir(parents=True, exist_ok=True)
+        self.tts_metrics_log_path = self.tts_output_root / "metrics.jsonl"
         self.tts_play_process = None
         self.last_tts_text = ""
+        self.turn_index = 0
+        self.current_turn_metrics = {}
+        self.last_wake_runtime_ms = 0.0
         super().__init__(args)
         self.root.title("Wake Word + VAD + STT + TTS 통합 데모")
 
@@ -208,13 +214,90 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         """
         super()._build_ui()
         self.tts_info_var = type(self.status_var)(value=f"TTS 모델: {self.tts_model_path}")
-        self.tts_runtime_var = type(self.status_var)(value="tts sec: - | load sec: -")
-        # 상단 상태 영역 마지막에 간단한 TTS 정보만 덧붙인다.
+        self.tts_runtime_var = type(self.status_var)(value="stt sec: - | tts sec: - | total sec: -")
+        self.tts_stage_var = type(self.status_var)(value="TTS 상태: 대기")
+        self.tts_log_var = type(self.status_var)(value=f"기록 파일: {self.tts_metrics_log_path}")
         from tkinter import ttk
 
-        # 기존 위젯 구조를 재검색하는 대신, 루트 하단에 추가 라벨을 둔다.
-        ttk.Label(self.root, textvariable=self.tts_info_var).pack(anchor="w", padx=18, pady=(0, 0))
-        ttk.Label(self.root, textvariable=self.tts_runtime_var).pack(anchor="w", padx=18, pady=(0, 6))
+        self.phase_tts = PhaseLamp(self.phase_done.master, "TTS 재생 중")
+        self.phase_tts.pack(anchor="w", fill="x", pady=(4, 0), before=self.phase_done)
+
+        history_frame = self.history_text.master
+        root_frame = history_frame.master
+        tts_frame = ttk.LabelFrame(root_frame, text="TTS 상태와 실행시간", padding=10)
+        tts_frame.pack(fill="x", pady=(8, 8), before=history_frame)
+        ttk.Label(tts_frame, textvariable=self.tts_info_var).pack(anchor="w")
+        ttk.Label(tts_frame, textvariable=self.tts_stage_var).pack(anchor="w", pady=(4, 0))
+        ttk.Label(tts_frame, textvariable=self.tts_runtime_var).pack(anchor="w", pady=(4, 0))
+        ttk.Label(tts_frame, textvariable=self.tts_log_var).pack(anchor="w", pady=(4, 0))
+
+    def _reset_turn_metrics(self):
+        """
+        기능:
+        - 현재 turn의 실행시간 추적 상태를 초기화한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        self.current_turn_metrics = {
+            "turn_id": self.turn_index,
+            "wake_detected_at": None,
+            "stt_started_at": None,
+            "stt_finished_at": None,
+            "tts_started_at": None,
+            "tts_finished_at": None,
+            "wake_runtime_ms": self.last_wake_runtime_ms,
+        }
+
+    def _append_metrics_log(self, payload):
+        """
+        기능:
+        - TTS 파이프라인 실행 지표를 JSONL 파일에 누적 저장한다.
+
+        입력:
+        - `payload`: 저장할 dict.
+
+        반환:
+        - 없음.
+        """
+        self.tts_metrics_log_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.tts_metrics_log_path.open("a", encoding="utf-8") as fp:
+            fp.write(json.dumps(payload, ensure_ascii=False) + "\n")
+
+    def _activate_listening(self):
+        """
+        기능:
+        - 새 turn 실행시간 추적을 시작하고 listening 상태로 전환한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        self.turn_index += 1
+        self._reset_turn_metrics()
+        self.current_turn_metrics["wake_detected_at"] = time.monotonic()
+        self.tts_stage_var.set("TTS 상태: 호출어 감지, 새 turn 시작")
+        self.tts_runtime_var.set("stt sec: - | tts sec: - | total sec: -")
+        super()._activate_listening()
+
+    def _finalize_utterance(self, reason_text):
+        """
+        기능:
+        - STT 시작 시점을 기록하고 발화를 전사 대상으로 넘긴다.
+
+        입력:
+        - `reason_text`: 발화 종료 이유 설명 문자열.
+
+        반환:
+        - 없음.
+        """
+        self.current_turn_metrics["stt_started_at"] = time.monotonic()
+        super()._finalize_utterance(reason_text)
 
     def _pipeline_worker(self):
         """
@@ -246,7 +329,7 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
     def _format_tts_response(self, text):
         """
         기능:
-        - STT 결과를 TTS용 응답 문장으로 만든다.
+        - STT 결과를 TTS용 발화 문자열로 정리한다.
 
         입력:
         - `text`: STT 결과 문자열.
@@ -274,6 +357,7 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         - 없음.
         """
         try:
+            self.current_turn_metrics["tts_started_at"] = time.monotonic()
             timestamp = time.strftime("%y%m%d_%H%M%S")
             output_path = self.tts_output_root / f"{timestamp}.wav"
             command = [
@@ -297,6 +381,7 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
                 capture_output=True,
                 check=False,
             )
+            synth_wall_sec = time.monotonic() - self.current_turn_metrics["tts_started_at"]
             if result.returncode != 0:
                 self.gui_queue.put(
                     {
@@ -314,12 +399,15 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
                 elif line.startswith("elapsed_sec:"):
                     elapsed = line.split(":", 1)[1].strip()
 
+            play_started_at = time.monotonic()
             self.tts_play_process = subprocess.Popen(
                 ["aplay", "-q", str(output_path)],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
             self.tts_play_process.wait()
+            play_sec = time.monotonic() - play_started_at
+            self.current_turn_metrics["tts_finished_at"] = time.monotonic()
             self.gui_queue.put(
                 {
                     "type": "tts_done",
@@ -327,10 +415,52 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
                     "output_path": str(output_path),
                     "model_load_sec": model_load,
                     "tts_sec": elapsed,
+                    "tts_wall_sec": synth_wall_sec,
+                    "play_sec": play_sec,
                 }
             )
         except Exception as exc:
             self.gui_queue.put({"type": "tts_error", "error": str(exc)})
+
+    def _stt_worker(self, audio, audio_sec, model_key, model_label, transcriber):
+        """
+        기능:
+        - STT 실행의 wall time까지 함께 기록한다.
+
+        입력:
+        - `audio`: 발화 전체 오디오 배열.
+        - `audio_sec`: 발화 길이(초).
+        - `model_key`: 현재 STT 모델 키.
+        - `model_label`: 현재 STT 모델 라벨.
+        - `transcriber`: 사용할 STTTranscriber 인스턴스.
+
+        반환:
+        - 없음.
+        """
+        started_at = time.monotonic()
+        try:
+            text = transcriber.transcribe(audio)
+            finished_at = time.monotonic()
+            self.current_turn_metrics["stt_finished_at"] = finished_at
+            self.gui_queue.put(
+                {
+                    "type": "stt_done",
+                    "audio_sec": audio_sec,
+                    "stt_sec": float(transcriber.last_duration_sec),
+                    "stt_wall_sec": finished_at - started_at,
+                    "model_key": model_key,
+                    "model_label": model_label,
+                    "text": text,
+                }
+            )
+        except Exception as exc:
+            self.gui_queue.put(
+                {
+                    "type": "stt_error",
+                    "model_label": model_label,
+                    "error": str(exc),
+                }
+            )
 
     def _refresh_ui(self):
         """
@@ -374,6 +504,8 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
 
             elif item["type"] == "wake_update":
                 self.wake_score = item["score"]
+                self.last_wake_runtime_ms = float(item["runtime_ms"])
+                self.current_turn_metrics["wake_runtime_ms"] = self.last_wake_runtime_ms
                 self.wake_runtime_var.set(f"wake total: {item['runtime_ms']:.2f} ms")
                 if item["detected"]:
                     self.wake_lamp_until = time.monotonic() + 1.0
@@ -397,10 +529,23 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
                 self.last_stt_text = item["text"]
                 response_text = self._format_tts_response(item["text"])
                 self.last_tts_text = response_text
+                wake_to_stt_done_sec = "-"
+                wake_detected_at = self.current_turn_metrics.get("wake_detected_at")
+                stt_finished_at = self.current_turn_metrics.get("stt_finished_at")
+                if wake_detected_at and stt_finished_at:
+                    wake_to_stt_done_sec = f"{stt_finished_at - wake_detected_at:.3f}"
+                self.tts_stage_var.set("TTS 상태: STT 완료, 음성 합성 시작")
+                self.tts_runtime_var.set(
+                    f"stt sec: {item['stt_sec']:.3f} (wall {item['stt_wall_sec']:.3f}) | "
+                    f"tts sec: - | total sec: {wake_to_stt_done_sec}"
+                )
                 self._append_history(
                     f"[{timestamp}] {item['model_label']}\n"
                     f"- audio_sec: {item['audio_sec']:.2f}\n"
                     f"- stt_sec: {item['stt_sec']:.3f}\n"
+                    f"- stt_wall_sec: {item['stt_wall_sec']:.3f}\n"
+                    f"- wake_runtime_ms: {self.current_turn_metrics.get('wake_runtime_ms', 0.0):.2f}\n"
+                    f"- wake_to_stt_done_sec: {wake_to_stt_done_sec}\n"
                     f"- text: {item['text']}\n"
                     f"- tts_request: {response_text}"
                 )
@@ -416,14 +561,44 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
 
             elif item["type"] == "tts_done":
                 timestamp = time.strftime("%H:%M:%S")
+                wake_detected_at = self.current_turn_metrics.get("wake_detected_at")
+                stt_started_at = self.current_turn_metrics.get("stt_started_at")
+                tts_finished_at = self.current_turn_metrics.get("tts_finished_at")
+                total_sec = "-"
+                stt_to_tts_done_sec = "-"
+                if wake_detected_at and tts_finished_at:
+                    total_sec = f"{tts_finished_at - wake_detected_at:.3f}"
+                if stt_started_at and tts_finished_at:
+                    stt_to_tts_done_sec = f"{tts_finished_at - stt_started_at:.3f}"
                 self.tts_runtime_var.set(
-                    f"tts sec: {item['tts_sec']} | load sec: {item['model_load_sec']}"
+                    f"stt sec: 완료 | tts sec: {item['tts_sec']} (wall {item['tts_wall_sec']:.3f}) | total sec: {total_sec}"
                 )
+                self.tts_stage_var.set("TTS 상태: 응답 재생 완료")
                 self._append_history(
                     f"[{timestamp}] Piper Korean TTS\n"
                     f"- tts_sec: {item['tts_sec']}\n"
+                    f"- tts_wall_sec: {item['tts_wall_sec']:.3f}\n"
                     f"- model_load_sec: {item['model_load_sec']}\n"
+                    f"- play_sec: {item['play_sec']:.3f}\n"
+                    f"- wake_to_tts_done_sec: {total_sec}\n"
+                    f"- stt_to_tts_done_sec: {stt_to_tts_done_sec}\n"
                     f"- output: {item['output_path']}"
+                )
+                self._append_metrics_log(
+                    {
+                        "timestamp": timestamp,
+                        "turn_id": self.current_turn_metrics.get("turn_id"),
+                        "wake_runtime_ms": self.current_turn_metrics.get("wake_runtime_ms"),
+                        "stt_text": self.last_stt_text,
+                        "tts_text": item["text"],
+                        "model_load_sec": item["model_load_sec"],
+                        "tts_sec": item["tts_sec"],
+                        "tts_wall_sec": round(float(item["tts_wall_sec"]), 6),
+                        "play_sec": round(float(item["play_sec"]), 6),
+                        "wake_to_tts_done_sec": total_sec,
+                        "stt_to_tts_done_sec": stt_to_tts_done_sec,
+                        "output_path": item["output_path"],
+                    }
                 )
                 self._set_pipeline_state("DONE", "TTS 응답 완료")
                 self.root.after(1200, self._finish_done_phase)
@@ -431,6 +606,17 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
             elif item["type"] == "tts_error":
                 timestamp = time.strftime("%H:%M:%S")
                 self._append_history(f"[{timestamp}] Piper Korean TTS\n- error: {item['error']}")
+                self.tts_stage_var.set("TTS 상태: 오류")
+                self._append_metrics_log(
+                    {
+                        "timestamp": timestamp,
+                        "turn_id": self.current_turn_metrics.get("turn_id"),
+                        "wake_runtime_ms": self.current_turn_metrics.get("wake_runtime_ms"),
+                        "stt_text": self.last_stt_text,
+                        "tts_text": self.last_tts_text,
+                        "error": item["error"],
+                    }
+                )
                 self._set_pipeline_state("DONE", "TTS 실패 후 대기 복귀")
                 self.root.after(1200, self._finish_done_phase)
 
@@ -461,7 +647,8 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         self.phase_idle.set_active(is_idle, "호출어 대기 중" if is_idle else "")
         self.phase_listening.set_active(is_listening, "명령을 듣는 중" if is_listening else "")
         self.phase_stt.set_active(is_stt, "음성을 전사하는 중" if is_stt else "")
-        self.phase_done.set_active(is_tts or is_done, "응답을 읽는 중" if is_tts else ("처리 완료" if is_done else ""))
+        self.phase_tts.set_active(is_tts, "전사 결과를 음성으로 재생 중" if is_tts else "")
+        self.phase_done.set_active(is_done, "처리 완료" if is_done else "")
 
         if is_listening:
             self.listen_indicator_var.set("마이크가 켜져 있고 현재 명령을 듣고 있습니다")

@@ -2,6 +2,14 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Jetson voice pipeline TTS GUI를 STT 원문 발화 + TTS 램프/실행시간 기록형으로 보강
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.
+- `voice_pipeline_tts_gui_demo.py`의 기본 TTS 응답을 템플릿 문장이 아니라 `STT 원문 그대로` 읽도록 바꿨다.
+- GUI에는 `TTS 재생 중` 램프를 별도로 추가했고, 기존 `출력 완료` 램프와 분리했다.
+- 최근 turn의 `stt wall sec`, `tts sec`, `tts wall sec`, `wake_to_tts_done_sec`를 화면과 history에 같이 남기도록 보강했다.
+- turn별 실행 기록은 `results/tts/jetson_demo/voice_pipeline_tts/metrics.jsonl`에 JSONL로 누적 저장한다.
+
 ## 2026-03-19 | Human + Codex | Piper 공식 파인튜닝 완료, 자동평가까지 닫힘
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/status.md`, `tts/README.md`, `tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`였다.
