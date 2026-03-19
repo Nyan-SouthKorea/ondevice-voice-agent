@@ -1189,3 +1189,21 @@
 ### Next
 
 - 남성 ref run은 `inventory -> official fine-tune -> sampler/postprocess -> A100/Nano smoke`를 detached chain으로 다시 시작한다.
+
+## 2026-03-20 | Human + Codex | 남성 ref inventory를 복구하고 official fine-tune preprocessing까지 재진입
+
+### Context
+
+- 남성 ref `generation`은 끝났지만, local run root에 만들어 둔 `run_inventory.sh`가 잘못된 인자를 넘기고 있어 다음 단계가 즉시 실패하고 있었다.
+- 현재 컨텍스트에서 중요한 건 “왜 멈췄는지”를 실제 파일과 로그로 고정하고, 그 뒤 파이프라인을 다시 살리는 것이었다.
+
+### Actions
+
+- `run_inventory_260320.log`를 확인해 실패 원인이 `--run-root` / `--synthetic-root` 인자명 불일치라는 것을 잡았다.
+- local `run_inventory.sh`를 수정하고 inventory를 다시 실행해 `24,689문장 / duplicate 0 / 30.300시간` 요약을 확보했다.
+- `run_official_finetune.sh`를 다시 시작했고, 현재 `phase.local.md` 기준으로 `preprocessing` 단계까지 실제로 올라온 것을 확인했다.
+- `start_sampler.sh`, `start_postprocess.sh`, `wait_postprocess_and_smokes.sh`도 detached로 다시 붙였다.
+
+### Next
+
+- 남성 ref `Piper` 공식 fine-tune이 `preprocessing -> training -> postprocess -> A100/Nano smoke`로 이어지는지 계속 추적한다.
