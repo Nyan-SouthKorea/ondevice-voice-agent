@@ -112,6 +112,12 @@
   - providers: `CUDAExecutionProvider`, `CPUExecutionProvider`
   - 구현 메모: `onnxruntime.preload_dlls(directory='')`, NVIDIA CUDA wheel, `pygoruut` 호환 레이어가 필요했다
   - 결론 메모: 현재 Python 경로와 author runtime 기준 모두 한국어 품질이 무효라 제품 기본 후보로는 두지 않는다
+- Jetson `voice_pipeline_tts_gui_demo.py`는 현재 `persistent Piper worker` 경로로 전환 중이다.
+  - 목표:
+    - 매 턴마다 `tts_demo.py` subprocess를 새로 띄우지 않음
+    - per-turn model reload 제거
+    - permanent wav 저장 제거
+    - `tts_wall_sec`를 실제 합성 wall time에 가깝게 맞춤
 - `Kokoro`는 A100 `cuda` 기준 공식 영어 smoke를 통과했고, 현재 공식 language code에는 한국어가 없다.
   - env: `../env/tts_kokoro`
   - 공식 repo/model: `hexgrad/Kokoro-82M`

@@ -7,6 +7,7 @@ import json
 import subprocess
 import threading
 import time
+import os
 from pathlib import Path
 
 from voice_pipeline_gui_demo import (
@@ -190,16 +191,22 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         self.input_device_label = describe_input_device(self.input_device)
         self.tts_env_python = args.tts_env_root / DEFAULT_PIPER_ENV / "bin" / "python"
         self.tts_model_path = args.tts_model_path or resolve_default_tts_model_path()
-        self.tts_output_root = WORKSPACE_ROOT / "results" / "tts" / "jetson_demo" / "voice_pipeline_tts"
-        self.tts_output_root.mkdir(parents=True, exist_ok=True)
-        self.tts_metrics_log_path = self.tts_output_root / "metrics.jsonl"
+        self.tts_run_root = WORKSPACE_ROOT / "results" / "tts" / "jetson_demo" / "voice_pipeline_tts"
+        self.tts_run_root.mkdir(parents=True, exist_ok=True)
+        self.tts_metrics_log_path = self.tts_run_root / "metrics.jsonl"
+        self.tts_temp_root = Path("/tmp/ondevice_voice_agent_tts")
+        self.tts_temp_root.mkdir(parents=True, exist_ok=True)
         self.tts_play_process = None
+        self.tts_worker_process = None
+        self.tts_worker_lock = threading.Lock()
+        self.tts_worker_model_load_sec = None
         self.last_tts_text = ""
         self.turn_index = 0
         self.current_turn_metrics = {}
         self.last_wake_runtime_ms = 0.0
         super().__init__(args)
         self.root.title("Wake Word + VAD + STT + TTS 통합 데모")
+        threading.Thread(target=self._warmup_tts_worker, daemon=True).start()
 
     def _build_ui(self):
         """
@@ -215,7 +222,7 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         super()._build_ui()
         self.tts_info_var = type(self.status_var)(value=f"TTS 모델: {self.tts_model_path}")
         self.tts_runtime_var = type(self.status_var)(value="stt sec: - | tts sec: - | total sec: -")
-        self.tts_stage_var = type(self.status_var)(value="TTS 상태: 대기")
+        self.tts_stage_var = type(self.status_var)(value="TTS 상태: 모델 예열 중")
         self.tts_log_var = type(self.status_var)(value=f"기록 파일: {self.tts_metrics_log_path}")
         from tkinter import ttk
 
@@ -345,6 +352,72 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         except Exception:
             return clean
 
+    def _ensure_tts_worker(self):
+        """
+        기능:
+        - Piper TTS worker를 한 번만 띄우고 재사용한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 준비된 worker 프로세스를 반환한다.
+        """
+        with self.tts_worker_lock:
+            if self.tts_worker_process and self.tts_worker_process.poll() is None:
+                return self.tts_worker_process
+
+            command = [
+                str(self.tts_env_python),
+                str(REPO_ROOT / "tts" / "tools" / "piper_persistent_worker.py"),
+                "--model-path",
+                str(self.tts_model_path),
+                "--device",
+                self.args.tts_device,
+                "--temp-root",
+                str(self.tts_temp_root),
+            ]
+            self.tts_worker_process = subprocess.Popen(
+                command,
+                cwd=REPO_ROOT,
+                text=True,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                bufsize=1,
+            )
+            ready_line = self.tts_worker_process.stdout.readline().strip()
+            if not ready_line:
+                stderr = self.tts_worker_process.stderr.read().strip()
+                raise RuntimeError(stderr or "TTS worker 준비 응답이 비어 있습니다.")
+            payload = json.loads(ready_line)
+            if payload.get("type") != "ready":
+                raise RuntimeError(f"TTS worker 준비 실패: {payload}")
+            self.tts_worker_model_load_sec = payload.get("model_load_sec")
+            return self.tts_worker_process
+
+    def _warmup_tts_worker(self):
+        """
+        기능:
+        - GUI 시작 시 TTS 모델을 미리 로드한다.
+
+        입력:
+        - 없음.
+
+        반환:
+        - 없음.
+        """
+        try:
+            self._ensure_tts_worker()
+            self.gui_queue.put(
+                {
+                    "type": "tts_worker_ready",
+                    "model_load_sec": self.tts_worker_model_load_sec,
+                }
+            )
+        except Exception as exc:
+            self.gui_queue.put({"type": "tts_worker_error", "error": str(exc)})
+
     def _tts_worker(self, response_text):
         """
         기능:
@@ -358,46 +431,34 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         """
         try:
             self.current_turn_metrics["tts_started_at"] = time.monotonic()
-            timestamp = time.strftime("%y%m%d_%H%M%S")
-            output_path = self.tts_output_root / f"{timestamp}.wav"
-            command = [
-                str(self.tts_env_python),
-                str(REPO_ROOT / "tts" / "tts_demo.py"),
-                "--model",
-                "piper",
-                "--model-name",
-                str(self.tts_model_path),
-                "--device",
-                self.args.tts_device,
-                "--text",
-                response_text,
-                "--output",
-                str(output_path),
-            ]
-            result = subprocess.run(
-                command,
-                cwd=REPO_ROOT,
-                text=True,
-                capture_output=True,
-                check=False,
-            )
+            worker = self._ensure_tts_worker()
+            request = {"cmd": "synthesize", "text": response_text}
+            worker.stdin.write(json.dumps(request, ensure_ascii=False) + "\n")
+            worker.stdin.flush()
+            response_line = worker.stdout.readline().strip()
             synth_wall_sec = time.monotonic() - self.current_turn_metrics["tts_started_at"]
-            if result.returncode != 0:
+            if not response_line:
+                stderr = worker.stderr.readline().strip()
                 self.gui_queue.put(
                     {
                         "type": "tts_error",
-                        "error": result.stderr or result.stdout or "TTS 합성 실패",
+                        "error": stderr or "TTS worker 응답이 비어 있습니다.",
+                    }
+                )
+                return
+            payload = json.loads(response_line)
+            if not payload.get("ok"):
+                self.gui_queue.put(
+                    {
+                        "type": "tts_error",
+                        "error": payload.get("error", "TTS 합성 실패"),
                     }
                 )
                 return
 
-            model_load = "-"
-            elapsed = "-"
-            for line in (result.stdout or "").splitlines():
-                if line.startswith("model_load_sec:"):
-                    model_load = line.split(":", 1)[1].strip()
-                elif line.startswith("elapsed_sec:"):
-                    elapsed = line.split(":", 1)[1].strip()
+            output_path = Path(payload["audio_path"])
+            elapsed = payload.get("elapsed_sec", "-")
+            model_load = self.tts_worker_model_load_sec or payload.get("model_load_sec", "-")
 
             play_started_at = time.monotonic()
             self.tts_play_process = subprocess.Popen(
@@ -407,12 +468,16 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
             )
             self.tts_play_process.wait()
             play_sec = time.monotonic() - play_started_at
+            try:
+                os.unlink(output_path)
+            except FileNotFoundError:
+                pass
             self.current_turn_metrics["tts_finished_at"] = time.monotonic()
             self.gui_queue.put(
                 {
                     "type": "tts_done",
                     "text": response_text,
-                    "output_path": str(output_path),
+                    "output_path": "-",
                     "model_load_sec": model_load,
                     "tts_sec": elapsed,
                     "tts_wall_sec": synth_wall_sec,
@@ -559,6 +624,15 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
                 self._set_pipeline_state("DONE", "STT 실패 후 대기 복귀")
                 self.root.after(1200, self._finish_done_phase)
 
+            elif item["type"] == "tts_worker_ready":
+                self.tts_stage_var.set(
+                    f"TTS 상태: 모델 준비 완료 (load {float(item['model_load_sec']):.3f}s)"
+                )
+
+            elif item["type"] == "tts_worker_error":
+                self.tts_stage_var.set("TTS 상태: 모델 예열 실패")
+                self._append_history(f"[{time.strftime('%H:%M:%S')}] TTS worker error\n- error: {item['error']}")
+
             elif item["type"] == "tts_done":
                 timestamp = time.strftime("%H:%M:%S")
                 wake_detected_at = self.current_turn_metrics.get("wake_detected_at")
@@ -676,6 +750,17 @@ class VoicePipelineTtsGuiDemo(VoicePipelineGuiDemo):
         """
         if self.tts_play_process and self.tts_play_process.poll() is None:
             self.tts_play_process.terminate()
+        if self.tts_worker_process and self.tts_worker_process.poll() is None:
+            try:
+                if self.tts_worker_process.stdin:
+                    self.tts_worker_process.stdin.write(json.dumps({"cmd": "shutdown"}) + "\n")
+                    self.tts_worker_process.stdin.flush()
+            except Exception:
+                pass
+            try:
+                self.tts_worker_process.terminate()
+            except Exception:
+                pass
         super()._close()
 
 

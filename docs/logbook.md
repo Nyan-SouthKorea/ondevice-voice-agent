@@ -21,6 +21,13 @@
 - 사용자는 assistant가 현재 모드를 잊지 않도록, 협업 모드에서는 `협업)`, 에이전트 모드에서는 `AI)`를 답변 앞에 붙이길 원했다.
 - 이에 따라 `docs/개발방침.md`의 작업 모드 섹션에 답변 prefix 규칙을 추가했고, 현재 `docs/status.md` 기준 활성 모드가 `에이전트 모드`이므로 이후 답변은 `AI)`로 시작한다.
 
+## 2026-03-19 | Human + Codex | Jetson TTS 데모를 persistent worker 경로로 전환
+
+- 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `tts/README.md`였다.
+- 기존 `voice_pipeline_tts_gui_demo.py`는 매 턴마다 `tts_demo.py` subprocess를 새로 띄워 `model_load_sec`와 `tts_wall_sec`가 실제 실사용 latency보다 크게 나왔다.
+- 이를 줄이기 위해 `tts/tools/piper_persistent_worker.py`를 추가하고, GUI는 worker를 한 번만 띄운 뒤 stdin/stdout JSON 프로토콜로 synthesize 요청을 재사용하는 구조로 바꿨다.
+- 이 경로에서는 per-turn permanent wav 저장을 하지 않고, `/tmp/ondevice_voice_agent_tts` 아래 임시 wav만 재생 직전 생성한 뒤 즉시 삭제한다.
+
 ## 2026-03-19 | Human + Codex | 남성 ref 전체 synthetic generation을 resume-safe 방식으로 전환
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`였다.
