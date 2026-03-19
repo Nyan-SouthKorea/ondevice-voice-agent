@@ -2,6 +2,13 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | 작업 모드에 `에이전트 모드`를 추가
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/decisions.md`였다.
+- 사용자는 `협업 모드`와 별도로, 사용자가 자리를 비운 상태를 전제로 장시간 작업을 스스로 이어가는 `에이전트 모드`를 운영 방침에 추가하길 원했다.
+- 이에 따라 `docs/README.md`에는 작업 모드 개요를, `docs/개발방침.md`에는 `에이전트 모드`의 상세 행동 규칙을, `docs/decisions.md`에는 고정 의사결정을 반영했다.
+- 핵심은 `명시적인 중단 지시가 없는 한 이미 시작한 실행을 끊지 않고`, 작업 전환 지점마다 `docs/README.md`와 상태 파일을 다시 확인해 컨텍스트 압축 이후에도 스스로 복구 가능하게 유지하는 것이다.
+
 ## 2026-03-19 | Human + Codex | 남성 ref 전체 synthetic generation을 resume-safe 방식으로 전환
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`였다.
