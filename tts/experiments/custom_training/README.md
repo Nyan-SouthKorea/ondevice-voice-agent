@@ -10,6 +10,19 @@
 4. pilot 검증이 통과한 뒤에만 full training으로 확장
 5. 현재 training 우선순위는 `Piper` 먼저, `Kokoro`는 runtime 우선 / training 후순위다.
 
+현재 준비 완료 상태:
+
+- 한국어 text-only corpus: `../results/tts_custom/corpora/ko_text_corpus_v1/`
+- OpenVoice audition prompt: `tts/evaluation/prompts/openvoice_audition_prompts_ko_v2.tsv`
+- OpenVoice reference 후보:
+  - `../results/tts_custom/references/ko_male_lee_sunkyun/ko_male_lee_sunkyun.wav`
+  - `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
+- OpenVoice 10문장 샘플:
+  - `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_male_lee_sunkyun/`
+  - `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_female_announcer/`
+- pilot synthetic dataset 예상 시간:
+  - 현재 부분 생성본 실측 기준 `1.5시간 pilot audio -> 약 24분`, 안전하게는 `25~30분`
+
 관련 기준 문서:
 
 - `docs/reports/tts_custom_training_plan_v1.md`

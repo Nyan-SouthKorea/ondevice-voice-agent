@@ -214,6 +214,28 @@
 - 현재 `Piper` training blocker는 초기 예상보다 줄었다.
   - system `espeak-ng`는 아직 미설치지만, 현재 env 기준 즉시 blocker는 아니었다
   - 실제 다음 관문은 synthetic dataset와 pilot training 본 실행이다
+- 한국어 custom training용 준비물은 아래까지 실제로 만들었다.
+  - 한국어 text-only corpus: `../results/tts_custom/corpora/ko_text_corpus_v1/`
+  - corpus 준비 스크립트: `tts/tools/prepare_ko_text_corpus.py`
+  - OpenVoice reference 준비 스크립트: `tts/tools/openvoice_prepare_reference.py`
+  - OpenVoice audition 스크립트: `tts/tools/openvoice_audition.py`
+  - synthetic dataset 생성 스크립트: `tts/tools/openvoice_generate_dataset.py`
+- 현재 `ko_text_corpus_v1` 기준 pilot 후보 규모는 아래다.
+  - `pilot_count=1352`
+  - `pilot_estimated_sec=5402.78`
+  - `pilot_estimated_hour=1.501`
+- 부분 생성본 실측 기준 pilot synthetic dataset 생성 예상 시간은 아래처럼 본다.
+  - 부분 생성 결과: `168 wav`, `774.757 sec` audio
+  - global wall span: `205.123 sec`
+  - observed global RTF: `0.2648`
+  - 현재 추정: `1.5시간 pilot audio -> 약 24분`, 안전하게는 `25~30분`
+- 현재 OpenVoice 신규 audition reference 후보는 아래 둘을 active pending 상태로 둔다.
+  - 남성 reference: `../results/tts_custom/references/ko_male_lee_sunkyun/ko_male_lee_sunkyun.wav`
+  - 여성 reference: `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
+- 현재 사용자가 직접 들어볼 OpenVoice 10문장 샘플 경로는 아래다.
+  - 남성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_male_lee_sunkyun/`
+  - 여성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_female_announcer/`
+  - prompt 기준: `tts/evaluation/prompts/openvoice_audition_prompts_ko_v2.tsv`
 - 한국어 custom training은 아래 순서를 따른다.
   - `1~3시간 pilot synthetic dataset`
   - pilot 학습
@@ -268,14 +290,15 @@
 3. `MeloTTS`, `OpenVoice V2`는 Nano에서 기능 성공 경로를 기준으로 더 가벼운 runtime 변환 가능성을 검토한다.
 4. 현재 partial listening score를 기준으로 우선순위를 유지하고, 추가 수기 평가는 필요할 때만 다시 연다.
 5. 한국어 text-only corpus를 정리하고 pilot dataset 구조를 고정한다.
-6. `OpenVoice V2` voice audition과 synthetic dataset `1~3시간` pilot 생성 파이프라인을 연다.
-7. `Piper` preprocessing -> pilot 학습 -> export smoke를 연결한다.
-8. `Piper` pilot 학습 뒤에만 full training 확대 여부를 판단한다.
-9. `Kokoro`는 runtime winner 재검증을 유지하고, training은 후순위 research로 남긴다.
-10. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
-11. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
-12. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
-13. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
+6. `OpenVoice V2` voice audition에서 최종 reference 1개를 승인한다.
+7. 승인된 reference로 `1~3시간 pilot synthetic dataset` 본 생성을 돌린다.
+8. `Piper` preprocessing -> pilot 학습 -> export smoke를 연결한다.
+9. `Piper` pilot 학습 뒤에만 full training 확대 여부를 판단한다.
+10. `Kokoro`는 runtime winner 재검증을 유지하고, training은 후순위 research로 남긴다.
+11. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
+12. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
+13. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
+14. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
 
 ## 참조 문서
 

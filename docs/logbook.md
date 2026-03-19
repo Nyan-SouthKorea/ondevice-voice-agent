@@ -2,6 +2,33 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | OpenVoice audition 후보 준비와 pilot 생성 시간 추정
+
+- 기준 문서는 `docs/status.md`, `docs/reports/tts_custom_training_plan_v1.md`, `tts/experiments/custom_training/README.md`였다.
+- 한국어 custom training 준비를 위해 아래 스크립트를 추가했다.
+  - `tts/tools/prepare_ko_text_corpus.py`
+  - `tts/tools/openvoice_prepare_reference.py`
+  - `tts/tools/openvoice_audition.py`
+  - `tts/tools/openvoice_generate_dataset.py`
+- 공개 한국어 데이터셋에서 audio를 버리고 text만 남기는 `ko_text_corpus_v1`를 만들었다.
+  - `full_count=4893`
+  - `pilot_count=1352`
+  - `pilot_estimated_hour=1.501`
+- OpenVoice synthetic dataset 본 생성 전에 부분 생성으로 시간만 추정했다.
+  - 생성된 부분 결과: `168 wav`, `774.757 sec` audio
+  - global wall span: `205.123 sec`
+  - observed global RTF: `0.2648`
+  - 현재 추정: `1.5시간 pilot audio -> 약 24분`, 안전하게는 `25~30분`
+- 사용자의 새 요청에 따라 full pilot 생성은 여기서 멈추고, reference audition을 우선하기로 했다.
+- 새 reference 후보는 사용자가 넣은 MP4 두 개에서 직접 정리했다.
+  - 남성: `../results/tts_custom/references/ko_male_lee_sunkyun/ko_male_lee_sunkyun.wav`
+  - 여성: `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
+- 두 reference에 대해 OpenVoice 한국어 10문장 샘플을 생성했다.
+  - 남성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_male_lee_sunkyun/`
+  - 여성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_female_announcer/`
+  - prompt 기준: `tts/evaluation/prompts/openvoice_audition_prompts_ko_v2.tsv`
+  - 다음 결정 포인트는 사용자가 두 후보를 직접 듣고 active reference를 고르는 것이다.
+
 ## 2026-03-19 | Human + Codex | Piper/Kokoro training feasibility 1차 audit
 
 - 기준 문서는 `docs/status.md`, `tts/README.md`, `docs/reports/tts_custom_training_plan_v1.md`였다.
