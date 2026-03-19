@@ -42,6 +42,11 @@ def parse_args():
         default=WORKSPACE_ROOT / "env" / "tts_piper" / "bin" / "python",
     )
     parser.add_argument(
+        "--export-python-bin",
+        type=Path,
+        default=WORKSPACE_ROOT / "env" / "tts_piper_train" / "bin" / "python",
+    )
+    parser.add_argument(
         "--benchmark-python-bin",
         type=Path,
         default=WORKSPACE_ROOT / "env" / "tts_eval_stt" / "bin" / "python",
@@ -172,7 +177,7 @@ def export_checkpoint(
     checkpoint_path: Path,
     export_root: Path,
     config_src: Path,
-    python_bin: Path,
+    export_python_bin: Path,
 ) -> Dict[str, str]:
     """
     기능:
@@ -194,7 +199,7 @@ def export_checkpoint(
     if not onnx_path.exists():
         subprocess.run(
             [
-                str(python_bin),
+                str(export_python_bin),
                 "-m",
                 "piper_train.export_onnx",
                 str(checkpoint_path),
@@ -350,7 +355,7 @@ def main():
                     checkpoint_path=checkpoint_path,
                     export_root=export_root,
                     config_src=config_src,
-                    python_bin=args.tts_python_bin,
+                    export_python_bin=args.export_python_bin,
                 )
             )
 

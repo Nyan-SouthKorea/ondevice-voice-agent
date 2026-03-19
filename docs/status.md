@@ -197,9 +197,11 @@
   - `tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
 - 현재 `Piper` pilot 실행 계획 기준 문서는 아래다.
   - `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
+- 현재 `Piper` pilot 자동평가 결과 기준 문서는 아래다.
+  - `tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `tts/docs/환경/260319_1100_Piper_학습환경.md`
-- 현재 `Piper` pilot 학습은 실제로 실행 중이다.
+- 현재 `Piper` pilot 학습은 완료됐다.
   - root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
   - GPU: `GPU0`
   - dataset snapshot: `2.0시간 / 1,928문장`
@@ -216,6 +218,15 @@
     - 완료 후 생성 예정:
       - `exported_onnx/`
       - `benchmark_postprocess/`
+- 현재 `Piper` pilot은 학습, ONNX export, 자동 benchmark까지 완료됐다.
+  - benchmark root:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/benchmark_postprocess/20260319_132231/`
+  - 자동지표 기준 최고 checkpoint:
+    - `epoch=10-step=1298`
+  - 현재 자동지표 결론:
+    - `20`개 한국어 prompt 기준 모든 checkpoint의 exact match가 `0.0`
+    - best `mean_normalized_cer`도 `0.9149`로 아직 품질이 부족하다
+  - 따라서 현재 pilot은 파이프라인 성립 검증에는 성공했지만, full training 확대는 보류한다.
 - 현재 active 역할 분리는 아래와 같다.
   - Jetson runtime winner 후보: `Piper`, `Kokoro`
   - voice audition / synthetic dataset 생성기: `OpenVoice V2`

@@ -2,6 +2,20 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Piper pilot 자동평가 완료, quality gate는 아직 미통과
+
+- 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`, `tts/docs/환경/260319_1100_Piper_학습환경.md`였다.
+- `Piper` pilot 학습은 `epoch=19-step=2360`에서 완료됐다.
+- 중요한 checkpoint `0, 1, 5, 10, 15`와 마지막 checkpoint를 ONNX로 export했다.
+- 자동 후처리 benchmark도 완료했다.
+  - root:
+    - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/benchmark_postprocess/20260319_132231/`
+- 자동지표 기준 best checkpoint는 `epoch=10-step=1298`였다.
+  - `mean_normalized_cer 0.9149`
+  - `exact_match_rate 0.0`
+- 따라서 이번 pilot은 `학습 -> export -> benchmark` 파이프라인 성립 검증에는 성공했지만, 현재 품질 gate는 통과하지 못했다고 기록한다.
+- 결과 요약은 `tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`로 승격했다.
+
 ## 2026-03-19 | Human + Codex | Piper pilot 학습 진행 + 자동 후처리 연결
 
 - 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`, `tts/docs/환경/260319_1100_Piper_학습환경.md`였다.
