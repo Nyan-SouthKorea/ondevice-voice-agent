@@ -1051,3 +1051,21 @@
 ### Next
 
 - 상위 문서 중복을 더 줄이고, 현재 상태 기준은 `status.md` 하나로 수렴한다.
+
+## 2026-03-19 | Human + Codex | Jetson 한국어 TTS 입력 GUI를 PyQt5로 교체
+
+### Context
+
+- Jetson Nano에서 기존 `tkinter` 기반 TTS 텍스트 입력 GUI는 한글 IME 입력이 안정적이지 않았다.
+- Jetson에는 `PyQt5`와 `ibus`가 이미 있어, 입력기 호환성이 더 좋은 GUI 툴킷으로 옮기는 쪽이 빠르고 안전했다.
+
+### Actions
+
+- `tts/tools/tts_text_input_gui.py`를 `PyQt5` 기반으로 교체했다.
+- `tts/tools/tts_text_input_gui_jetson.sh`의 workspace root 계산 버그를 수정했다.
+- Jetson에서 GUI를 다시 띄우고, 프로세스와 IME 환경변수 `DISPLAY=:0`, `XMODIFIERS=@im=ibus`, `GTK_IM_MODULE=ibus`, `QT_IM_MODULE=ibus`, `LC_ALL=ko_KR.UTF-8`를 확인했다.
+
+### Next
+
+- 사용자가 Jetson GUI에서 실제 한글 입력과 합성을 확인한다.
+- 필요하면 재생 장치 선택과 입력기 관련 사용법을 짧게 추가 문서화한다.

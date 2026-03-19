@@ -199,6 +199,17 @@ python tts/tools/tts_jetson_demo.py --model kokoro
   - `edge_tts`, `openai_api`: network
 - 필요하면 `--device`로 직접 덮어쓴다.
 
+Jetson 한국어 텍스트 입력 GUI:
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent
+repo/tts/tools/tts_text_input_gui_jetson.sh
+```
+
+- `tts/tools/tts_text_input_gui.py`는 Jetson에서 한글 IME 입력을 안정적으로 받기 위해 `PyQt5` 기반으로 동작한다.
+- GUI 자체는 `/usr/bin/python3`로 띄우고, 실제 합성은 `env/tts_piper_jetson/bin/python repo/tts/tts_demo.py`를 subprocess로 호출한다.
+- 기본 한국어 Piper ONNX는 우선 `repo/tts/models/piper_ko_260319_공식파인튜닝/`를 보고, 없으면 `results/tts_custom/training/.../exported_onnx/` 경로를 fallback으로 사용한다.
+
 현재 v1 방향:
 
 - 빠른 end-to-end 연결용:
