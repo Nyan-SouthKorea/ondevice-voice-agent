@@ -2,6 +2,24 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | 장시간 실행 중 사용자 질문은 작업을 끊지 않는 규칙 추가
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/decisions.md`였다.
+- 사용자가 장시간 실행 중 질문을 하더라도, 명시적인 중단 지시가 아니면 기존 작업을 멈추지 말고 답변만 하길 원한다고 요청했다.
+- 이에 따라 `docs/개발방침.md`와 `docs/decisions.md`에 아래 규칙을 고정했다.
+  - 장시간 실행 중 질문은 중간 답변만 하고, 백그라운드 작업은 계속 유지한다.
+  - 실제로 멈출 때는 `멈춰`, `중단`, `취소` 같은 명시적 지시가 있을 때만 멈춘다.
+
+## 2026-03-19 | Human + Codex | OpenVoice full generation 기본 경로를 `TTS only`로 전환
+
+- 기준 문서는 `docs/status.md`, `docs/reports/tts_custom_training_plan_v1.md`, `docs/decisions.md`였다.
+- 사용자가 `STT 역전사를 수행해서 문제되는 음성을 필터링하면서 생성하라`고 별도로 지시할 때만 filtered run을 사용하고, 기본 synthetic dataset 생성은 빠른 `TTS only` 모드로 돌리길 원한다고 요청했다.
+- 이에 따라 아래를 정리했다.
+  - 기존 `full_v1/openvoice_ko_female_announcer_speed_1p1/`는 filtered partial run으로 보존
+  - `stt_spotcheck_100` 결과는 archive/reference 용도로 유지
+  - 새 active run은 `full_v1_tts_only/openvoice_ko_female_announcer_speed_1p1/`로 분리
+  - 새 active run 옆에는 `progress.local.md`, `progress.local.json`을 두고 진행률을 덮어쓴다
+
 ## 2026-03-19 | Human + Codex | OpenVoice active reference와 speed 고정
 
 - 기준 문서는 `docs/status.md`, `docs/reports/tts_custom_training_plan_v1.md`, `tts/experiments/custom_training/README.md`였다.

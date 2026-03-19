@@ -243,6 +243,17 @@
   - approved speed: `1.1`
   - 이번 승인 과정에서는 speed만 바꿨고, `tau`, `sdp_ratio`, `noise_scale`, `noise_scale_w`는 건드리지 않았다.
   - canonical selection manifest: `tts/experiments/custom_training/openvoice_active_selection_20260319.json`
+- OpenVoice synthetic dataset 생성 정책은 아래처럼 둔다.
+  - 기본값: `TTS only`
+  - STT 역전사 필터: 명시적으로 요청할 때만 사용
+  - 이유: `Whisper large-v3` 필터는 품질 보조에는 유효하지만 처리량을 크게 낮춘다.
+- 현재 active full generation run은 아래다.
+  - active run root: `../results/tts_custom/synthetic_dataset/full_v1_tts_only/openvoice_ko_female_announcer_speed_1p1/`
+  - progress file: `progress.local.md`
+  - mode: `OpenVoice TTS only (no STT filtering)`
+- 이전 filtered partial run은 아래에 archive/reference로 남겨둔다.
+  - `../results/tts_custom/synthetic_dataset/full_v1/openvoice_ko_female_announcer_speed_1p1/`
+  - `stt_spotcheck_100`과 `problem_audio_5`도 이 경로를 기준으로 본다.
 - 한국어 custom training은 아래 순서를 따른다.
   - `1~3시간 pilot synthetic dataset`
   - pilot 학습
@@ -298,7 +309,7 @@
 4. 현재 partial listening score를 기준으로 우선순위를 유지하고, 추가 수기 평가는 필요할 때만 다시 연다.
 5. 한국어 text-only corpus를 정리하고 pilot dataset 구조를 고정한다.
 6. `OpenVoice V2` voice audition에서 최종 reference 1개를 승인한다.
-7. 승인된 reference로 `1~3시간 pilot synthetic dataset` 본 생성을 돌린다.
+7. active `tts_only` full generation 경과를 보면서 text corpus를 더 확장해 `15~30시간`급 full_v2 후보를 준비한다.
 8. `Piper` preprocessing -> pilot 학습 -> export smoke를 연결한다.
 9. `Piper` pilot 학습 뒤에만 full training 확대 여부를 판단한다.
 10. `Kokoro`는 runtime winner 재검증을 유지하고, training은 후순위 research로 남긴다.

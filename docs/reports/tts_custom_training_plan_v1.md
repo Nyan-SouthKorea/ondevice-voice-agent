@@ -164,17 +164,20 @@
 - teacher artifact, 발음 붕괴, prosody 이상을 먼저 걸러야 한다.
 - 이 단계에서 문제가 있으면 대규모 생성은 시간 낭비다.
 
-### 필수 필터
+### 기본 품질 관리
 
-- `Whisper large-v3` 역전사
-- CER / normalized exact match
-- 금지 패턴 규칙
-- 샘플 청취
+- 기본 full generation은 `TTS only`로 둔다.
+- `Whisper large-v3` 역전사 필터는 필요할 때만 opt-in 한다.
+- spot-check에서는 아래를 다시 본다.
+  - CER / normalized exact match
+  - 금지 패턴 규칙
+  - 샘플 청취
 
 ### 기본 generation 설정
 
 - OpenVoice synthetic dataset 생성 기본값은 `ko_female_announcer + speed 1.1`로 둔다.
 - 이 기본값은 `tts/tools/openvoice_generate_dataset.py` 기본 인자와 `tts/experiments/custom_training/openvoice_active_selection_20260319.json` 기준으로 유지한다.
+- active full generation 기본 경로는 `TTS only`로 두고, filtered run은 별도 실험/검증 경로로 분리한다.
 
 ### 메타데이터
 
@@ -185,6 +188,7 @@
 - `generation_settings`
 - `stt_filter_score`
 - `accepted`
+- `filter_mode`
 
 ## Track F. pilot 학습
 

@@ -17,6 +17,11 @@
 - 결정: 장시간 작업에서는 주요 액션 2~3개마다 짧은 진행 보고를 남기고, 1분 이상 걸릴 수 있는 실행은 핵심 터미널 출력을 함께 요약한다. 또한 안정된 마일스톤마다 local commit 필요 여부와 push 시점을 다시 판단하고, 가능하면 `local commit 2회당 push 1회` 정도를 기본 cadence로 삼는다.
 - 이유: 긴 세션에서는 사용자가 현재 확인한 것, 막힌 지점, 다음 액션을 놓치기 쉽고, commit/push cadence가 없으면 의미 있는 중간 상태가 로컬에 오래 머물러 백업과 협업 기준이 늦어진다.
 
+## 2026-03-19 | 장시간 실행 중 질문은 작업을 끊지 않고 중간 답변만 한다
+
+- 결정: 장시간 실행 중 사용자가 중간 질문을 해도, 명시적인 중단 지시가 없는 한 기존 백그라운드 작업은 멈추지 않는다. 질문에는 중간 답변만 하고, 원래 진행하던 작업을 계속 이어간다.
+- 이유: 긴 생성/학습/변환 작업을 매번 끊으면 총 소요 시간이 커지고, 사용자도 질문 한 번으로 작업이 중단되길 원하지 않는 경우가 많다.
+
 ## 2026-03-18 | 문서가 없는 프로젝트는 최소 문서 체계를 먼저 만든다
 
 - 결정: 실제 프로젝트 개발을 시작하는데 `docs/README.md`가 없다면, 먼저 `docs/README.md`, `docs/개발방침.md`, `docs/status.md`, `docs/decisions.md`, `docs/logbook.md`를 최소 형태로 만든 뒤 작업한다.
@@ -71,6 +76,11 @@
 
 - 결정: OpenVoice V2를 synthetic dataset 생성기로 사용할 때 active reference는 `ko_female_announcer`로 고정하고, 기본 generation speed는 `1.1`로 유지한다. 이번 결정에서는 speed만 바꿨고, `tau`, `sdp_ratio`, `noise_scale`, `noise_scale_w` 같은 tone 파라미터는 기본값을 유지한다.
 - 이유: 사용자가 reference/speed 조합을 직접 청취한 뒤 `ko_female_announcer + speed 1.1`을 최종 승인했고, 이후 파일럿 학습과 full 학습에서 같은 기준을 재사용해야 컨텍스트가 길어져도 방향이 흔들리지 않는다.
+
+## 2026-03-19 | OpenVoice synthetic dataset 생성에서 STT 역전사 필터는 기본 비활성, 필요 시에만 opt-in 한다
+
+- 결정: OpenVoice synthetic dataset 생성 기본 경로는 `TTS only`로 두고, `Whisper large-v3` 역전사 필터는 사용자가 명시적으로 요청할 때만 켠다.
+- 이유: 현재 생성 파이프라인에서는 STT 필터가 품질 보조에는 도움이 되지만 처리량을 크게 떨어뜨린다. 기본 경로는 속도와 총량 확보를 우선하고, 품질 검증은 표본 spot-check나 별도 filtered run으로 분리하는 편이 더 실용적이다.
 
 ## 2026-03-13 | 민감한 운영 정보는 `secrets/` 로컬 문서로 분리한다
 
