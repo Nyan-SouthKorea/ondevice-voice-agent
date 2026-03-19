@@ -2,6 +2,21 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Partial human listening score 회수와 benchmark 보고서 반영
+
+- 기준 문서는 `docs/status.md`, `tts/evaluation/README.md`, `docs/reports/tts_benchmark_full_v1_20260318.md`였다.
+- 사용자가 Jetson Nano GUI에서 일부만 청취 평가를 입력했고, 남은 평가는 시간 대비 효용이 낮다고 판단해 여기서 마감하기로 했다.
+- Nano에서 아래 산출물을 A100 canonical 결과 폴더로 회수했다.
+  - `ko_grouped_score_sheet.tsv`
+  - `en_grouped_score_sheet.tsv`
+  - `human_scores_flat.tsv`
+  - `assets/tts_listening_review_gui_20260319.png`
+- 현재 partial coverage는 아래다.
+  - 한국어: `KO001`, `KO010`, `KO018`
+  - 영어: `EN001`
+- 입력된 항목만 기준으로 모델별 평균을 계산해 `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/human_score_summary.tsv`를 만들었다.
+- benchmark 보고서와 `status`에는 coverage와 `n`을 함께 적어 과해석을 막도록 반영했다.
+
 ## 2026-03-19 | Human + Codex | Jetson Nano listening review GUI 연속 재생 오류 수정
 
 - 기준 문서는 `docs/status.md`, `tts/evaluation/README.md`였다.

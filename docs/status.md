@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, AGX/Nano 4모델 bring-up 완료, Jetson 최적화 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료 |
+| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Jetson 최적화 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료 |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -180,6 +180,17 @@
       - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/en_grouped_score_sheet.tsv`
     - flat export:
       - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/human_scores_flat.tsv`
+    - partial summary:
+      - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/human_score_summary.tsv`
+    - GUI screenshot:
+      - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/assets/tts_listening_review_gui_20260319.png`
+- 현재 partial human listening coverage는 아래다.
+  - 한국어: `KO001`, `KO010`, `KO018`
+  - 영어: `EN001`
+- partial human listening 기준 요약은 아래처럼 본다.
+  - 한국어: `MeloTTS (KO) 9.00`, `OpenAI API TTS (KO) 8.33`, `Edge TTS (KO) 8.00`, `OpenVoice V2 (KO) 8.00`
+  - 영어: `Kokoro (EN) 10.00`, `Piper (EN) 10.00`, `MeloTTS (EN) 10.00`, `OpenVoice V2 (EN) 9.00`
+  - 단, 영어는 `EN001` 한 문장만 평가했으므로 순위 확정 근거로 쓰지 않는다.
 - `OpenVoice V2`는 reference 재선정 뒤 canonical benchmark에 다시 반영했다.
   - active 한국어 reference: `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
   - source: `stt/datasets/korean_eval_50/021.wav`
@@ -224,7 +235,7 @@
 1. Orin Nano에서 살아난 4모델 경로를 기준으로 ONNX, TensorRT, hybrid runtime 같은 경량화 가능성을 모델별로 나눈다.
 2. `Piper cpu`, `Kokoro cuda`를 Jetson 상위 voice pipeline local 후보로 먼저 유지한다.
 3. `MeloTTS`, `OpenVoice V2`는 Nano에서 기능 성공 경로를 기준으로 더 가벼운 runtime 변환 가능성을 검토한다.
-4. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
+4. 현재 partial listening score를 기준으로 우선순위를 유지하고, 추가 수기 평가는 필요할 때만 다시 연다.
 5. 영어 local 후보가 우세하다고 판단되면 custom training 계획 문서를 연다.
 6. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
 7. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
