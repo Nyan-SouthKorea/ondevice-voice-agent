@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Jetson 최적화 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료 |
+| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Jetson runtime winner + custom training planning 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, 다음 active 방향은 `Piper/Kokoro` runtime winner 검증 + `OpenVoice V2` synthetic dataset pipeline |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -191,6 +191,20 @@
   - 한국어: `MeloTTS (KO) 9.00`, `OpenAI API TTS (KO) 8.33`, `Edge TTS (KO) 8.00`, `OpenVoice V2 (KO) 8.00`
   - 영어: `Kokoro (EN) 10.00`, `Piper (EN) 10.00`, `MeloTTS (EN) 10.00`, `OpenVoice V2 (EN) 9.00`
   - 단, 영어는 `EN001` 한 문장만 평가했으므로 순위 확정 근거로 쓰지 않는다.
+- 현재 active TTS 후속 계획은 아래 문서를 기준으로 본다.
+  - `docs/reports/tts_custom_training_plan_v1.md`
+- 현재 active 역할 분리는 아래와 같다.
+  - Jetson runtime winner 후보: `Piper`, `Kokoro`
+  - voice audition / synthetic dataset 생성기: `OpenVoice V2`
+  - 기존 benchmark anchor와 비교용 후보: `MeloTTS`
+- 한국어 custom training은 아래 순서를 따른다.
+  - `1~3시간 pilot synthetic dataset`
+  - pilot 학습
+  - 검증 통과 시 full 학습으로 확대
+- `runtime winner`와 `training winner`는 같다고 가정하지 않는다.
+- A100 `80GB x 2`는 generation, STT filtering, training 같은 독립 작업을 병렬로 나눠 적극 사용한다.
+- 현재 기준에서는 리소스 때문에 transfer learning을 고집하지 않는다.
+  - 필요하면 scratch와 transfer를 모두 pilot에서 비교하고, 더 나은 쪽으로 간다.
 - `OpenVoice V2`는 reference 재선정 뒤 canonical benchmark에 다시 반영했다.
   - active 한국어 reference: `../results/tts_assets/openvoice_v2/references/ko_benchmark_reference.wav`
   - source: `stt/datasets/korean_eval_50/021.wav`
@@ -236,11 +250,13 @@
 2. `Piper cpu`, `Kokoro cuda`를 Jetson 상위 voice pipeline local 후보로 먼저 유지한다.
 3. `MeloTTS`, `OpenVoice V2`는 Nano에서 기능 성공 경로를 기준으로 더 가벼운 runtime 변환 가능성을 검토한다.
 4. 현재 partial listening score를 기준으로 우선순위를 유지하고, 추가 수기 평가는 필요할 때만 다시 연다.
-5. 영어 local 후보가 우세하다고 판단되면 custom training 계획 문서를 연다.
-6. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
-7. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
-8. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
-9. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
+5. `Piper`, `Kokoro`의 runtime winner와 학습 가능성을 audit한다.
+6. `OpenVoice V2` voice audition과 synthetic dataset `1~3시간` pilot 생성 파이프라인을 연다.
+7. pilot 학습 뒤에만 full training 확대 여부를 판단한다.
+8. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
+9. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.
+10. wake word 뒤에 VAD를 연결하고 speech start / end 기준을 고정한다.
+11. `WhisperTRT small nano safe`를 기준으로 wake word + VAD + STT 통합 GUI 동작을 실제 마이크 조건에서 점검한다.
 
 ## 참조 문서
 

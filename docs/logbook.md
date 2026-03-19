@@ -2,6 +2,22 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | 영어 runtime winner + 한국어 custom training 계획 고정
+
+- 기준 문서는 `docs/status.md`, `tts/README.md`, `docs/research/tts.md`였다.
+- 사용자가 `Jetson runtime winner`와 `OpenVoice V2 synthetic dataset pipeline`을 결합한 새 방향으로 진행하길 원했고, 이 흐름을 나중에 잊지 않도록 문서에 고정하길 원했다.
+- 합의한 핵심은 아래다.
+  - `Piper`, `Kokoro`는 Jetson runtime winner 후보로 먼저 검증
+  - `OpenVoice V2`는 최종 runtime이 아니라 voice audition + synthetic dataset 생성기
+  - 한국어 custom training은 `1~3시간 pilot dataset -> pilot 학습 -> 확대`
+  - `runtime winner`와 `training winner`는 같다고 가정하지 않음
+- 이에 따라 아래를 반영했다.
+  - `docs/reports/tts_custom_training_plan_v1.md`
+  - `tts/experiments/custom_training/README.md`
+  - `docs/status.md`
+  - `tts/README.md`
+  - `docs/research/tts.md`
+
 ## 2026-03-19 | Human + Codex | Partial human listening score 회수와 benchmark 보고서 반영
 
 - 기준 문서는 `docs/status.md`, `tts/evaluation/README.md`, `docs/reports/tts_benchmark_full_v1_20260318.md`였다.

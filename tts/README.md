@@ -181,8 +181,11 @@ python tts/tools/tts_jetson_demo.py --model kokoro
   - `OpenAI API TTS`
 - wake word 데이터 생성 / reference baseline:
   - `Edge TTS`
-- 온디바이스 기본 후보:
-  - `MeloTTS`
+- Jetson 영어 runtime shortlist:
+  - `Piper`
+  - `Kokoro`
+- 후속 custom training 트랙:
+  - `OpenVoice V2`를 voice audition + synthetic dataset 생성기로 사용
 
 현재 고민과 판단:
 
@@ -199,9 +202,9 @@ python tts/tools/tts_jetson_demo.py --model kokoro
 현재 선택지 비교:
 
 1. 이미 잘 되어 있는 한국어 TTS를 가져와 목소리만 선택해 사용
-   - 현재 기준 제품 관점의 메인 경로다.
-   - 가장 짧은 시간 안에 고객 시연 품질과 Jetson 실시간성을 함께 확인할 수 있다.
-   - 기본 후보는 `MeloTTS`다.
+   - 초기 검토 시점에는 가장 빠른 기준선 후보였다.
+   - 하지만 현재 Jetson 실측 기준으로는 `MeloTTS`가 runtime 기본 후보라고 보지 않는다.
+   - 지금은 한국어 품질 anchor와 비교 기준으로만 유지한다.
 2. 원하는 목소리를 직접 학습해 사용
    - 현재 단계에서는 보류한다.
    - 데이터 수집, 음성 정제, 권리 검토, 학습, 추론 경량화까지 동시에 열려 오버엔지니어링이 되기 쉽다.
@@ -211,17 +214,19 @@ python tts/tools/tts_jetson_demo.py --model kokoro
    - 성공하면 시연용 인상 개선 폭이 클 수 있다.
    - 다만 2-stage(`TTS -> voice conversion`) 또는 무거운 1-stage 구조가 되면 Jetson 동시 구동 제약에 걸릴 가능성이 있어, 기본 경로가 아니라 2차 후보로 둔다.
 
-현재 결론:
+2026-03-19 이후 active 결론:
 
 - A100 비교 트랙:
   - `MeloTTS`
   - `OpenVoice V2`
   - `Piper`
   - `Kokoro`
-- 제품 우선순위 판단:
-  - `기존 한국어 TTS 선택 + 좋은 voice 고르기`를 먼저 본다.
-  - `zero-shot / voice cloning`은 품질 향상 폭이 클 때만 다음 단계로 올린다.
-  - `커스텀 voice 학습`은 여전히 보류한다.
+- Jetson runtime 우선 트랙:
+  - `Piper`
+  - `Kokoro`
+- `OpenVoice V2`는 최종 runtime 후보가 아니라, 원하는 목소리 audition과 synthetic dataset 생성기로 본다.
+- 한국어 custom training은 `1~3시간 pilot dataset -> pilot 학습 -> 확대` 순서로 진행한다.
+- `runtime winner`와 `training winner`는 같다고 가정하지 않는다.
 
 즉, 지금은 A100에서 4개 후보를 모두 붙여 보되, Jetson 최종 후보를 고를 때는 여전히 "음색 + 지연 + 메모리 + 운영 단순성" 기준으로 좁힌다.
 `Edge TTS`와 `OpenAI API TTS`는 이 4개 로컬 후보와 별개로 reference backend로 유지한다.
@@ -241,8 +246,11 @@ python tts/tools/tts_jetson_demo.py --model kokoro
   - `Piper cpu`와 `Kokoro cuda`가 영어 local 후보
   - `MeloTTS`는 Jetson CPU에서만 동작했고 warm run도 느려 한국어 local 기본 후보로는 보류
   - `Edge TTS`, `OpenAI API TTS`는 network fallback/demo 경로로 유지
-- 다음 단계는 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`를 공통 문장셋 기준 benchmark 수집 구조로 넘기는 것이다.
-  - 필요하면 `Edge TTS`, `OpenAI API TTS`도 reference 청취 baseline으로 함께 듣는다.
+- 다음 단계는 아래다.
+  - `Piper`, `Kokoro` runtime winner 재검증
+  - `Piper`, `Kokoro` 학습 가능성 audit
+  - `OpenVoice V2` reference audition pipeline
+  - 한국어 synthetic dataset `1~3시간` pilot 생성과 pilot 학습
 
 현재 확인된 OpenAI API TTS 메모:
 

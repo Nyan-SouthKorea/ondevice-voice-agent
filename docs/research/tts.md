@@ -1,7 +1,17 @@
 # TTS 기술 조사
 
-> 마지막 업데이트: 2026-03-18
+> 마지막 업데이트: 2026-03-19
 > 목적: Jetson Orin Nano 기준 TTS v1 선택과 구현 순서를 정리한다.
+
+## 2026-03-19 후속 방향 전환
+
+- 아래 내용은 초기 후보 비교와 선택 배경을 보존한 문서다.
+- 현재 active 실행 계획은 `docs/reports/tts_custom_training_plan_v1.md`를 기준으로 본다.
+- 현재 active 방향은 아래다.
+  - Jetson runtime winner 후보: `Piper`, `Kokoro`
+  - `OpenVoice V2`는 최종 runtime이 아니라 voice audition + synthetic dataset 생성기
+  - 한국어 custom training은 `1~3시간 pilot dataset -> pilot 학습 -> 확대`
+  - `runtime winner`와 `training winner`는 같다고 가정하지 않는다
 
 ## 현재 결론
 
