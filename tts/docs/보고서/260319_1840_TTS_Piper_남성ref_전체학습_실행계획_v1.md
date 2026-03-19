@@ -1,6 +1,6 @@
 # TTS Piper 남성ref 전체학습 실행계획 v1
 
-> 마지막 업데이트: 2026-03-19 18:40 KST
+> 마지막 업데이트: 2026-03-20 08:22 KST
 > 목적: `ko_male_lee_sunkyun` reference와 `v1~v3 전체 텍스트`를 사용해 OpenVoice synthetic dataset을 새로 만들고, 그 결과로 `Piper` 한국어 공식 fine-tune run을 다시 수행한다.
 
 ## 한 줄 결론
@@ -12,6 +12,16 @@
   1. 남성 ref synthetic data로도 `Piper 공식 fine-tune`이 안정적으로 수렴하는지 확인
   2. 각 단계의 실행시간을 모두 기록
   3. 최종 ONNX를 Jetson Nano에서 실제로 측정하고 문서화
+
+## 현재 상태 점검
+
+- `OpenVoice` 남성 ref 전체 generation은 완료됐다.
+  - `24,689 wav`
+  - `30.300시간`
+- 생성 완료 뒤 자동으로 `inventory -> official fine-tune`으로 넘어가야 했지만, 실제로는 그렇지 않았다.
+  - `monitor_generation_progress.py`만 남아 있었고
+  - `wait_generation_and_continue.pid`, `watch_generation_and_continue.pid`가 가리키는 실제 프로세스는 모두 죽어 있었다.
+- 따라서 이 문서의 다음 액션은 `generation 완료 가정` 아래에서 `inventory`부터 다시 시작하는 것이다.
 
 ## 기준 문서
 
@@ -81,21 +91,15 @@
 
 ## 단계
 
-1. male synthetic generation 시작
-   - 운영 메모:
-     - 초기 run은 174개까지 생성 뒤 조용히 멈췄다.
-     - 같은 구간 문장을 직접 probe한 결과, 특정 텍스트나 ref 자체가 blocker는 아니었다.
-     - 현재는 `--skip-existing`와 row 단위 `manifest.tsv` append가 가능한 generation 스크립트로 같은 run root를 resume하는 방식으로 진행한다.
-2. progress monitor와 시간 기록 연결
-3. generation 완료 후 inventory 생성
-4. `deduped_rows.tsv` 기준 dataset snapshot 생성
-5. Piper preprocess
-6. official lessac medium checkpoint 기준 fine-tune
-7. checkpoint sampler
-8. ONNX export + benchmark
-9. A100 smoke
-10. Jetson Nano smoke
-11. 결과 보고서 정리
+1. 남성 ref generation 완료 상태를 기준으로 inventory 생성
+2. `deduped_rows.tsv` 기준 dataset snapshot 생성
+3. Piper preprocess
+4. official lessac medium checkpoint 기준 fine-tune
+5. checkpoint sampler
+6. ONNX export + benchmark
+7. A100 smoke
+8. Jetson Nano smoke
+9. 결과 보고서 정리
 
 ## 시간 기록 원칙
 
@@ -130,3 +134,5 @@
   - synthetic data 품질 차이
   - 남성 ref에서의 발음 안정성 차이
   - Jetson Nano runtime latency 차이
+- 현재 가장 먼저 해결해야 할 문제는 모델 품질이 아니라 `자동 이어짐이 실제로 동작하게 만드는 것`이다.
+- 즉 이 run의 다음 단계는 `generation 성공 여부 확인`이 아니라 `generation 이후 chain을 detached 실행으로 다시 복구`하는 것이다.

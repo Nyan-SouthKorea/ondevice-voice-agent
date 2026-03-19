@@ -1,6 +1,6 @@
 # Status
 
-> 마지막 업데이트: 2026-03-19
+> 마지막 업데이트: 2026-03-20
 
 ## 현재 작업 모드
 
@@ -35,7 +35,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Piper 공식 fine-tune control run 검증 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, `Piper` 공식 fine-tune control run까지 자동 benchmark 완료, Jetson Nano 한글 입력용 `PyQt5` 텍스트 입력 GUI 추가, STT 원문을 그대로 읽는 `voice_pipeline_tts_gui_demo.py` 추가, TTS 전용 램프와 실행시간/`metrics.jsonl` 기록 반영, 다음 active 방향은 `공식 fine-tune 결과 청취 + Jetson runtime 검증 + 30시간대 scale-up 판단` |
+| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Piper 공식 fine-tune control run 검증 완료, 남성 ref 전체학습 재현 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, `Piper` 공식 fine-tune control run까지 자동 benchmark 완료, Jetson Nano 한글 입력용 `PyQt5` 텍스트 입력 GUI 추가, `voice_pipeline_tts_gui_demo.py`는 persistent Piper worker 경로로 전환 완료, 남성 ref OpenVoice 전체 생성은 `24,689문장 / 30.300시간`으로 완료됐고 stale monitor / dead watcher 점검까지 끝났다. 현재 active 방향은 `inventory -> official fine-tune -> postprocess -> Jetson Nano 평가`를 detached chain으로 다시 시작하는 것이다 |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -118,6 +118,12 @@
     - per-turn model reload 제거
     - permanent wav 저장 제거
     - `tts_wall_sec`를 실제 합성 wall time에 가깝게 맞춤
+- 남성 ref 전체 synthetic generation 현재 기준
+  - run root: `../results/tts_custom/synthetic_dataset/full_male_v1_tts_only/openvoice_ko_male_lee_sunkyun_speed_1p1`
+  - corpus: `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/master_union_unique_by_text.tsv`
+  - 생성 결과: `24,689 wav`, `30.300시간`
+  - 현재 판단: generation 본체는 완료됐고, `monitor_generation_progress.py`와 `wait/watch_generation_and_continue`는 stale 또는 dead 상태였다
+  - 다음 단계: `260319_1840_Piper_한국어_공식_파인튜닝_남성ref_v1` 아래에서 inventory와 official fine-tune을 detached chain으로 다시 시작
 - `Kokoro`는 A100 `cuda` 기준 공식 영어 smoke를 통과했고, 현재 공식 language code에는 한국어가 없다.
   - env: `../env/tts_kokoro`
   - 공식 repo/model: `hexgrad/Kokoro-82M`

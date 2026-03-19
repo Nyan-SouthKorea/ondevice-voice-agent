@@ -28,6 +28,14 @@
 - 이를 줄이기 위해 `tts/tools/piper_persistent_worker.py`를 추가하고, GUI는 worker를 한 번만 띄운 뒤 stdin/stdout JSON 프로토콜로 synthesize 요청을 재사용하는 구조로 바꿨다.
 - 이 경로에서는 per-turn permanent wav 저장을 하지 않고, `/tmp/ondevice_voice_agent_tts` 아래 임시 wav만 재생 직전 생성한 뒤 즉시 삭제한다.
 
+## 2026-03-19 | Human + Codex | 남성 ref 전체학습 체인에 detached supervisor를 실제로 다시 걸음
+
+- 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`였다.
+- 사용자는 에이전트 모드의 핵심을 `작업을 끊지 않는 것`으로 봤고, 질문은 “어떻게 실제로 보장하느냐”였다.
+- 실제 점검 결과 남성 ref 전체학습 체인의 `wait_generation_and_continue.sh`는 상태 파일만 남아 있고 실제 프로세스는 떠 있지 않았다.
+- 그래서 `nohup`으로 detached supervisor를 다시 걸고, pid 파일 `wait_generation_and_continue.pid`와 실제 `ps` 결과를 확인했다.
+- 이 변경과 함께 `에이전트 모드`에서는 장시간 다단계 파이프라인을 세션과 분리된 supervisor로 넘기는 규칙을 `개발방침`과 `decisions`에 추가했다.
+
 ## 2026-03-19 | Human + Codex | 남성 ref 전체 synthetic generation을 resume-safe 방식으로 전환
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`였다.
@@ -1164,3 +1172,20 @@
 ### Next
 
 - 사용자가 새 GUI에서 STT 모델 로드와 end-to-end 응답을 다시 확인한다.
+
+## 2026-03-20 | Human + Codex | 남성 ref generation 완료와 continuation 실패를 실제 상태 기준으로 다시 정리
+
+### Context
+
+- 남성 ref `OpenVoice` 전체 생성은 이미 끝났는데도, continuation watcher가 다음 단계를 시작하지 않은 채 상태 파일만 남겨 둔 흔적이 있었다.
+- 에이전트 모드에서는 대화 맥락보다 실제 프로세스와 산출물 상태를 기준으로 판단해야 하므로, 컨텍스트 압축 전에 현재 상태를 다시 고정할 필요가 있었다.
+
+### Actions
+
+- `full_male_v1_tts_only` run root의 `progress.local.md`, `manifest.tsv`, `wav` 개수를 다시 대조해 generation 완료를 확정했다.
+- `monitor_generation_progress.py`만 남고 `openvoice_generate_dataset.py` 본체와 `wait/watch_generation_and_continue` 프로세스는 죽어 있음을 확인했다.
+- `docs/status.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`, 새 보고서 `tts/docs/보고서/260320_0822_TTS_상태점검_및_다음계획.md`를 현재 사실에 맞게 갱신했다.
+
+### Next
+
+- 남성 ref run은 `inventory -> official fine-tune -> sampler/postprocess -> A100/Nano smoke`를 detached chain으로 다시 시작한다.
