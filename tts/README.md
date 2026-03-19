@@ -9,8 +9,11 @@ TTS 문서 허브:
 - 현재 active custom training 계획: `../tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`
 - 현재 Piper pilot 실행 계획: `../tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
 - 현재 Piper pilot 자동평가 결과: `../tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`
+- 현재 Piper 공식 파인튜닝 실행 계획: `../tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`
 - 현재 학습 가능성 점검: `../tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
 - 현재 active Piper pilot run root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
+- 현재 active Piper 공식 파인튜닝 run root: `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`
+- 현재 TTS 통합 텍스트 코퍼스 인덱스: `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
 - Jetson Nano 구동 기록: `../tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`
 - AGX Orin 구동 기록: `../tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`
 - A100 전체 benchmark 결과: `../tts/docs/보고서/260318_1824_TTS_전체_벤치마크_결과_v1.md`
@@ -255,6 +258,57 @@ python tts/tools/tts_jetson_demo.py --model kokoro
     - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/checkpoint_review/review_samples/`
   - 학습 종료 후 자동 후처리:
     - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/postprocess_status.local.md`
+
+## 한국어 text 코퍼스 구성
+
+현재 OpenVoice 합성과 Piper 학습에 쓰는 한국어 텍스트는 `v1`, `v2`, `v3` 세 단계로 정리되어 있다. 각 버전은 서로 exact duplicate가 없도록 관리하고, 최종 통합 인덱스는 아래에 따로 모아둔다.
+
+- 통합 인덱스:
+  - `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
+- 통합 TSV:
+  - `master_union_unique_by_text.tsv`
+- 데이터셋 설명 아카이브:
+  - `../results/tts_custom/corpora/260319_1635_데이터셋_설명_아카이브_v1/`
+- 역할 분리:
+  - `260319_1510...`: generation/training에 쓰는 canonical text index
+  - `260319_1635...`: dataset card, license, local summary를 모아둔 설명 아카이브
+
+| 버전 | 목적 | 사용한 공개 데이터셋 | 수집 방식 | 현재 문장 수 | 현재 확인 가능한 원본/캐시 경로 |
+|---|---|---|---|---:|---|
+| `v1` | 첫 번째 clean seed corpus | `Bingsu/KSS_Dataset`, `Bingsu/zeroth-korean` | Hugging Face `streaming=True`로 읽고 `audio` 컬럼은 버리고 text만 사용 | `4,893` | `~/.cache/huggingface/datasets/Bingsu___kss_dataset/`, `~/.cache/huggingface/datasets/Bingsu___zeroth-korean/` |
+| `v2` | `v1`의 확장판 | `KSS + Zeroth-Korean` 동일 계열 확장 | 같은 계열 소스를 더 넓게 수집해 text corpus 확장 | `10,396` | 현재는 최종 text corpus만 남아 있고, 별도 source cache 경로는 명시적으로 관리하지 않음 |
+| `v3` | `v1/v2`와 겹치지 않는 신규 text 추가 | `malaysia-ai/Korean-Single-Speaker-TTS`, `NX2411/AIhub-korean-speech-data-large` | 새 공개 소스에서 text를 추가 수집하고 `v1/v2`와 exact duplicate 제거 | `9,400` | 현재는 최종 text corpus만 남아 있고, 식별 가능한 raw cache/download 경로는 확인되지 않음 |
+| `통합본` | 이후 generation/training의 canonical index | `v1 + v2 + v3` | 기존 corpus를 비파괴적으로 합쳐 인덱스만 통합 | `24,689` | `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/` |
+
+각 corpus 경로:
+
+- `v1`: `../results/tts_custom/corpora/ko_text_corpus_v1/`
+- `v2`: `../results/tts_custom/corpora/ko_text_corpus_v2/`
+- `v3`: `../results/tts_custom/corpora/ko_text_corpus_v3/`
+- `통합`: `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
+- `설명 아카이브`: `../results/tts_custom/corpora/260319_1635_데이터셋_설명_아카이브_v1/`
+- 중복 파일 정리 후 현재 canonical TSV는 `master_union_unique_by_text.tsv` 하나만 유지한다.
+
+중복 검사는 이렇게 했다.
+
+1. `v1` 생성 시에는 `prepare_ko_text_corpus.py`에서
+   - `NFKC` 정규화
+   - 공백 정리
+   - 문장부호 앞 공백 제거
+   - 길이 필터
+   를 거친 뒤 최종 `text` 문자열을 `set`으로 exact dedupe했다.
+2. `v1/v2/v3` 상호 비교는 각 `corpus_full.tsv`의 최종 `text` 컬럼을 집합으로 읽어 exact match 기준으로 비교했다.
+3. 현재 확인 결과는 아래와 같다.
+   - `v1 ∩ v2 = 0`
+   - `v1 ∩ v3 = 0`
+   - `v2 ∩ v3 = 0`
+   - union = `24,689`
+
+주의:
+
+- 이 검사는 `exact duplicate` 기준이다.
+- 의미는 같지만 표현이 조금 다른 문장까지 잡는 semantic dedupe는 아직 하지 않았다.
+- `v3` source 두 개는 현재 로컬에 남아 있는 건 최종 text corpus와 summary이며, 원본 다운로드 경로를 다시 추적할 수 있도록 별도 raw archive를 보관하지는 않았다.
     - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/exported_onnx/`
     - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/benchmark_postprocess/`
   - 현재 자동지표 기준 best checkpoint:

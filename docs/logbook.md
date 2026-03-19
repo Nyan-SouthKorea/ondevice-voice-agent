@@ -2,6 +2,65 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | TTS 통합 코퍼스/설명 아카이브 중복 복사본 정리
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.
+- `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`은 canonical text index로 고정했다.
+- `../results/tts_custom/corpora/260319_1635_데이터셋_설명_아카이브_v1/`은 dataset card와 설명 문서 아카이브로 고정했다.
+- 이에 따라 `1510` 안의 `master_union_all.tsv`, `sources/` 복사본, `1635` 안의 중복 `master_union_unique_by_text.tsv`를 제거해 역할이 겹치는 사본을 정리했다.
+- 이후 TTS 관련 문서에서는 `1510`의 `master_union_unique_by_text.tsv`만 canonical 인덱스로, `1635`는 설명 문서 archive로만 참조한다.
+
+## 2026-03-19 | Human + Codex | TTS 통합 텍스트 코퍼스를 이후 generation/training의 canonical index로 고정
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/status.md`, `tts/README.md`였다.
+- 기존 `ko_text_corpus_v1/v2/v3`를 건드리지 않고, 별도 통합 인덱스 `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`를 만들었다.
+- 현재 active generation은 기존 코퍼스를 그대로 유지한다.
+- 대신 다음 generation/training cycle부터는 `master_union_unique_by_text.tsv`를 기본 출발점으로 삼는다는 메모를 `status`, `tts/README`, `Piper 공식 파인튜닝 실행계획`에 반영했다.
+
+## 2026-03-19 | Human + Codex | Piper 공식 파인튜닝 control run 재개
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`였다.
+- `scratch` 파일럿 실패 원인을 분리하기 위해, 이번에는 Piper 공식 가이드가 권장하는 `existing checkpoint fine-tune` control run을 다시 걸었다.
+- active run root는 `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`다.
+- 현재는 공식 `en_US lessac medium` checkpoint를 내려받는 단계이며, `.ckpt.part` 파일 증가로 실제 다운로드가 진행 중인 것을 확인했다.
+
+## 2026-03-19 | Human + Codex | 중간 질문은 작업 중단 지시로 해석하지 않도록 규칙 강화
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`였다.
+- 사용자는 장시간 작업 중 중간 질문이나 상담 요청을 하더라도, 명시적인 중단 지시가 아닌 한 기존 실행과 후속 단계를 계속 이어가길 원했다.
+- 기존에도 유사 규칙은 있었지만, 이번에는 아래를 더 강하게 명시했다.
+  - 중간 질문, 확인 요청, 상담 요청은 기본적으로 작업 중단 지시가 아니다.
+  - 명시적으로 `멈춰`, `중단`, `취소`, `여기까지`, `끝내` 같은 말이 없는 한 실행과 후속 단계를 끊지 않는다.
+  - 질문에 답하는 동안에도 현재 active 작업과 다음 단계를 계속 리마인드하고, 답변 직후 원래 흐름으로 복귀한다.
+
+## 2026-03-19 | Human + Codex | docs/README를 실행과 정리 단계 모두의 강한 시작 게이트로 재강조
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`였다.
+- 사용자는 코드 수정뿐 아니라 결과 정리, 보고서 작성, 커밋/푸시 전에도 항상 `docs/README.md`를 다시 읽고 프로젝트 운영 원칙을 재확인하길 원했다.
+- 이에 따라 규칙을 아래처럼 더 강하게 분명히 했다.
+  - `docs/README.md`는 실행 시작 전뿐 아니라 정리와 마감 단계에도 다시 읽는다.
+  - 작업 성격이 바뀌면 같은 세션 안에서도 `docs/README.md`를 다시 시작 게이트로 삼는다.
+  - 즉 구현과 정리 모두를 별도 작업으로 보고, 관성으로 넘어가지 않는다.
+
+## 2026-03-19 | Human + Codex | 장시간 작업 보고에 터미널 요약 포함, 터미널 정리는 보수적으로 수행하도록 규칙 보강
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`였다.
+- 사용자는 장시간 작업 중 진행 보고를 받을 때, 현재 활성 터미널과 백그라운드 작업이 무엇인지 짧게 함께 보길 원했다.
+- 또 터미널 정리 시 컨텍스트 압축으로 중요한 작업을 실수로 끊지 않도록 매우 보수적으로 판단하길 원했다.
+- 이에 따라 `docs/개발방침.md`에 아래 규칙을 추가했다.
+  - 장시간 작업이 살아 있으면 진행 보고 말미에 `tty/pid`, 역할, active/idle 여부를 짧게 같이 적는다.
+  - 터미널 종료는 `ps`, `tty`, 진행률 파일, 상태 파일, 출력 경로`를 먼저 확인한 뒤에만 판단한다.
+  - 불확실하면 종료하지 않고 유지한 채 `idle` 또는 `미확인 유지`로 보고한다.
+
+## 2026-03-19 | Human + Codex | 실행 중인 작업 보고는 실제 프로세스 확인 후 답하도록 규칙 보강
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`였다.
+- 사용자가 현재 실제로 돌고 있는 작업과 앞으로 할 계획을 구분해서 보고받길 원했다.
+- 이에 따라 `docs/개발방침.md`에 아래 규칙을 추가했다.
+  - 실행 중인 작업, 터미널 상태, 백그라운드 진행 여부를 말할 때는 대화 맥락만으로 답하지 않는다.
+  - 반드시 `ps`, `tty`, 진행률 파일, 상태 파일 같은 실제 실행 근거를 먼저 확인한 뒤 답한다.
+  - `계획 중인 일`, `곧 시작할 일`, `현재 실제로 구동 중인 일`을 구분해서 말한다.
+
 ## 2026-03-19 | Human + Codex | Piper pilot 자동평가 완료, quality gate는 아직 미통과
 
 - 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`, `tts/docs/환경/260319_1100_Piper_학습환경.md`였다.
@@ -89,6 +148,19 @@
 - source mp4는 이름을 바꾸지 않고 아래에 아카이빙했다.
   - `../results/tts_custom/references/source_videos/20260319/ref 음성-여성 아나운서.mp4`
   - `../results/tts_custom/references/source_videos/20260319/ref 음성-남성 이션균 배우.mp4`
+
+## 2026-03-19 | Human + Codex | 한국어 text corpus 설명 아카이브 생성
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.
+- 한국어 custom TTS용 text corpus 설명을 한곳에서 볼 수 있도록 로컬 아카이브 `../results/tts_custom/corpora/260319_1635_데이터셋_설명_아카이브_v1/`를 만들었다.
+- 포함한 내용은 아래다.
+  - `master_union_unique_by_text.tsv`
+  - `Bingsu/KSS_Dataset` dataset card, `dataset_info.json`, `LICENSE`
+  - `Bingsu/zeroth-korean` dataset card, `dataset_info.json`, `LICENSE`
+  - `malaysia-ai/Korean-Single-Speaker-TTS` dataset card 원문
+  - `NX2411/AIhub-korean-speech-data-large` dataset card 원문
+  - 현재 로컬 `ko_text_corpus_v1/v2/v3` summary 복사본
+- 이 작업은 비파괴적으로 수행했고, active generation/training 입력 경로는 바꾸지 않았다.
 
 ## 2026-03-19 | Human + Codex | OpenVoice audition 후보 준비와 pilot 생성 시간 추정
 

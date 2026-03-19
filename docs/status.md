@@ -199,6 +199,18 @@
   - `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
 - 현재 `Piper` pilot 자동평가 결과 기준 문서는 아래다.
   - `tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`
+- 현재 `Piper` 공식 파인튜닝 실행 계획 기준 문서는 아래다.
+  - `tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`
+- 현재 TTS 합성용 텍스트는 비파괴 통합 인덱스로도 정리해뒀다.
+  - root:
+    - `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
+  - 현재 canonical TSV:
+    - `master_union_unique_by_text.tsv`
+  - dataset card와 license, local corpus summary는 아래 설명 아카이브에서 따로 본다.
+    - `../results/tts_custom/corpora/260319_1635_데이터셋_설명_아카이브_v1/`
+  - 현재 active 생성은 기존 `ko_text_corpus_v1/v2/v3`별 코퍼스를 그대로 사용한다.
+  - 단, 현재 run이 끝난 뒤 다음 generation/training 입력을 다시 고를 때는 통합본의 `master_union_unique_by_text.tsv`를 기본 출발점으로 삼는다.
+  - 즉 이후 데이터 생성과 학습 snapshot 설계는 이 통합 코퍼스를 canonical index로 보고 진행한다.
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `tts/docs/환경/260319_1100_Piper_학습환경.md`
 - 현재 `Piper` pilot 학습은 완료됐다.
@@ -227,6 +239,21 @@
     - `20`개 한국어 prompt 기준 모든 checkpoint의 exact match가 `0.0`
     - best `mean_normalized_cer`도 `0.9149`로 아직 품질이 부족하다
   - 따라서 현재 pilot은 파이프라인 성립 검증에는 성공했지만, full training 확대는 보류한다.
+- 현재 `Piper` 공식 파인튜닝 control run은 진행 중이다.
+  - root: `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`
+  - base checkpoint: `../results/tts_assets/piper_checkpoints/en_US_lessac_medium/epoch=2164-step=1355540.ckpt`
+  - 현재 단계: `training`
+  - 최신 synthetic inventory 기준 snapshot:
+    - `18,477문장 / 21.568시간`
+  - 목적:
+    - `scratch` 실패 원인이 synthetic-only 데이터 자체인지, 공식 fine-tune 레시피를 따르지 않은 탓인지 분리해 확인한다.
+  - 현재는 `epoch 2164` base checkpoint에서 이어서 `20 epoch` 추가 학습을 수행 중이다.
+- 현재 `full_v3` OpenVoice TTS-only generation은 완료됐다.
+  - root: `../results/tts_custom/synthetic_dataset/full_v3_tts_only/openvoice_ko_female_announcer_speed_1p1/`
+  - 결과:
+    - `9,400 wav`
+    - `13.023시간`
+  - `9.379시간` 목표를 넘긴 이유는 중복 생성이 아니라 실제 합성 audio length가 예측보다 길었기 때문이다.
 - 현재 active 역할 분리는 아래와 같다.
   - Jetson runtime winner 후보: `Piper`, `Kokoro`
   - voice audition / synthetic dataset 생성기: `OpenVoice V2`
