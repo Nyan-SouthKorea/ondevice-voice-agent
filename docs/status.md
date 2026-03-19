@@ -37,17 +37,17 @@
   - `val_recall 0.9966`
   - `val_fp_rate 0.0114`
   - 현재 runtime 기준 threshold: `0.80`
-- Jetson runtime과 smoke 학습 환경은 각각 `docs/envs/jetson_wake_word_env.md`, `docs/envs/wake_word_train_smoke_env.md`에 정리돼 있다.
+- Jetson runtime과 smoke 학습 환경은 각각 `wake_word/docs/환경/260313_1700_Jetson_웨이크워드_환경.md`, `wake_word/docs/환경/260316_1616_웨이크워드_학습스모크_환경.md`에 정리돼 있다.
 - STT 50문장 직접 녹음 평가 세트와 benchmark 파이프라인은 준비돼 있다.
 - 현재 로컬에 유지하는 TRT 자산 기준은 아래와 같다.
   - `whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy`
   - `whisper_trt_small_ko_ctx64_fp16e_fp32w_nano_safe`
 - 50문장 현재 active 비교 기준은 아래 문서를 본다.
-  - `docs/reports/stt_korean_eval50_six_model_overview.md`
+  - `stt/docs/보고서/260318_1056_STT_한국어평가50_6모델_개요.md`
 - 현재 로컬 워크스페이스 기준은 `repo / env / secrets` sibling 구조다.
   - A100에서는 `env`를 비워 두고 필요할 때만 다시 만든다.
   - Jetson에서는 같은 repo branch를 기준으로 실기 검증과 TRT 빌드를 진행한다.
-- STT 자동 생성 결과물은 `stt/eval_results/` 아래에 두고, 사람이 읽는 요약은 `docs/reports/stt_korean_eval50_six_model_overview.md`를 기준으로 본다.
+- STT 자동 생성 결과물은 `stt/eval_results/` 아래에 두고, 사람이 읽는 요약은 `stt/docs/보고서/260318_1056_STT_한국어평가50_6모델_개요.md`를 기준으로 본다.
 - 현재 STT 기본값은 `WhisperTRT small nano safe`다.
   - code-generated 비교 요약 기준:
     - `normalized_exact_match_rate 0.4600`
@@ -117,7 +117,7 @@
   - CLI smoke output: `../results/tts/20260318_kokoro_smoke/demo_cli.wav`
   - 구현 메모: 첫 영어 실행에서 `en_core_web_sm` 자동 설치, 현재 env에서는 `espeakng-loader`가 함께 설치되어 system `espeak-ng` 없이도 공식 영어 경로가 동작했다
   - 결론 메모: A100 비교 후보로는 유지하되, 현재 공식 Korean path가 없으므로 한국어 제품 기본 후보로 바로 올리지는 않는다
-- Jetson TTS screening 1차 결과는 `docs/reports/260318_TTS_Jetson_스크리닝.md`를 기준으로 본다.
+- Jetson TTS screening 1차 결과는 `tts/docs/보고서/260318_1912_TTS_Jetson_스크리닝.md`를 기준으로 본다.
   - thin demo wrapper: `tts/tools/tts_jetson_demo.py`
   - split env:
     - `../env/tts_network_jetson`
@@ -137,14 +137,14 @@
   - 현재 Jetson shortlist:
     - 영어 local: `Piper cpu`, `Kokoro cuda`
     - 한국어는 일단 network fallback 유지
-- Orin Nano 4모델 bring-up 결과는 `docs/reports/260319_TTS_나노_구동기록.md`를 기준으로 본다.
+- Orin Nano 4모델 bring-up 결과는 `tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`를 기준으로 본다.
   - `Piper (EN, cpu)` 성공, `elapsed_sec 0.400`
   - `Kokoro (EN, cuda)` 성공, `elapsed_sec 5.235`
   - `MeloTTS (KO, cpu)` 성공, `elapsed_sec 15.057`
   - `OpenVoice V2 (KO, cpu)` 성공, `elapsed_sec 39.795`
   - `OpenVoice V2 (KO, cuda)`는 `NvMapMemAlloc error 12`로 실패해 Nano 기본 경로를 `cpu`로 둔다
   - `tts/tools/tts_jetson_demo.py`는 이제 `/proc/device-tree/model`을 읽어 `AGX Orin`과 `Orin Nano`에서 다른 기본 device를 자동 선택한다
-- AGX Orin 4모델 bring-up 결과는 `docs/reports/260319_TTS_AGX_구동기록.md`를 기준으로 본다.
+- AGX Orin 4모델 bring-up 결과는 `tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`를 기준으로 본다.
   - AGX result root:
     - `/home/everybot/workspace/ondevice-voice-agent/results/tts/agx_smoke/`
   - AGX smoke 요약:
@@ -161,7 +161,7 @@
   - 1차: A100에서 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`를 모두 같은 기준으로 구현하고 비교한다.
   - 2차: A100 결과를 바탕으로 Jetson 실측 후보를 좁힌다.
   - 3차: 위 둘이 모두 부족할 때만 custom voice 학습을 검토한다.
-- 현재 TTS benchmark canonical 계획은 `docs/reports/260318_TTS_벤치마크_계획.md`를 기준으로 본다.
+- 현재 TTS benchmark canonical 계획은 `tts/docs/보고서/260318_1708_TTS_벤치마크_계획.md`를 기준으로 본다.
 - 현재 canonical prompt는 `tts/evaluation/prompts/tts_benchmark_prompts_v1.tsv`다.
   - 한국어 100문장
   - 영어 100문장
@@ -192,11 +192,11 @@
   - 영어: `Kokoro (EN) 10.00`, `Piper (EN) 10.00`, `MeloTTS (EN) 10.00`, `OpenVoice V2 (EN) 9.00`
   - 단, 영어는 `EN001` 한 문장만 평가했으므로 순위 확정 근거로 쓰지 않는다.
 - 현재 active TTS 후속 계획은 아래 문서를 기준으로 본다.
-  - `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`
+  - `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`
 - 현재 training feasibility audit 기준 문서는 아래다.
-  - `docs/reports/260319_TTS_학습_가능성_점검.md`
+  - `tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
-  - `docs/envs/tts_piper_train_env.md`
+  - `tts/docs/환경/260319_1100_Piper_학습환경.md`
 - 현재 active 역할 분리는 아래와 같다.
   - Jetson runtime winner 후보: `Piper`, `Kokoro`
   - voice audition / synthetic dataset 생성기: `OpenVoice V2`
@@ -298,7 +298,7 @@
   - `../results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav`
 - 현재 repo 안의 TTS 관련 데이터는 wake word positive 생성용 합성 음성 중심이라, custom speaker training의 바로 쓸 수 있는 기반 데이터셋으로 보지는 않는다.
 - TTS 평가 기준은 `tts/evaluation/README.md`, 대표 문장셋은 `tts/evaluation/prompts/ko_demo_sentences_v1.txt`를 기준으로 시작한다.
-- 데모 구현 계획 문서는 `docs/reports/stt_demo_plan.md`에 둔다.
+- 데모 구현 계획 문서는 `stt/docs/보고서/260318_1055_STT_데모_계획.md`에 둔다.
 - 통합 GUI 데모의 화면 설명과 스크린샷은 `stt/README.md`를 기준으로 본다.
 
 ## 다음 작업

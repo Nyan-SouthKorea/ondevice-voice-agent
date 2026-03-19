@@ -3,6 +3,11 @@
 이 디렉토리는 `하이 포포` 한국어 wake word 프로젝트의 실제 구현 영역이다.  
 현재 이 리포에서 가장 많이 진행된 하위 프로젝트이며, 데이터 준비부터 feature extraction, 학습, 평가, Jetson 실시간 추론까지 이 디렉토리 아래에서 관리한다.
 
+Wake word 문서 허브:
+
+- 모듈 문서 허브: `docs/README.md`
+- 현재 상태 기준: `../docs/status.md`
+
 ## 목표
 
 - 호출어 `하이 포포`를 안정적으로 감지하는 경량 wake word 모델을 만든다.
@@ -62,7 +67,7 @@
 
 원본 openWakeWord 출처와 현재 어떤 부분을 로컬로 옮겼는지는 아래 문서에 정리했다.
 
-- [`../docs/research/openwakeword_reference.md`](../docs/research/openwakeword_reference.md)
+- [`../wake_word/docs/조사/260316_1231_OpenWakeWord_레퍼런스_조사.md`](../wake_word/docs/조사/260316_1231_OpenWakeWord_레퍼런스_조사.md)
 
 1. positive 생성
 2. positive augmentation
@@ -264,5 +269,5 @@ python wake_word/wake_word_gui_demo.py \
 - [`../docs/project_overview.md`](../docs/project_overview.md)
 - [`../docs/status.md`](../docs/status.md)
 - [`../docs/개발방침.md`](../docs/개발방침.md)
-- [`../docs/research/wake_word.md`](../docs/research/wake_word.md)
+- [`../wake_word/docs/조사/260316_1230_웨이크워드_기술_조사.md`](../wake_word/docs/조사/260316_1230_웨이크워드_기술_조사.md)
 - [`../docs/jetson_transition_plan.md`](../docs/jetson_transition_plan.md)

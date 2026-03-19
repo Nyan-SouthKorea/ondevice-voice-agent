@@ -40,4 +40,4 @@
 AGX Orin에서 새로 빌드할 경우 먼저 장비 스펙을 수집하고 아래 가이드를 따른다.
 
 - `stt/experiments/stt_trt_collect_jetson_profile.py`
-- `docs/envs/jetson/stt_trt_agx_orin_experiment.md`
+- `stt/docs/환경/260317_1510_STT_TRT_AGX_Orin_실험가이드.md`

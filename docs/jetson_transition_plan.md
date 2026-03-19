@@ -16,10 +16,10 @@
 - VAD 사용법: [../vad/README.md](../vad/README.md)
 - STT 사용법: [../stt/README.md](../stt/README.md)
 - TTS 사용법: [../tts/README.md](../tts/README.md)
-- Jetson runtime env: [envs/jetson_wake_word_env.md](envs/jetson_wake_word_env.md)
-- Jetson TTS env: [envs/jetson_tts_env.md](envs/jetson_tts_env.md)
-- Jetson smoke train env: [envs/wake_word_train_smoke_env.md](envs/wake_word_train_smoke_env.md)
-- STT TRT 실험 env (AGX 대응): [envs/jetson/stt_trt_agx_orin_experiment.md](envs/jetson/stt_trt_agx_orin_experiment.md)
+- Jetson runtime env: [../wake_word/docs/환경/260313_1700_Jetson_웨이크워드_환경.md](../wake_word/docs/환경/260313_1700_Jetson_웨이크워드_환경.md)
+- Jetson TTS env: [../tts/docs/환경/260319_0930_Jetson_TTS_환경.md](../tts/docs/환경/260319_0930_Jetson_TTS_환경.md)
+- Jetson smoke train env: [../wake_word/docs/환경/260316_1616_웨이크워드_학습스모크_환경.md](../wake_word/docs/환경/260316_1616_웨이크워드_학습스모크_환경.md)
+- STT TRT 실험 env (AGX 대응): [../stt/docs/환경/260317_1510_STT_TRT_AGX_Orin_실험가이드.md](../stt/docs/환경/260317_1510_STT_TRT_AGX_Orin_실험가이드.md)
 
 ## 완료된 항목
 
@@ -55,12 +55,12 @@
 - STT 기본 모델과 TTS 기본 경로가 Jetson 제약을 고려한 실제 선택지로 좁혀져 있다.
 - TTS backend별 smoke env와 최종 통합 대상 env가 구분돼 있고, benchmark 코드와 충돌하지 않는다.
 - Jetson TTS screening 결과와 상위 통합 shortlist가 문서에 숫자와 경로 기준으로 정리돼 있다.
-- 다음 세션에서 필요한 문서가 `status / envs / module README` 기준으로 빠르게 복구된다.
+- 다음 세션에서 필요한 문서가 `status / module docs / module README` 기준으로 빠르게 복구된다.
 
 ## 새 세션 시작 순서
 
 1. `docs/status.md`
 2. 관련 모듈 `README.md`
-3. `docs/envs/jetson_wake_word_env.md`
+3. `wake_word/docs/환경/260313_1700_Jetson_웨이크워드_환경.md`
 4. `docs/decisions.md`
 5. 필요 시 `docs/logbook.md` 또는 `docs/archive/`

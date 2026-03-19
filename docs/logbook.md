@@ -7,9 +7,9 @@
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.
 - 사용자는 파일탐색기에서 최근 연구 흐름을 빠르게 파악할 수 있도록, 시간이 누적되는 보고서 문서는 날짜 prefix와 읽기 쉬운 한국어 제목으로 보이길 원했다.
 - 이에 따라 아래 원칙을 고정했다.
-  - 최신 기준 문서(`README`, `status`, `개발방침`, `decisions`, `logbook`, `envs`)는 고정 파일명을 유지한다.
-  - 시간이 지나며 누적되는 사람이 읽는 보고서는 `YYMMDD_한국어제목.md` 형식을 기본으로 쓴다.
-- 이번 리팩토링에서는 `docs/reports/`의 TTS 누적 문서를 우선 정리했고, `tts/README.md`에는 TTS 문서 허브 링크를 추가했다.
+  - 최신 기준 문서(`README`, `status`, `개발방침`, `decisions`, `logbook`, 각 모듈 `docs/README`)는 고정 파일명을 유지한다.
+  - 시간이 지나며 누적되는 사람이 읽는 조사/환경/보고서 문서는 `YYMMDD_HHMM_한국어제목.md` 형식을 기본으로 쓴다.
+- 이번 리팩토링에서는 먼저 TTS 누적 문서를 시간순 파일명으로 정리했고, 이후 모듈별 `docs/` 구조로 내리기 위한 기반을 만들었다.
 
 ## 2026-03-19 | Human + Codex | 장시간 실행 중 사용자 질문은 작업을 끊지 않는 규칙 추가
 
@@ -21,7 +21,7 @@
 
 ## 2026-03-19 | Human + Codex | OpenVoice full generation 기본 경로를 `TTS only`로 전환
 
-- 기준 문서는 `docs/status.md`, `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`, `docs/decisions.md`였다.
+- 기준 문서는 `docs/status.md`, `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`, `docs/decisions.md`였다.
 - 사용자가 `STT 역전사를 수행해서 문제되는 음성을 필터링하면서 생성하라`고 별도로 지시할 때만 filtered run을 사용하고, 기본 synthetic dataset 생성은 빠른 `TTS only` 모드로 돌리길 원한다고 요청했다.
 - 이에 따라 아래를 정리했다.
   - 기존 `full_v1/openvoice_ko_female_announcer_speed_1p1/`는 filtered partial run으로 보존
@@ -31,7 +31,7 @@
 
 ## 2026-03-19 | Human + Codex | OpenVoice active reference와 speed 고정
 
-- 기준 문서는 `docs/status.md`, `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`, `tts/experiments/custom_training/README.md`였다.
+- 기준 문서는 `docs/status.md`, `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`, `tts/experiments/custom_training/README.md`였다.
 - 사용자가 OpenVoice selection 샘플 중 `ko_female_announcer + speed 1.1` 조합을 최종 승인했다.
 - 이번 승인에서 바뀐 것은 speed뿐이고, `tau`, `sdp_ratio`, `noise_scale`, `noise_scale_w`는 건드리지 않았다.
 - 이후 synthetic dataset 생성 기본값이 흔들리지 않도록 아래를 같이 반영했다.
@@ -44,7 +44,7 @@
 
 ## 2026-03-19 | Human + Codex | OpenVoice audition 후보 준비와 pilot 생성 시간 추정
 
-- 기준 문서는 `docs/status.md`, `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`, `tts/experiments/custom_training/README.md`였다.
+- 기준 문서는 `docs/status.md`, `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`, `tts/experiments/custom_training/README.md`였다.
 - 한국어 custom training 준비를 위해 아래 스크립트를 추가했다.
   - `tts/tools/prepare_ko_text_corpus.py`
   - `tts/tools/openvoice_prepare_reference.py`
@@ -71,16 +71,16 @@
 
 ## 2026-03-19 | Human + Codex | Piper/Kokoro training feasibility 1차 audit
 
-- 기준 문서는 `docs/status.md`, `tts/README.md`, `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`였다.
+- 기준 문서는 `docs/status.md`, `tts/README.md`, `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`였다.
 - `Piper`, `Kokoro`를 한국어 custom training 후보 관점에서 다시 좁혔다.
 - 현재 결론은 아래다.
   - `Piper`: archived지만 공식 `TRAINING.md`, `piper_train.preprocess`, `piper_train`, `export_onnx` 경로가 남아 있어 pilot training 1순위
   - `Kokoro`: inference 문서는 강하지만 공식 fine-tune / dataset format / export workflow가 불명확해 training 후순위
-- 이를 `docs/reports/260319_TTS_학습_가능성_점검.md`로 고정했고, `status`, `tts/README.md`, `docs/research/tts.md`, `tts/experiments/custom_training/README.md`를 함께 갱신했다.
+- 이를 `tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`로 고정했고, `status`, `tts/README.md`, `tts/docs/조사/260317_1005_TTS_기술_조사.md`, `tts/experiments/custom_training/README.md`를 함께 갱신했다.
 
 ## 2026-03-19 | Human + Codex | Piper pilot training env bring-up
 
-- 기준 문서는 `docs/reports/260319_TTS_학습_가능성_점검.md`, `docs/status.md`, `docs/개발방침.md`였다.
+- 기준 문서는 `tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`, `docs/status.md`, `docs/개발방침.md`였다.
 - A100에서 `Piper` archived training stack을 실제로 살렸다.
 - 확인된 핵심은 아래다.
   - `python 3.10`
@@ -104,11 +104,11 @@
   - `piper_train.preprocess --skip-audio` 한국어 smoke도 실제로 통과했다
   - 즉 system `espeak-ng`는 현재 시점의 즉시 blocker는 아니었다
   - 대신 `preprocess.py`는 샘플 1개일 때 `batch_size=0` edge case가 있다
-- 위 내용을 `docs/envs/tts_piper_train_env.md`로 정리했다.
+- 위 내용을 `tts/docs/환경/260319_1100_Piper_학습환경.md`로 정리했다.
 
 ## 2026-03-19 | Human + Codex | 영어 runtime winner + 한국어 custom training 계획 고정
 
-- 기준 문서는 `docs/status.md`, `tts/README.md`, `docs/research/tts.md`였다.
+- 기준 문서는 `docs/status.md`, `tts/README.md`, `tts/docs/조사/260317_1005_TTS_기술_조사.md`였다.
 - 사용자가 `Jetson runtime winner`와 `OpenVoice V2 synthetic dataset pipeline`을 결합한 새 방향으로 진행하길 원했고, 이 흐름을 나중에 잊지 않도록 문서에 고정하길 원했다.
 - 합의한 핵심은 아래다.
   - `Piper`, `Kokoro`는 Jetson runtime winner 후보로 먼저 검증
@@ -116,15 +116,15 @@
   - 한국어 custom training은 `1~3시간 pilot dataset -> pilot 학습 -> 확대`
   - `runtime winner`와 `training winner`는 같다고 가정하지 않음
 - 이에 따라 아래를 반영했다.
-  - `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`
+  - `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`
   - `tts/experiments/custom_training/README.md`
   - `docs/status.md`
   - `tts/README.md`
-  - `docs/research/tts.md`
+  - `tts/docs/조사/260317_1005_TTS_기술_조사.md`
 
 ## 2026-03-19 | Human + Codex | Partial human listening score 회수와 benchmark 보고서 반영
 
-- 기준 문서는 `docs/status.md`, `tts/evaluation/README.md`, `docs/reports/260318_TTS_전체_벤치마크_결과_v1.md`였다.
+- 기준 문서는 `docs/status.md`, `tts/evaluation/README.md`, `tts/docs/보고서/260318_1824_TTS_전체_벤치마크_결과_v1.md`였다.
 - 사용자가 Jetson Nano GUI에서 일부만 청취 평가를 입력했고, 남은 평가는 시간 대비 효용이 낮다고 판단해 여기서 마감하기로 했다.
 - Nano에서 아래 산출물을 A100 canonical 결과 폴더로 회수했다.
   - `ko_grouped_score_sheet.tsv`
@@ -159,7 +159,7 @@
 
 ## 2026-03-19 | Human + Codex | Orin Nano에서 TTS 4모델 bring-up 완료
 
-- 기준 문서는 `docs/envs/jetson_tts_env.md`, `docs/reports/260319_TTS_AGX_구동기록.md`였다.
+- 기준 문서는 `tts/docs/환경/260319_0930_Jetson_TTS_환경.md`, `tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`였다.
 - Nano host `192.168.20.165`에서 `Piper`, `Kokoro`, `MeloTTS`, `OpenVoice V2` 4개 로컬 후보를 모두 실제 합성 가능한 상태로 만들었다.
 - 핵심 결과는 아래였다.
   - `Piper (cpu)` 성공, `elapsed_sec 0.400`
@@ -169,17 +169,17 @@
 - `OpenVoice V2`는 Nano `cuda`에서 `NvMapMemAlloc error 12`로 실패했고, 현재 안정 경로는 `cpu`다.
 - Nano에서는 `tts_openvoice_v2_jetson`을 `tts_melotts_jetson` 기반 shared env로 두는 실용 경로를 택했다.
 - `tts/tools/tts_jetson_demo.py`는 이제 `/proc/device-tree/model`을 읽어 `AGX Orin`과 `Orin Nano`에서 다른 기본 device를 자동 선택하고, 필요하면 `openvoice_v2 -> tts_melotts_jetson` fallback도 자동 처리한다.
-- 상세 숫자와 산출물 경로는 `docs/reports/260319_TTS_나노_구동기록.md`로 승격했다.
+- 상세 숫자와 산출물 경로는 `tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`로 승격했다.
 
 ## 2026-03-19 | Human + Codex | AGX Orin에서 TTS 4모델 bring-up 완료
 
-- 기준 문서는 `docs/envs/jetson_tts_env.md`, `docs/envs/jetson/stt_trt_agx_orin_experiment.md`였다.
+- 기준 문서는 `tts/docs/환경/260319_0930_Jetson_TTS_환경.md`, `stt/docs/환경/260317_1510_STT_TRT_AGX_Orin_실험가이드.md`였다.
 - AGX host `192.168.20.173`에서 새 root 구조 `/home/everybot/workspace/ondevice-voice-agent/{repo,env,results,secrets}`를 기준으로 작업했다.
 - `Piper`, `Kokoro`, `MeloTTS`, `OpenVoice V2` 4개 로컬 후보를 모두 실제 smoke 가능한 상태로 만들었다.
 - 핵심 우회 포인트는 아래였다.
   - `MeloTTS`: `torchaudio` ABI mismatch를 repo fallback으로 우회
   - `OpenVoice V2`: 검증된 `tts_melotts_jetson` env를 복제한 뒤 extras만 추가, `numpy==1.26.4` 유지, `wavmark`는 `--no-deps` 설치
-- 상세 숫자와 산출물 경로는 `docs/reports/260319_TTS_AGX_구동기록.md`로 승격했다.
+- 상세 숫자와 산출물 경로는 `tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`로 승격했다.
 - 다음 단계는 같은 경로를 `Orin Nano`에 최소 변경으로 옮기는 것이다.
 
 ## 2026-03-18 | Human + Codex | Jetson TTS 1차 screening 완료
@@ -211,7 +211,7 @@
   - `piper auto` `elapsed_sec 0.318`
   - `kokoro auto` `elapsed_sec 1.629`
   - `melotts auto` `elapsed_sec 14.506`
-- screening 결론은 `docs/reports/260318_TTS_Jetson_스크리닝.md`로 승격했다.
+- screening 결론은 `tts/docs/보고서/260318_1912_TTS_Jetson_스크리닝.md`로 승격했다.
 - 현재 Jetson shortlist는 아래다.
   - 영어 local: `Piper cpu`, `Kokoro cuda`
   - 한국어는 일단 network fallback 유지
@@ -224,7 +224,7 @@
   - 영어: `gpt-4o-mini-tts / marin` -> `../results/tts_assets/openvoice_v2/references/en_benchmark_reference.wav`
 - rerun 원본은 `../results/tts/openvoice_rerun_tmp_20260318/`에 보관했다.
 - canonical benchmark `../results/tts/benchmark_full_v1_20260318/`에는 OpenVoice audio, listening sample, per_prompt, per_entry_summary를 새 결과로 교체했다.
-- 결과는 `docs/reports/260318_TTS_전체_벤치마크_결과_v1.md`로 승격했다.
+- 결과는 `tts/docs/보고서/260318_1824_TTS_전체_벤치마크_결과_v1.md`로 승격했다.
 - 자동 평가 기준 결론은 아래다.
   - 한국어 로컬 후보: `MeloTTS` 우위 유지
   - 영어 로컬 후보: `Kokoro`, `Piper` 우선
@@ -312,7 +312,7 @@
 
 ### Actions
 
-- `docs/reports/260318_TTS_벤치마크_계획.md`를 추가해 6개 backend 기준 benchmark 구조를 고정했다.
+- `tts/docs/보고서/260318_1708_TTS_벤치마크_계획.md`를 추가해 6개 backend 기준 benchmark 구조를 고정했다.
 - 비교 표를 세 갈래로 나눴다.
   - 한국어 제품성 표
   - 영어 엔진 비교 표
@@ -328,7 +328,7 @@
 
 - benchmark의 기준 문서와 canonical prompt가 고정되었다.
 - 이후 컨텍스트가 압축되더라도 아래 두 파일을 기준으로 바로 이어갈 수 있다.
-  - `docs/reports/260318_TTS_벤치마크_계획.md`
+  - `tts/docs/보고서/260318_1708_TTS_벤치마크_계획.md`
   - `tts/evaluation/prompts/tts_benchmark_prompts_v1.tsv`
 
 ### Next
@@ -467,7 +467,7 @@
 - `../results/tts_assets/piper/neurlang_kss_korean/` 아래에 `piper-kss-korean.onnx`, `piper-kss-korean.onnx.json`을 내려받았다.
 - `tts/backends/piper.py`에 `phoneme_type=pygoruut` custom model용 얇은 호환 레이어를 추가했다.
 - `../env/tts_piper`에 `pygoruut`를 설치하고, A100 `cuda:0`에서 SDK/CLI smoke를 순차 실행했다.
-- `tts/README.md`, `tts/experiments/piper/README.md`, `docs/status.md`, `docs/research/tts.md`, `docs/envs/tts_a100_experiment_env.md`를 현재 사실에 맞게 정정했다.
+- `tts/README.md`, `tts/experiments/piper/README.md`, `docs/status.md`, `tts/docs/조사/260317_1005_TTS_기술_조사.md`, `tts/docs/환경/260318_1708_A100_TTS_실험환경.md`를 현재 사실에 맞게 정정했다.
 
 ### Results
 
@@ -620,7 +620,7 @@
 - `tts/` 아래에 `backends/`, `experiments/`, `evaluation/` 구조를 추가해 runtime 코드와 후보별 실험 메모, 평가 기준을 분리했다.
 - A100 비교 후보를 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`로 고정하고, 각 후보별 실험 디렉토리를 만들었다.
 - 공통 문장셋과 핵심 메트릭 기준을 `tts/evaluation/` 아래에 정리했다.
-- `docs/status.md`, `docs/research/tts.md`, `docs/decisions.md`, `tts/README.md`를 현재 방향에 맞게 갱신했다.
+- `docs/status.md`, `tts/docs/조사/260317_1005_TTS_기술_조사.md`, `docs/decisions.md`, `tts/README.md`를 현재 방향에 맞게 갱신했다.
 
 ### Next
 
@@ -735,7 +735,7 @@
 - 같은 스크립트에서 모델별 자원 정리와 실패 summary 기록을 넣어, 한 경로가 실패해도 전체 실행이 끊기지 않게 했다.
 - AGX Orin의 `small` checkpoint를 다시 가져와 `whisper_trt_small_ko_ctx64_fp16e_fp32w_agx_cross_device` 경로를 복원했다.
 - `small nano safe`는 혼합 배치 실행에서 allocator assert가 나와, fresh process 단독 재실행 결과를 최종 6모델 세트에 합쳤다.
-- 최종 아카이브를 `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/`에 정리하고, 사람이 읽는 요약을 `docs/reports/stt_korean_eval50_six_model_overview.md`로 승격했다.
+- 최종 아카이브를 `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/`에 정리하고, 사람이 읽는 요약을 `stt/docs/보고서/260318_1056_STT_한국어평가50_6모델_개요.md`로 승격했다.
 
 ### Next
 
@@ -752,8 +752,8 @@
 ### Actions
 
 - `stt/experiments/stt_trt_collect_jetson_profile.py`를 추가해 Jetson 장비 프로파일을 JSON으로 저장할 수 있게 했다.
-- `docs/envs/jetson/stt_trt_agx_orin_experiment.md`를 추가해 AGX Orin에서 Codex가 따라야 할 순서와 빌드/검증 기준을 정리했다.
-- `docs/envs/stt_trt_experiment_env.md`, `docs/jetson_transition_plan.md`, `stt/README.md`, `stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/README.md`에 새 handoff 경로를 연결했다.
+- `stt/docs/환경/260317_1510_STT_TRT_AGX_Orin_실험가이드.md`를 추가해 AGX Orin에서 Codex가 따라야 할 순서와 빌드/검증 기준을 정리했다.
+- `stt/docs/환경/260317_1316_STT_TRT_실험환경.md`, `docs/jetson_transition_plan.md`, `stt/README.md`, `stt/models/whisper_trt_base_ko_ctx64_fp16e_fp16w_legacy/README.md`에 새 handoff 경로를 연결했다.
 
 ### Next
 
@@ -792,7 +792,7 @@
 
 ### Actions
 
-- `docs/reports/stt_demo_plan.md`에 STT GUI 데모와 통합 GUI 데모의 2단계 계획을 정리했다.
+- `stt/docs/보고서/260318_1055_STT_데모_계획.md`에 STT GUI 데모와 통합 GUI 데모의 2단계 계획을 정리했다.
 - `whisper base fp16e_fp16w (trt, legacy)`를 STT 백엔드로 직접 부를 수 있도록 `stt_whisper_trt.py`를 추가했다.
 - `tools/stt_gui_demo.py`를 추가해 `녹음 시작 / 정지`, 백그라운드 모델 로딩, 전사 히스토리, API 경고/호출 횟수 표시를 넣었다.
 - 하나의 녹음에 대해 `tiny / base(cuda) / base(trt) / api`를 모두 순차 실행하는 전체 비교 모드도 추가했다.

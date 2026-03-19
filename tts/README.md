@@ -4,18 +4,19 @@
 
 TTS 문서 허브:
 
+- 모듈 문서 허브: `docs/README.md`
 - 현재 상태 기준: `../docs/status.md`
-- 현재 active custom training 계획: `../docs/reports/260319_TTS_커스텀_학습_계획_v1.md`
-- 현재 학습 가능성 점검: `../docs/reports/260319_TTS_학습_가능성_점검.md`
-- Jetson Nano 구동 기록: `../docs/reports/260319_TTS_나노_구동기록.md`
-- AGX Orin 구동 기록: `../docs/reports/260319_TTS_AGX_구동기록.md`
-- A100 전체 benchmark 결과: `../docs/reports/260318_TTS_전체_벤치마크_결과_v1.md`
-- Jetson screening 요약: `../docs/reports/260318_TTS_Jetson_스크리닝.md`
-- benchmark 설계 기준: `../docs/reports/260318_TTS_벤치마크_계획.md`
-- 조사 문서: `../docs/research/tts.md`
-- Jetson 환경 문서: `../docs/envs/jetson_tts_env.md`
-- A100 실험 환경 문서: `../docs/envs/tts_a100_experiment_env.md`
-- Piper 학습 환경 문서: `../docs/envs/tts_piper_train_env.md`
+- 현재 active custom training 계획: `../tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`
+- 현재 학습 가능성 점검: `../tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
+- Jetson Nano 구동 기록: `../tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`
+- AGX Orin 구동 기록: `../tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`
+- A100 전체 benchmark 결과: `../tts/docs/보고서/260318_1824_TTS_전체_벤치마크_결과_v1.md`
+- Jetson screening 요약: `../tts/docs/보고서/260318_1912_TTS_Jetson_스크리닝.md`
+- benchmark 설계 기준: `../tts/docs/보고서/260318_1708_TTS_벤치마크_계획.md`
+- 조사 문서: `../tts/docs/조사/260317_1005_TTS_기술_조사.md`
+- Jetson 환경 문서: `../tts/docs/환경/260319_0930_Jetson_TTS_환경.md`
+- A100 실험 환경 문서: `../tts/docs/환경/260318_1708_A100_TTS_실험환경.md`
+- Piper 학습 환경 문서: `../tts/docs/환경/260319_1100_Piper_학습환경.md`
 - custom training 실험 README: `experiments/custom_training/README.md`
 
 현재 상태:
@@ -478,8 +479,8 @@ tts/
 
 - `evaluation/README.md`
 - `evaluation/prompts/ko_demo_sentences_v1.txt`
-- `../docs/research/tts.md`
-- `../docs/envs/tts_a100_experiment_env.md`
+- `../tts/docs/조사/260317_1005_TTS_기술_조사.md`
+- `../tts/docs/환경/260318_1708_A100_TTS_실험환경.md`
 
 다음 작업:
 
@@ -491,4 +492,4 @@ tts/
 
 - [`../docs/개발방침.md`](../docs/개발방침.md)
 - [`../docs/project_overview.md`](../docs/project_overview.md)
-- [`../docs/research/tts.md`](../docs/research/tts.md)
+- [`../tts/docs/조사/260317_1005_TTS_기술_조사.md`](../tts/docs/조사/260317_1005_TTS_기술_조사.md)

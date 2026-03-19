@@ -2,6 +2,12 @@
 
 이 디렉토리는 speech-to-text 계층 자리다.
 
+STT 문서 허브:
+
+- 모듈 문서 허브: `docs/README.md`
+- 현재 상태 기준: `../docs/status.md`
+- 정량 비교 요약: `docs/보고서/260318_1056_STT_한국어평가50_6모델_개요.md`
+
 현재 상태:
 
 - 초기 구현 완료
@@ -70,7 +76,7 @@ print(transcriber.last_duration_sec)
 - 입력은 `16kHz mono` wav 또는 float32 mono 배열 기준
 - 현재 단계의 목적은 `짧은 utterance -> text` 기본 경로 확보와 비교 평가 기준 마련이다
 - 기본 모델값은 감으로 정하지 않고, 직접 녹음한 50문장 세트로 속도와 정확도를 비교한 뒤 정했다
-- 현재 추천 판단과 전체 우선순위는 `docs/status.md`, 정량 비교표는 `docs/reports/stt_korean_eval50_overview.md`를 기준으로 본다.
+- 현재 추천 판단과 전체 우선순위는 `docs/status.md`, 정량 비교표는 `stt/docs/보고서/260318_1018_STT_한국어평가50_개요.md`를 기준으로 본다.
 
 ## 모델 자산 역할
 
@@ -442,7 +448,7 @@ python stt/tools/stt_benchmark.py \
 - 현재 active 비교 기준 아카이브:
   - `stt/eval_results/korean_eval_50/20260317_172300_six_model_final/`
 - 사람이 읽는 요약 문서:
-  - `docs/reports/stt_korean_eval50_six_model_overview.md`
+  - `stt/docs/보고서/260318_1056_STT_한국어평가50_6모델_개요.md`
 
 | 모델 | 장치 | 샘플 수 | Load (s) | Mean STT (s) | P95 STT (s) | Mean RTF | Normalized Exact Match | Normalized CER |
 |---|---|---:|---:|---:|---:|---:|---:|---:|

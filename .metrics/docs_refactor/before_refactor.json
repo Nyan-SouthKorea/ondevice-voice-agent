@@ -107,12 +107,12 @@
           "lines": 269
         },
         {
-          "path": "docs/envs/jetson_wake_word_env.md",
+          "path": "wake_word/docs/환경/260313_1700_Jetson_웨이크워드_환경.md",
           "chars": 5898,
           "lines": 246
         },
         {
-          "path": "docs/envs/wake_word_train_smoke_env.md",
+          "path": "wake_word/docs/환경/260316_1616_웨이크워드_학습스모크_환경.md",
           "chars": 5755,
           "lines": 238
         },
@@ -248,19 +248,19 @@
       "lines": 535
     },
     {
-      "path": "docs/envs/jetson_wake_word_env.md",
+      "path": "wake_word/docs/환경/260313_1700_Jetson_웨이크워드_환경.md",
       "group": "active_docs",
       "chars": 5898,
       "lines": 246
     },
     {
-      "path": "docs/envs/wake_word_env.md",
+      "path": "wake_word/docs/환경/260313_1701_웨이크워드_기본환경.md",
       "group": "active_docs",
       "chars": 1096,
       "lines": 64
     },
     {
-      "path": "docs/envs/wake_word_train_smoke_env.md",
+      "path": "wake_word/docs/환경/260316_1616_웨이크워드_학습스모크_환경.md",
       "group": "active_docs",
       "chars": 5755,
       "lines": 238
@@ -284,49 +284,49 @@
       "lines": 432
     },
     {
-      "path": "docs/reports/stt_korean_eval50_overview.md",
+      "path": "stt/docs/보고서/260318_1018_STT_한국어평가50_개요.md",
       "group": "active_docs",
       "chars": 3256,
       "lines": 81
     },
     {
-      "path": "docs/reports/stt_trt_attempt_note.md",
+      "path": "stt/docs/보고서/260318_1019_STT_TRT_시도_노트.md",
       "group": "active_docs",
       "chars": 1275,
       "lines": 39
     },
     {
-      "path": "docs/research/negative_datasets.md",
+      "path": "wake_word/docs/조사/260313_1647_웨이크워드_부정데이터셋_조사.md",
       "group": "active_docs",
       "chars": 2472,
       "lines": 141
     },
     {
-      "path": "docs/research/openwakeword_reference.md",
+      "path": "wake_word/docs/조사/260316_1231_OpenWakeWord_레퍼런스_조사.md",
       "group": "active_docs",
       "chars": 3553,
       "lines": 185
     },
     {
-      "path": "docs/research/stt.md",
+      "path": "stt/docs/조사/260316_1616_STT_기술_조사.md",
       "group": "active_docs",
       "chars": 1761,
       "lines": 65
     },
     {
-      "path": "docs/research/tts.md",
+      "path": "tts/docs/조사/260317_1005_TTS_기술_조사.md",
       "group": "active_docs",
       "chars": 2563,
       "lines": 151
     },
     {
-      "path": "docs/research/tts_korean.md",
+      "path": "tts/docs/조사/260318_1708_TTS_한국어_조사.md",
       "group": "active_docs",
       "chars": 1790,
       "lines": 83
     },
     {
-      "path": "docs/research/wake_word.md",
+      "path": "wake_word/docs/조사/260316_1230_웨이크워드_기술_조사.md",
       "group": "active_docs",
       "chars": 3577,
       "lines": 148

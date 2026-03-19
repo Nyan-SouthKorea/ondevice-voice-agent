@@ -33,7 +33,7 @@
 1. `docs/status.md`를 먼저 읽고 현재 상태를 파악한다.
 2. 이번 작업과 직접 관련된 모듈 `README.md`만 읽는다.
 3. `docs/개발방침.md`를 읽고 그 규칙에 맞게 행동한다.
-4. 필요할 때만 `docs/decisions.md`, `docs/research/`, `docs/envs/`, `docs/reports/`를 추가로 읽는다.
+4. 필요할 때만 `docs/decisions.md`, 관련 모듈의 `docs/` 허브와 그 안의 조사/환경/보고서를 추가로 읽는다.
 5. 과거 맥락이 꼭 필요할 때만 `docs/logbook.md`와 `docs/archive/`를 읽는다.
 6. 코드는 작업과 관련된 디렉토리만 읽고, 레포 전체를 처음부터 끝까지 훑지 않는다.
 7. 작업 시작 시에는 `이번 작업 기준 문서: ...` 정도로 어떤 문서를 근거로 삼았는지 짧게 확인한다.
@@ -55,9 +55,9 @@
 | `docs/decisions.md` | 핵심 결정 | 현재도 유효한 의사결정 | 세세한 작업 메모 |
 | `docs/logbook.md` | 최근 로그 | 최근 세션의 작업 흐름 | 오래된 전체 히스토리 |
 | `docs/archive/` | 보관 문서 | 이전 상세 문서, 오래된 로그 | 현재 기준 문서 역할 |
-| `docs/research/` | 조사 문서 | 후보 비교, 선택 배경 | 최신 진행 상태 |
-| `docs/envs/` | 환경 문서 | 설치, 검증, 재현 절차 | 프로젝트 현황 요약 |
-| `docs/reports/` | 승격된 결과 요약 | 사람이 읽는 결과 보고서 | 자동 생성 원본 산출물 |
+| `<module>/docs/조사/` | 모듈 조사 문서 | 후보 비교, 선택 배경 | 최신 진행 상태 |
+| `<module>/docs/환경/` | 모듈 환경 문서 | 설치, 검증, 재현 절차 | 프로젝트 현황 요약 |
+| `<module>/docs/보고서/` | 모듈 결과 요약 | 사람이 읽는 결과 보고서 | 자동 생성 원본 산출물 |
 
 ## 추천 읽는 순서
 
@@ -65,7 +65,7 @@
 2. 관련 모듈 `README.md`
 3. `docs/개발방침.md`
 4. `docs/decisions.md`
-5. 필요 시 `docs/research/`, `docs/envs/`, `docs/reports/`
+5. 필요 시 관련 모듈의 `docs/조사/`, `docs/환경/`, `docs/보고서/`
 6. 과거 맥락이 더 필요할 때만 `docs/logbook.md`와 `docs/archive/`
 
 ## 디렉토리 메모
@@ -80,14 +80,13 @@ docs/
 ├── project_overview.md
 ├── jetson_transition_plan.md
 ├── archive/
-├── envs/
-├── research/
-├── reports/
 └── assets/
 ```
 
 - `project_overview.md`는 빠른 배경 설명용 얇은 문서다.
 - `jetson_transition_plan.md`는 Jetson 연동 체크리스트만 유지한다.
+- `tts/docs/`, `stt/docs/`, `wake_word/docs/`처럼 요소기술별 특성이 강한 문서는 각 모듈 아래에서 관리한다.
+- 즉 `docs/`에는 고정된 운영 문서만 남기고, 계속 쌓이는 실험/조사/환경/보고서는 각 모듈 `docs/`로 내린다.
 - `stt/eval_results/**/*.md` 같은 자동 생성 결과물은 공식 문서가 아니라 실행 산출물로 본다.
 - 로컬 워크스페이스는 보통 `../repo`, `../env`, `../secrets`를 같은 루트 아래에 두고, 재생성 가능한 로컬 실행 결과는 필요할 때만 `../results`에 둔다.
 
@@ -99,19 +98,18 @@ docs/
 - 작업 시작 게이트는 항상 `docs/README.md`다. 새 세션이나 새 작업에서도 예외를 만들지 않는다.
 - 중요 변경 뒤에는 필요한 문서만 최소 범위로 갱신한다. 습관적으로 모든 문서를 건드리지 않는다.
 - 오래된 상세 기록은 지우지 말고 `docs/archive/`로 내린다.
-- 자동 생성 결과물은 모듈 출력 디렉토리에 두고, 사람이 계속 읽어야 할 요약만 `docs/reports/`로 승격한다.
+- 자동 생성 결과물은 모듈 출력 디렉토리에 두고, 사람이 계속 읽어야 할 요약만 관련 모듈 `docs/보고서/`로 승격한다.
 - 재현에 필요 없는 시행착오 산출물은 `md` 요약으로 승격한 뒤 삭제한다.
 - 대용량 실행 파일이나 체크포인트를 남기지 않기로 결정했다면, 문서에는 `보관 여부`, `재현 경로`, `남겨둔 이유`를 함께 적는다.
 
 ## 문서 파일명 규칙
 
 - 시간이 지나도 하나의 최신 기준만 유지해야 하는 문서는 고정 파일명을 쓴다.
-  - 예: `README.md`, `docs/status.md`, `docs/개발방침.md`, `docs/decisions.md`, `docs/logbook.md`, `docs/envs/*.md`
+  - 예: `README.md`, `docs/status.md`, `docs/개발방침.md`, `docs/decisions.md`, `docs/logbook.md`, `tts/docs/README.md`
 - 시간이 지나며 누적되고, 파일탐색기에서 시점 순서가 바로 보여야 하는 문서는 날짜 prefix를 붙인다.
-  - 기본 형식: `YYMMDD_한국어제목.md`
-  - 같은 날 같은 계열 문서가 여러 개면 `YYMMDD_HHMM_한국어제목.md`
-- 현재는 사람이 읽는 누적 보고서와 실험 승격 문서를 중심으로 이 규칙을 적용한다.
-  - 예: `docs/reports/260319_TTS_나노_구동기록.md`
+  - 기본 형식: `YYMMDD_HHMM_한국어제목.md`
+- 현재는 사람이 읽는 누적 보고서, 조사 문서, 실험 승격 문서를 중심으로 이 규칙을 적용한다.
+  - 예: `tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`
 - 단순 `01_`, `02_`보다 날짜 prefix를 우선한다.
   - 이유: 중간 삽입 시 전체 renaming이 필요 없고, 최근 내역을 파일명만 보고 바로 파악할 수 있기 때문이다.
 

@@ -9,7 +9,7 @@
 - 사람 귀로 듣는 품질과 시스템 메트릭을 함께 본다.
 - Jetson 이전 뒤에도 같은 문장셋과 같은 지표로 다시 비교한다.
 
-현재 canonical 실행 계획은 `../docs/reports/260318_TTS_벤치마크_계획.md`를 기준으로 본다.
+현재 canonical 실행 계획은 `../docs/보고서/260318_1708_TTS_벤치마크_계획.md`를 기준으로 본다.
 현재 canonical registry는 `benchmark_registry_v1.json`이고, 사람 청취용 subset은 `prompts/tts_listening_subset_v1.tsv`를 기준으로 본다.
 실행 코드는 `../tools/tts_benchmark.py`, env별 worker는 `../tools/tts_benchmark_worker.py`를 사용한다.
 

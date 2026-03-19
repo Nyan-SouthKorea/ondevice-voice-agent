@@ -18,4 +18,4 @@
 
 - wake word 추론과 학습 feature extraction은 이제 이 디렉토리의 ONNX 파일만 사용한다.
 - `wake_word/openWakeWord/` 로컬 clone은 더 이상 실행 의존성으로 사용하지 않는다.
-- 어떤 원본 파일을 참고했고, 현재 무엇을 로컬 구현으로 옮겼는지는 `docs/research/openwakeword_reference.md`에 기록한다.
+- 어떤 원본 파일을 참고했고, 현재 무엇을 로컬 구현으로 옮겼는지는 `wake_word/docs/조사/260316_1231_OpenWakeWord_레퍼런스_조사.md`에 기록한다.
