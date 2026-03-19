@@ -2,6 +2,12 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | 커밋 메시지는 한국어 중심으로 고정
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`였다.
+- 사용자는 GitHub에서 작업 흐름을 빠르게 읽기 위해 commit 메시지도 한국어 중심이길 원했다.
+- 이에 따라 commit 메시지는 한국어 중심으로 쓰고, `tts`, `stt`, 모델명, 라이브러리명 같은 기술 식별자만 필요할 때 영어로 남기는 혼합형 규칙을 고정했다.
+
 ## 2026-03-19 | Human + Codex | TTS 통합 코퍼스/설명 아카이브 중복 복사본 정리
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.
