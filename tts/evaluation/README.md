@@ -91,6 +91,14 @@
 
 사람 청취 평가는 사용자가 모델별 샘플을 직접 듣고 `10점 만점` 기준으로 기록한다.
 
+현재 바로 듣기 좋은 묶음 경로:
+
+- grouped score sheet:
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/ko_grouped_score_sheet.tsv`
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/en_grouped_score_sheet.tsv`
+- prompt pack:
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/prompt_packs/`
+
 권장 수기 항목:
 
 - `overall_impression_10`

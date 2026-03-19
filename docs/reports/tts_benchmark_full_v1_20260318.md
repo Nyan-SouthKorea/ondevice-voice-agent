@@ -98,6 +98,11 @@
 
 - listening template:
   - `../results/tts/benchmark_full_v1_20260318/listening_scores_template.tsv`
+- grouped score sheet:
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/ko_grouped_score_sheet.tsv`
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/en_grouped_score_sheet.tsv`
+- prompt pack:
+  - `../results/tts/benchmark_full_v1_20260318/listening_review_20260319/prompt_packs/`
 - 대표 listening 폴더:
   - 한국어:
     - `../results/tts/benchmark_full_v1_20260318/listening/ko/melotts_ko/`
