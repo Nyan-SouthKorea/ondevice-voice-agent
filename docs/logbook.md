@@ -10,6 +10,13 @@
 - 이에 따라 에이전트 모드의 모든 비사소한 행동은 `docs/AGENT.md`에서 시작해 `docs/README.md -> docs/status.md`로 진입한다는 규칙을 `README`, `개발방침`, `decisions`, `AGENT`에 명시적으로 강화했다.
 - stale reminder 파일은 정리했고, root `results/_local_supervisor`에는 빈 디렉토리만 남겼다.
 
+## 2026-03-20 | Human + Codex | `AGENT.md` 시작 게이트를 협업 모드에도 공통 적용
+
+- 기준 문서는 `docs/AGENT.md`, `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `docs/decisions.md`였다.
+- 사용자는 이 규칙을 에이전트 모드만이 아니라 협업 모드에도 공통 적용하는 것을 고민했고, 장단점 의견을 물은 뒤 그대로 반영하길 원했다.
+- 이에 따라 `협업 모드`, `에이전트 모드` 모두 비사소한 작업 단위의 시작 게이트를 `docs/AGENT.md`로 통일했다.
+- 적용 단위는 `모든 행동`이 아니라 `새 작업 시작, 단계 전환, 결과 정리, 커밋/푸시 전, 후속 실행 시작 전` 같은 비사소한 작업 단위로 고정했다.
+
 ## 2026-03-19 | Human + Codex | 작업 모드에 `에이전트 모드`를 추가
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/decisions.md`였다.
