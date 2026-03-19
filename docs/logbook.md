@@ -9,6 +9,12 @@
 - 이에 따라 `docs/README.md`에는 작업 모드 개요를, `docs/개발방침.md`에는 `에이전트 모드`의 상세 행동 규칙을, `docs/decisions.md`에는 고정 의사결정을 반영했다.
 - 핵심은 `명시적인 중단 지시가 없는 한 이미 시작한 실행을 끊지 않고`, 작업 전환 지점마다 `docs/README.md`와 상태 파일을 다시 확인해 컨텍스트 압축 이후에도 스스로 복구 가능하게 유지하는 것이다.
 
+## 2026-03-19 | Human + Codex | `docs/status.md`를 항상 읽는 규칙을 더 강하게 고정
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/status.md`였다.
+- 사용자는 현재 활성 모드와 현재 목표를 놓치지 않기 위해, `docs/README.md` 다음에는 항상 `docs/status.md`를 즉시 읽도록 더 강하게 반영하길 원했다.
+- 이에 따라 `docs/README.md`와 `docs/개발방침.md`에 `docs/status.md`를 시작 직후 반드시 읽는 규칙을 추가했고, `docs/status.md` 상단에는 현재 작업 모드를 직접 적어 두었다.
+
 ## 2026-03-19 | Human + Codex | 남성 ref 전체 synthetic generation을 resume-safe 방식으로 전환
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`였다.
