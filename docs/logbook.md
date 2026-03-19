@@ -2,6 +2,14 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Jetson Nano listening review GUI 연속 재생 오류 수정
+
+- 기준 문서는 `docs/status.md`, `tts/evaluation/README.md`였다.
+- 사용자가 같은 음성을 연속으로 2번 재생했을 때 GUI가 오류를 띄운다고 보고했다.
+- `tts/tools/tts_listening_review_gui.py`에 playback token 기반 취소 처리를 추가해, 이전 재생이 `sd.stop()`으로 중단될 때 이를 사용자 오류로 간주하지 않도록 바꿨다.
+- Nano에는 수정된 스크립트를 다시 반영했고, `DISPLAY=:0` 기준 GUI를 재실행했다.
+- Nano에서 같은 파일을 짧은 간격으로 두 번 호출하는 probe를 실행했고, 예외 없이 `REPLAY_OK`를 확인했다.
+
 ## 2026-03-19 | Human + Codex | Jetson Nano TTS listening review GUI 실행
 
 - 기준 문서는 `tts/evaluation/README.md`, `docs/status.md`, 기존 benchmark 결과물이었다.

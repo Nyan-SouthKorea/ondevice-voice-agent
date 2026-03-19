@@ -219,6 +219,7 @@ class ListeningReviewApp:
         self.output_device = resolve_output_device(args.output_device)
         self.play_thread = None
         self.playback_lock = threading.Lock()
+        self.playback_token = 0
         self.current_language = args.start_language
         self.current_index = {"ko": 0, "en": 0}
         self.output_devices = []
@@ -685,45 +686,52 @@ class ListeningReviewApp:
             messagebox.showerror("재생 실패", f"파일을 찾지 못했습니다: {audio_path}")
             return
 
-        self._stop_audio()
+        self._stop_audio(update_status=False)
+        self.playback_token += 1
+        token = self.playback_token
         self.playing_var.set(f"재생 중: {label} | {audio_path.name}")
 
         def _worker():
             try:
                 audio, sample_rate = sf.read(str(audio_path), always_2d=False)
+                if token != self.playback_token:
+                    return
                 with self.playback_lock:
+                    if token != self.playback_token:
+                        return
                     sd.play(audio, sample_rate, device=self.output_device)
                     sd.wait()
-                self.root.after(
-                    0,
-                    lambda: self.playing_var.set("재생 완료"),
-                )
+                if token != self.playback_token:
+                    return
+                self.root.after(0, lambda: self.playing_var.set("재생 완료"))
             except Exception as error:
-                self.root.after(
-                    0,
-                    lambda: messagebox.showerror("재생 실패", str(error)),
-                )
+                if token != self.playback_token:
+                    return
+                self.root.after(0, lambda: messagebox.showerror("재생 실패", str(error)))
                 self.root.after(0, lambda: self.playing_var.set(f"재생 실패: {error}"))
 
         self.play_thread = threading.Thread(target=_worker, daemon=True)
         self.play_thread.start()
 
-    def _stop_audio(self):
+    def _stop_audio(self, update_status=True):
         """
         기능:
         - 현재 재생 중인 오디오를 중지한다.
 
         입력:
-        - 없음.
+        - `update_status`: 상태 문구를 갱신할지 여부.
 
         반환:
         - 없음.
         """
+        self.playback_token += 1
         try:
             sd.stop()
-            self.playing_var.set("재생 중지")
+            if update_status:
+                self.playing_var.set("재생 중지")
         except Exception:
-            self.playing_var.set("재생 중인 파일 없음")
+            if update_status:
+                self.playing_var.set("재생 중인 파일 없음")
 
     def _close(self):
         """
