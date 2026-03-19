@@ -1207,3 +1207,21 @@
 ### Next
 
 - 남성 ref `Piper` 공식 fine-tune이 `preprocessing -> training -> postprocess -> A100/Nano smoke`로 이어지는지 계속 추적한다.
+
+## 2026-03-20 | Human + Codex | AGENT 진입점과 watchdog smoke-first 규칙 추가
+
+### Context
+
+- `docs/README.md`는 canonical이지만, 실제로는 에이전트에게 읽히라고 만든 문서라는 성격이 강했다.
+- 또한 이전에 상태 파일과 pid 파일만 남고 실제 watcher가 죽는 사례가 있어, 장시간 파이프라인은 watchdog 자체를 먼저 검증해야 한다는 요구가 생겼다.
+
+### Actions
+
+- `docs/AGENT.md`를 추가해 에이전트용 얇은 시작 진입점을 만들었다.
+- `docs/README.md`에는 `AGENT.md`가 결국 `README -> status` 순서로 진입시키는 얇은 문서라는 점을 명시했다.
+- `docs/개발방침.md`와 `docs/decisions.md`에는 `10분 이상` 또는 `다단계 자동 연결` 작업은 실전 실행 전에 watchdog smoke를 먼저 통과시켜야 한다는 규칙을 추가했다.
+- `docs/agent_watchdog_plan.md`에 범용 watchdog의 목표, 산출물, smoke 시나리오, 다음 구현 계획을 정리했다.
+
+### Next
+
+- 범용 `agent_watchdog.py`를 실제 구현해 sample smoke와 함께 검증한다.
