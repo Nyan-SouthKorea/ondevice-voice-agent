@@ -42,6 +42,11 @@
   - `python -m piper_train --help`
   - `python -m piper_train.preprocess --help`
   - `python -m piper_train.export_onnx --help`
+- `piper_phonemize.phonemize_espeak('ko')` 호출 성공
+- 한국어 `preprocess --skip-audio` smoke 성공
+  - output:
+    - `../results/tts_custom/synthetic_dataset/pilot_v1/preprocess_smoke_out_v3/config.json`
+    - `../results/tts_custom/synthetic_dataset/pilot_v1/preprocess_smoke_out_v3/dataset.jsonl`
 
 ## 실제 설치 순서
 
@@ -64,21 +69,28 @@ cd /data2/iena/260318_ondevice-voice-agent/results/tts_custom/tooling/piper_src/
 bash build_monotonic_align.sh
 ```
 
-## 현재 남은 시스템 의존성
+## 현재 남은 시스템 의존성 메모
 
 - `espeak-ng`
   - training guide는 system package 설치를 전제한다.
   - 현재 이 머신에서는 `sudo apt-get install espeak-ng`를 바로 수행하지 못했다.
+  - 다만 현재 env에서는 `piper_phonemize` 파이썬 모듈이 직접 한국어 phonemization을 수행했고, `preprocess --skip-audio` smoke도 통과했다.
+  - 즉 현재 시점에서 `espeak-ng`는 즉시 blocker로 보지 않는다.
 - `piper-phonemize`
-  - Python package는 설치됐지만, 현재 shell `PATH`에서 `piper-phonemize` executable은 바로 보이지 않았다.
-  - 다만 `piper_train.preprocess --help`와 `piper_train.export_onnx --help`는 정상 동작했다.
+  - shell `PATH`에는 별도 executable이 보이지 않았다.
+  - 하지만 `piper_train.preprocess`는 Python module import 경로로 정상 동작했다.
+
+## 현재 확인된 edge case
+
+- `preprocess.py`는 `batch_size = int(num_utterances / (workers * 2))`로 계산한다.
+- 그래서 샘플 1개 smoke에서는 `batch_size=0`로 죽는다.
+- 실제 pilot dataset처럼 2개 이상 utterance에서는 문제되지 않는다.
 
 ## 현재 판단
 
-- `Piper`는 “training path가 문서상 존재한다” 수준이 아니라, A100 pilot env에서 실제 CLI까지 살릴 수 있었다.
+- `Piper`는 “training path가 문서상 존재한다” 수준이 아니라, A100 pilot env에서 실제 CLI와 한국어 preprocess smoke까지 살릴 수 있었다.
 - 즉 custom training 1순위 후보로 계속 가져갈 가치가 충분하다.
 - 다음 실제 작업은 아래다.
-  1. `espeak-ng` / phonemizer 런타임 경로를 확정
-  2. 한국어 text-only corpus 준비
-  3. `OpenVoice V2` synthetic dataset `1~3시간` pilot 생성
-  4. `Piper` preprocessing -> pilot training -> export smoke
+  1. 한국어 text-only corpus 준비
+  2. `OpenVoice V2` synthetic dataset `1~3시간` pilot 생성
+  3. `Piper` preprocessing -> pilot training -> export smoke

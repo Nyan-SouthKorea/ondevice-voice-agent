@@ -32,7 +32,11 @@
   - `setuptools` 최신판에서 `pkg_resources` 문제
   - `numpy 2.x`와 old torch stack 충돌
   - `torchmetrics 1.x`와 `pytorch-lightning 1.7.7` 충돌
-  - system `espeak-ng`는 아직 미설치
+- 이어서 확인한 결과는 아래다.
+  - `piper_phonemize` 파이썬 모듈이 현재 env에서 한국어 `ko` phonemization을 직접 수행했다
+  - `piper_train.preprocess --skip-audio` 한국어 smoke도 실제로 통과했다
+  - 즉 system `espeak-ng`는 현재 시점의 즉시 blocker는 아니었다
+  - 대신 `preprocess.py`는 샘플 1개일 때 `batch_size=0` edge case가 있다
 - 위 내용을 `docs/envs/tts_piper_train_env.md`로 정리했다.
 
 ## 2026-03-19 | Human + Codex | 영어 runtime winner + 한국어 custom training 계획 고정

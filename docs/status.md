@@ -209,9 +209,11 @@
   - `numpy<2`, `torchmetrics<0.12`, `setuptools<81`, `pip<24.1`
   - `build_monotonic_align.sh`
   - `piper_train`, `piper_train.preprocess`, `piper_train.export_onnx` help
-- 현재 남은 `Piper` training blocker는 아래다.
-  - system `espeak-ng` 설치 확인
-  - `piper-phonemize` 실행 경로 확정
+  - `piper_phonemize` 기반 한국어 phonemization
+  - 한국어 `preprocess --skip-audio` smoke
+- 현재 `Piper` training blocker는 초기 예상보다 줄었다.
+  - system `espeak-ng`는 아직 미설치지만, 현재 env 기준 즉시 blocker는 아니었다
+  - 실제 다음 관문은 synthetic dataset와 pilot training 본 실행이다
 - 한국어 custom training은 아래 순서를 따른다.
   - `1~3시간 pilot synthetic dataset`
   - pilot 학습
@@ -265,7 +267,7 @@
 2. `Piper cpu`, `Kokoro cuda`를 Jetson 상위 voice pipeline local 후보로 먼저 유지한다.
 3. `MeloTTS`, `OpenVoice V2`는 Nano에서 기능 성공 경로를 기준으로 더 가벼운 runtime 변환 가능성을 검토한다.
 4. 현재 partial listening score를 기준으로 우선순위를 유지하고, 추가 수기 평가는 필요할 때만 다시 연다.
-5. `Piper` training env에서 `espeak-ng`와 phonemizer runtime 경로를 먼저 확정한다.
+5. 한국어 text-only corpus를 정리하고 pilot dataset 구조를 고정한다.
 6. `OpenVoice V2` voice audition과 synthetic dataset `1~3시간` pilot 생성 파이프라인을 연다.
 7. `Piper` preprocessing -> pilot 학습 -> export smoke를 연결한다.
 8. `Piper` pilot 학습 뒤에만 full training 확대 여부를 판단한다.
