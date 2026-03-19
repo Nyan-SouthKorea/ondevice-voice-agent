@@ -117,7 +117,7 @@
   - CLI smoke output: `../results/tts/20260318_kokoro_smoke/demo_cli.wav`
   - 구현 메모: 첫 영어 실행에서 `en_core_web_sm` 자동 설치, 현재 env에서는 `espeakng-loader`가 함께 설치되어 system `espeak-ng` 없이도 공식 영어 경로가 동작했다
   - 결론 메모: A100 비교 후보로는 유지하되, 현재 공식 Korean path가 없으므로 한국어 제품 기본 후보로 바로 올리지는 않는다
-- Jetson TTS screening 1차 결과는 `docs/reports/tts_jetson_screening_20260318.md`를 기준으로 본다.
+- Jetson TTS screening 1차 결과는 `docs/reports/260318_TTS_Jetson_스크리닝.md`를 기준으로 본다.
   - thin demo wrapper: `tts/tools/tts_jetson_demo.py`
   - split env:
     - `../env/tts_network_jetson`
@@ -137,14 +137,14 @@
   - 현재 Jetson shortlist:
     - 영어 local: `Piper cpu`, `Kokoro cuda`
     - 한국어는 일단 network fallback 유지
-- Orin Nano 4모델 bring-up 결과는 `docs/reports/tts_nano_bringup_20260319.md`를 기준으로 본다.
+- Orin Nano 4모델 bring-up 결과는 `docs/reports/260319_TTS_나노_구동기록.md`를 기준으로 본다.
   - `Piper (EN, cpu)` 성공, `elapsed_sec 0.400`
   - `Kokoro (EN, cuda)` 성공, `elapsed_sec 5.235`
   - `MeloTTS (KO, cpu)` 성공, `elapsed_sec 15.057`
   - `OpenVoice V2 (KO, cpu)` 성공, `elapsed_sec 39.795`
   - `OpenVoice V2 (KO, cuda)`는 `NvMapMemAlloc error 12`로 실패해 Nano 기본 경로를 `cpu`로 둔다
   - `tts/tools/tts_jetson_demo.py`는 이제 `/proc/device-tree/model`을 읽어 `AGX Orin`과 `Orin Nano`에서 다른 기본 device를 자동 선택한다
-- AGX Orin 4모델 bring-up 결과는 `docs/reports/tts_agx_bringup_20260319.md`를 기준으로 본다.
+- AGX Orin 4모델 bring-up 결과는 `docs/reports/260319_TTS_AGX_구동기록.md`를 기준으로 본다.
   - AGX result root:
     - `/home/everybot/workspace/ondevice-voice-agent/results/tts/agx_smoke/`
   - AGX smoke 요약:
@@ -161,7 +161,7 @@
   - 1차: A100에서 `MeloTTS`, `OpenVoice V2`, `Piper`, `Kokoro`를 모두 같은 기준으로 구현하고 비교한다.
   - 2차: A100 결과를 바탕으로 Jetson 실측 후보를 좁힌다.
   - 3차: 위 둘이 모두 부족할 때만 custom voice 학습을 검토한다.
-- 현재 TTS benchmark canonical 계획은 `docs/reports/tts_benchmark_plan.md`를 기준으로 본다.
+- 현재 TTS benchmark canonical 계획은 `docs/reports/260318_TTS_벤치마크_계획.md`를 기준으로 본다.
 - 현재 canonical prompt는 `tts/evaluation/prompts/tts_benchmark_prompts_v1.tsv`다.
   - 한국어 100문장
   - 영어 100문장
@@ -192,9 +192,9 @@
   - 영어: `Kokoro (EN) 10.00`, `Piper (EN) 10.00`, `MeloTTS (EN) 10.00`, `OpenVoice V2 (EN) 9.00`
   - 단, 영어는 `EN001` 한 문장만 평가했으므로 순위 확정 근거로 쓰지 않는다.
 - 현재 active TTS 후속 계획은 아래 문서를 기준으로 본다.
-  - `docs/reports/tts_custom_training_plan_v1.md`
+  - `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`
 - 현재 training feasibility audit 기준 문서는 아래다.
-  - `docs/reports/tts_training_feasibility_audit_20260319.md`
+  - `docs/reports/260319_TTS_학습_가능성_점검.md`
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `docs/envs/tts_piper_train_env.md`
 - 현재 active 역할 분리는 아래와 같다.

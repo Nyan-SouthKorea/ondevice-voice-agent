@@ -30,8 +30,8 @@
 
 관련 기준 문서:
 
-- `docs/reports/tts_custom_training_plan_v1.md`
-- `docs/reports/tts_training_feasibility_audit_20260319.md`
+- `docs/reports/260319_TTS_커스텀_학습_계획_v1.md`
+- `docs/reports/260319_TTS_학습_가능성_점검.md`
 - `docs/status.md`
 
 주의:

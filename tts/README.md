@@ -2,6 +2,22 @@
 
 이 디렉토리는 text-to-speech 계층 자리다.
 
+TTS 문서 허브:
+
+- 현재 상태 기준: `../docs/status.md`
+- 현재 active custom training 계획: `../docs/reports/260319_TTS_커스텀_학습_계획_v1.md`
+- 현재 학습 가능성 점검: `../docs/reports/260319_TTS_학습_가능성_점검.md`
+- Jetson Nano 구동 기록: `../docs/reports/260319_TTS_나노_구동기록.md`
+- AGX Orin 구동 기록: `../docs/reports/260319_TTS_AGX_구동기록.md`
+- A100 전체 benchmark 결과: `../docs/reports/260318_TTS_전체_벤치마크_결과_v1.md`
+- Jetson screening 요약: `../docs/reports/260318_TTS_Jetson_스크리닝.md`
+- benchmark 설계 기준: `../docs/reports/260318_TTS_벤치마크_계획.md`
+- 조사 문서: `../docs/research/tts.md`
+- Jetson 환경 문서: `../docs/envs/jetson_tts_env.md`
+- A100 실험 환경 문서: `../docs/envs/tts_a100_experiment_env.md`
+- Piper 학습 환경 문서: `../docs/envs/tts_piper_train_env.md`
+- custom training 실험 README: `experiments/custom_training/README.md`
+
 현재 상태:
 
 - 초기 구조 시작
