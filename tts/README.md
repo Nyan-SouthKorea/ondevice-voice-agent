@@ -210,6 +210,17 @@ repo/tts/tools/tts_text_input_gui_jetson.sh
 - GUI 자체는 `/usr/bin/python3`로 띄우고, 실제 합성은 `env/tts_piper_jetson/bin/python repo/tts/tts_demo.py`를 subprocess로 호출한다.
 - 기본 한국어 Piper ONNX는 우선 `repo/tts/models/piper_ko_260319_공식파인튜닝/`를 보고, 없으면 `results/tts_custom/training/.../exported_onnx/` 경로를 fallback으로 사용한다.
 
+Jetson 음성 파이프라인 TTS 응답 GUI:
+
+```bash
+cd /home/everybot/workspace/ondevice-voice-agent/repo
+tts/tools/voice_pipeline_tts_gui_jetson.sh
+```
+
+- `voice_pipeline_tts_gui_demo.py`는 기존 `voice_pipeline_gui_demo.py`를 확장해 `wake word -> VAD -> STT -> TTS`를 한 번에 데모한다.
+- LLM은 넣지 않고, STT로 인식한 결과를 템플릿 문장으로 바로 한국어 Piper TTS가 읽는다.
+- TTS 합성은 `env/tts_piper_jetson/bin/python repo/tts/tts_demo.py`를 subprocess로 호출하고, 결과 wav는 `results/tts/jetson_demo/voice_pipeline_tts/` 아래에 저장한다.
+
 현재 v1 방향:
 
 - 빠른 end-to-end 연결용:

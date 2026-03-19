@@ -1069,3 +1069,22 @@
 
 - 사용자가 Jetson GUI에서 실제 한글 입력과 합성을 확인한다.
 - 필요하면 재생 장치 선택과 입력기 관련 사용법을 짧게 추가 문서화한다.
+
+## 2026-03-19 | Human + Codex | wake word + VAD + STT + TTS 데모 추가
+
+### Context
+
+- 기존 `voice_pipeline_gui_demo.py`는 wake word, VAD, STT까지만 묶여 있었고, 사용자는 같은 GUI 흐름에서 바로 TTS 응답까지 듣는 두 번째 데모를 원했다.
+- LLM 단계는 제외하고, STT 결과를 바로 TTS로 읽는 단순 경로로 범위를 줄였다.
+
+### Actions
+
+- `voice_pipeline_tts_gui_demo.py`를 추가해 기존 통합 GUI 상태 머신 위에 `TTS_RUNNING` 단계를 붙였다.
+- STT 완료 후 `env/tts_piper_jetson/bin/python repo/tts/tts_demo.py`를 subprocess로 호출해 한국어 Piper ONNX로 응답을 합성하고 `aplay`로 즉시 재생하도록 구현했다.
+- Jetson 실행용 launcher `tts/tools/voice_pipeline_tts_gui_jetson.sh`를 추가했다.
+- Jetson Nano에서 foreground `timeout` 테스트로 GUI가 실제로 뜨는 것과, background 실행 시 프로세스 `voice_pipeline_tts_gui_demo.py`가 유지되는 것을 확인했다.
+
+### Next
+
+- Jetson에서 실제 wake word 호출부터 TTS 응답까지 end-to-end 동작을 사용자가 직접 확인한다.
+- 필요하면 응답 템플릿과 재생 장치 선택지를 짧게 조정한다.

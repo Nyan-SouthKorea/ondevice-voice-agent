@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Piper 공식 fine-tune control run 검증 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, `Piper` 공식 fine-tune control run까지 자동 benchmark 완료, Jetson Nano 한글 입력용 `PyQt5` 텍스트 입력 GUI 추가, 다음 active 방향은 `공식 fine-tune 결과 청취 + Jetson runtime 검증 + 30시간대 scale-up 판단` |
+| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Piper 공식 fine-tune control run 검증 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, `Piper` 공식 fine-tune control run까지 자동 benchmark 완료, Jetson Nano 한글 입력용 `PyQt5` 텍스트 입력 GUI 추가, wake word+VAD+STT 결과를 바로 읽는 `voice_pipeline_tts_gui_demo.py` 추가, 다음 active 방향은 `공식 fine-tune 결과 청취 + Jetson runtime 검증 + 30시간대 scale-up 판단` |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
