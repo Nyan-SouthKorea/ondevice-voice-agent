@@ -21,6 +21,15 @@
 - `tts/docs/환경/260319_1925_Piper_한국어_전체학습_재현가이드.md`
 - `tts/docs/보고서/260319_1736_TTS_Piper_공식_파인튜닝_자동평가_결과.md`
 
+## 공식 기준 링크
+
+- Piper training guide:
+  - https://tderflinger.github.io/piper-docs/guides/training/
+- Piper checkpoints / voices:
+  - https://huggingface.co/rhasspy/piper-voices
+- base checkpoint source used in this run:
+  - https://huggingface.co/datasets/rhasspy/piper-checkpoints/resolve/main/en/en_US/lessac/medium/epoch=2164-step=1355540.ckpt
+
 ## 이번 run의 입력 기준
 
 ### reference
