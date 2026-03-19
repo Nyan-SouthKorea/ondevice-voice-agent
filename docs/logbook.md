@@ -2,6 +2,26 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Piper 공식 파인튜닝 완료, 자동평가까지 닫힘
+
+- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `docs/status.md`, `tts/README.md`, `tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`였다.
+- 공식 control run root는 `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`였다.
+- 학습은 `epoch=2183-step=1376858`에서 정상 완료됐다.
+- 직후 review sample, ONNX export, benchmark 후처리를 직접 닫았다.
+  - review sample:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/checkpoint_review/review_samples/epoch=2183-step=1376858/`
+  - final benchmark:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/benchmark_postprocess/20260319_173609/`
+- 결과 요약:
+  - `mean_normalized_cer 0.1247`
+  - `exact_match_rate 0.30`
+  - scratch pilot best(`0.9149`, `0.0`) 대비 크게 개선됐다.
+- 해석:
+  - 이번 결과는 `synthetic 데이터만으로 절대 불가`보다는 `scratch 레시피가 주원인`이었다는 쪽을 지지한다.
+- 후처리 중 발견한 운영 이슈도 같이 고쳤다.
+  - `piper_training_postprocess.py`: 같은 checkpoint가 `important`와 `latest`로 중복 집계되지 않도록 stem 기준 dedupe
+  - `piper_checkpoint_sampler.py`: 최종 checkpoint가 중요한 epoch 규칙에 걸리지 않아도 항상 review 대상에 포함
+
 ## 2026-03-19 | Human + Codex | 커밋 메시지는 한국어 중심으로 고정
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`였다.

@@ -170,7 +170,14 @@ def collect_target_checkpoints(run_root: Path) -> List[Path]:
         latest = latest_all[-1]
         if latest not in targets:
             targets.append(latest)
-    return sort_checkpoints(targets)
+    deduped: List[Path] = []
+    seen_stems = set()
+    for checkpoint_path in sort_checkpoints(targets):
+        if checkpoint_path.stem in seen_stems:
+            continue
+        seen_stems.add(checkpoint_path.stem)
+        deduped.append(checkpoint_path)
+    return deduped
 
 
 def export_checkpoint(

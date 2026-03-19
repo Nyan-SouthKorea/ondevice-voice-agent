@@ -10,6 +10,7 @@ TTS 문서 허브:
 - 현재 Piper pilot 실행 계획: `../tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
 - 현재 Piper pilot 자동평가 결과: `../tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`
 - 현재 Piper 공식 파인튜닝 실행 계획: `../tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`
+- 현재 Piper 공식 파인튜닝 자동평가 결과: `../tts/docs/보고서/260319_1736_TTS_Piper_공식_파인튜닝_자동평가_결과.md`
 - 현재 학습 가능성 점검: `../tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
 - 현재 active Piper pilot run root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
 - 현재 active Piper 공식 파인튜닝 run root: `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`
@@ -258,6 +259,18 @@ python tts/tools/tts_jetson_demo.py --model kokoro
     - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/checkpoint_review/review_samples/`
   - 학습 종료 후 자동 후처리:
     - `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/postprocess_status.local.md`
+- 현재 `Piper` 공식 fine-tune control run도 학습, ONNX export, 자동 benchmark까지 완료됐다.
+  - final checkpoint:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/train_root/lightning_logs/version_1/checkpoints/epoch=2183-step=1376858.ckpt`
+  - review sample root:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/checkpoint_review/review_samples/epoch=2183-step=1376858/`
+  - final benchmark root:
+    - `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/benchmark_postprocess/20260319_173609/`
+  - 핵심 자동지표:
+    - `mean_normalized_cer 0.1247`
+    - `exact_match_rate 0.30`
+  - 해석:
+    - 직전 scratch pilot 대비 intelligibility가 크게 개선돼, 현재 synthetic Korean single-speaker 경로에서도 `공식 fine-tune 레시피`가 유효하다는 근거가 생겼다.
 
 ## 한국어 text 코퍼스 구성
 
@@ -303,6 +316,14 @@ python tts/tools/tts_jetson_demo.py --model kokoro
    - `v1 ∩ v3 = 0`
    - `v2 ∩ v3 = 0`
    - union = `24,689`
+
+현재 custom training 기준 최신 usable synthetic snapshot은 아래를 본다.
+
+- inventory root:
+  - `../results/tts_custom/synthetic_dataset/260319_1450_합성데이터_인벤토리_v3/`
+- 요약:
+  - `18,477문장`
+  - `21.568시간`
 
 주의:
 

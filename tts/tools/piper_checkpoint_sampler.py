@@ -217,11 +217,12 @@ def main():
 
     while True:
         checkpoint_paths = sorted(args.checkpoint_dir.rglob("*.ckpt"))
+        latest_name = checkpoint_paths[-1].name if checkpoint_paths else None
         for checkpoint_path in checkpoint_paths:
             if checkpoint_path.name in processed:
                 continue
             epoch = checkpoint_epoch(checkpoint_path)
-            if not should_keep(epoch, args.important_every):
+            if checkpoint_path.name != latest_name and not should_keep(epoch, args.important_every):
                 processed.add(checkpoint_path.name)
                 continue
             important_target = important_dir / checkpoint_path.name

@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Jetson runtime winner + custom training planning 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, 다음 active 방향은 `Piper/Kokoro` runtime winner 검증 + `OpenVoice V2` synthetic dataset pipeline |
+| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Piper 공식 fine-tune control run 검증 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, `Piper` 공식 fine-tune control run까지 자동 benchmark 완료, 다음 active 방향은 `공식 fine-tune 결과 청취 + Jetson runtime 검증 + 30시간대 scale-up 판단` |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -201,6 +201,8 @@
   - `tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`
 - 현재 `Piper` 공식 파인튜닝 실행 계획 기준 문서는 아래다.
   - `tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`
+- 현재 `Piper` 공식 파인튜닝 자동평가 결과 기준 문서는 아래다.
+  - `tts/docs/보고서/260319_1736_TTS_Piper_공식_파인튜닝_자동평가_결과.md`
 - 현재 TTS 합성용 텍스트는 비파괴 통합 인덱스로도 정리해뒀다.
   - root:
     - `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
@@ -272,24 +274,37 @@
   - system `espeak-ng`는 아직 미설치지만, 현재 env 기준 즉시 blocker는 아니었다
   - 실제 다음 관문은 synthetic dataset와 pilot training 본 실행이다
 - 현재 synthetic inventory snapshot은 아래를 기준으로 본다.
-  - root: `../results/tts_custom/synthetic_dataset/260319_1308_합성데이터_인벤토리/`
-- 현재 active 대규모 생성 run은 아래다.
-  - `../results/tts_custom/synthetic_dataset/full_v2_tts_only/openvoice_ko_female_announcer_speed_1p1/`
-  - 진행률 파일:
-    - `progress.local.md`
-  - 다음 run은 `v3` corpus 기준으로 supervisor가 자동 연결한다.
-    - supervisor 상태:
-      - `../results/tts_custom/synthetic_dataset/_local_supervisor/run_openvoice_v3_after_v2.local.md`
-  - usable unique: `7,876문장 / 9.398시간`
-  - archive/reference 전용 row: `1,058`
-- 현재 active Piper pilot run은 아래다.
+  - root: `../results/tts_custom/synthetic_dataset/260319_1450_합성데이터_인벤토리_v3/`
+  - usable unique: `18,477문장 / 21.568시간`
+  - canonical text index: `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/master_union_unique_by_text.tsv`
+- 현재 OpenVoice `full_v3` 생성은 완료됐다.
+  - root: `../results/tts_custom/synthetic_dataset/full_v3_tts_only/openvoice_ko_female_announcer_speed_1p1/`
+  - actual generated rows: `9,400`
+  - actual generated audio hour: `13.023`
+- 현재 완료된 Piper pilot run은 아래다.
   - root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
   - dataset snapshot: `1,928문장 / 2.0시간`
   - mode: `medium scratch / single-speaker / GPU0`
-  - generation은 GPU1에서 계속 진행하고, pilot 학습은 GPU0에서 분리 실행한다
+  - 결과 요약: `tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`
+- 현재 완료된 Piper 공식 fine-tune control run은 아래다.
+  - root: `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`
+  - dataset snapshot: `18,477문장 / 21.568시간`
+  - mode: `official fine-tune / lessac medium checkpoint / single-speaker / GPU0`
+  - final checkpoint:
+    - `train_root/lightning_logs/version_1/checkpoints/epoch=2183-step=1376858.ckpt`
+  - review sample:
+    - `checkpoint_review/review_samples/epoch=2183-step=1376858/`
+  - final benchmark:
+    - `benchmark_postprocess/20260319_173609/`
+  - 핵심 결과:
+    - `mean_normalized_cer 0.1247`
+    - `exact_match_rate 0.30`
+  - 해석:
+    - scratch pilot 대비 intelligibility가 크게 개선돼, 현재 synthetic Korean single-speaker 경로에서 `공식 fine-tune 레시피`가 유효하다는 근거를 확보했다
 - 현재 checkpoint review 정책은 아래처럼 둔다.
   - 매 epoch checkpoint 저장
   - 중요 checkpoint는 `epoch 0`, `epoch 1`, 이후 `5 epoch`마다 별도 보관
+  - 단, checkpoint pruning/보존 정책 때문에 최종 checkpoint만 남는 run이 있을 수 있으므로, review sampler는 항상 latest checkpoint도 별도 review 대상으로 포함한다
   - 중요 checkpoint마다 review prompt wav를 같이 저장해 사람이 직접 듣고 선택할 수 있게 한다
 - 한국어 custom training용 준비물은 아래까지 실제로 만들었다.
   - 한국어 text-only corpus: `../results/tts_custom/corpora/ko_text_corpus_v1/`
