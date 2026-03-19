@@ -2,6 +2,16 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Piper pilot 학습 실행계획과 checkpoint review 정책 고정
+
+- 기준 문서는 `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`, `tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`, `tts/docs/환경/260319_1100_Piper_학습환경.md`였다.
+- 실행 전에 장시간/다단계 계획을 문서로 먼저 남기는 방침을 `docs/개발방침.md`에 보강했다.
+- 현재까지 생성된 OpenVoice synthetic 데이터 inventory를 만들었고, usable unique snapshot 기준으로 `7,876문장 / 9.398시간`을 확보했다.
+- archive/reference 전용 partial filtered run `1,058`개는 training canonical snapshot에서 제외했다.
+- `2.0시간 / 1,928문장` balanced subset으로 `Piper medium scratch pilot`을 시작했다.
+- 현재 active pilot root는 `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`다.
+- 중요한 checkpoint는 `epoch 0`, `epoch 1`, 이후 `5 epoch`마다 별도 보관하고, review prompt 5문장 wav를 같이 저장하는 정책을 고정했다.
+
 ## 2026-03-19 | Human + Codex | TTS 누적 보고서 파일명을 날짜 prefix + 한국어 제목으로 리팩토링
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.

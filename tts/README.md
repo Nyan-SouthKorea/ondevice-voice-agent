@@ -7,6 +7,7 @@ TTS 문서 허브:
 - 모듈 문서 허브: `docs/README.md`
 - 현재 상태 기준: `../docs/status.md`
 - 현재 active custom training 계획: `../tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`
+- 현재 Piper pilot 실행 계획: `../tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
 - 현재 학습 가능성 점검: `../tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
 - Jetson Nano 구동 기록: `../tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`
 - AGX Orin 구동 기록: `../tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`

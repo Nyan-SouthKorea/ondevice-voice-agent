@@ -1,0 +1,6 @@
+prompt_id	text	category
+PR001	안녕하세요. 지금부터 음성 합성 품질을 점검하겠습니다.	statement
+PR002	오늘 오후 세 시 삼십 분에 회의가 예정되어 있습니다.	time
+PR003	배터리 잔량이 부족하니 충전기를 연결해 주세요.	command
+PR004	현재 온도는 스물세 도이고 습도는 오십오 퍼센트입니다.	number
+PR005	처리가 끝나면 결과를 바로 음성으로 안내하겠습니다.	statement

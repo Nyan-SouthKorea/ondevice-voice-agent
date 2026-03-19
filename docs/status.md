@@ -195,6 +195,8 @@
   - `tts/docs/보고서/260319_1052_TTS_커스텀_학습_계획_v1.md`
 - 현재 training feasibility audit 기준 문서는 아래다.
   - `tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
+- 현재 `Piper` pilot 실행 계획 기준 문서는 아래다.
+  - `tts/docs/보고서/260319_1308_TTS_Piper_파일럿_학습_실행계획.md`
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `tts/docs/환경/260319_1100_Piper_학습환경.md`
 - 현재 active 역할 분리는 아래와 같다.
@@ -214,6 +216,19 @@
 - 현재 `Piper` training blocker는 초기 예상보다 줄었다.
   - system `espeak-ng`는 아직 미설치지만, 현재 env 기준 즉시 blocker는 아니었다
   - 실제 다음 관문은 synthetic dataset와 pilot training 본 실행이다
+- 현재 synthetic inventory snapshot은 아래를 기준으로 본다.
+  - root: `../results/tts_custom/synthetic_dataset/260319_1308_합성데이터_인벤토리/`
+  - usable unique: `7,876문장 / 9.398시간`
+  - archive/reference 전용 row: `1,058`
+- 현재 active Piper pilot run은 아래다.
+  - root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
+  - dataset snapshot: `1,928문장 / 2.0시간`
+  - mode: `medium scratch / single-speaker / GPU0`
+  - generation은 GPU1에서 계속 진행하고, pilot 학습은 GPU0에서 분리 실행한다
+- 현재 checkpoint review 정책은 아래처럼 둔다.
+  - 매 epoch checkpoint 저장
+  - 중요 checkpoint는 `epoch 0`, `epoch 1`, 이후 `5 epoch`마다 별도 보관
+  - 중요 checkpoint마다 review prompt wav를 같이 저장해 사람이 직접 듣고 선택할 수 있게 한다
 - 한국어 custom training용 준비물은 아래까지 실제로 만들었다.
   - 한국어 text-only corpus: `../results/tts_custom/corpora/ko_text_corpus_v1/`
   - corpus 준비 스크립트: `tts/tools/prepare_ko_text_corpus.py`
