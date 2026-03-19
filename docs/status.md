@@ -27,7 +27,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, AGX 4모델 bring-up 완료, Orin Nano 확대 적용 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson split env + thin demo 완료, AGX에서 4개 로컬 후보 smoke 완료 |
+| TTS | A100 full benchmark 확정, AGX/Nano 4모델 bring-up 완료, Jetson 최적화 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료 |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -137,6 +137,13 @@
   - 현재 Jetson shortlist:
     - 영어 local: `Piper cpu`, `Kokoro cuda`
     - 한국어는 일단 network fallback 유지
+- Orin Nano 4모델 bring-up 결과는 `docs/reports/tts_nano_bringup_20260319.md`를 기준으로 본다.
+  - `Piper (EN, cpu)` 성공, `elapsed_sec 0.400`
+  - `Kokoro (EN, cuda)` 성공, `elapsed_sec 5.235`
+  - `MeloTTS (KO, cpu)` 성공, `elapsed_sec 15.057`
+  - `OpenVoice V2 (KO, cpu)` 성공, `elapsed_sec 39.795`
+  - `OpenVoice V2 (KO, cuda)`는 `NvMapMemAlloc error 12`로 실패해 Nano 기본 경로를 `cpu`로 둔다
+  - `tts/tools/tts_jetson_demo.py`는 이제 `/proc/device-tree/model`을 읽어 `AGX Orin`과 `Orin Nano`에서 다른 기본 device를 자동 선택한다
 - AGX Orin 4모델 bring-up 결과는 `docs/reports/tts_agx_bringup_20260319.md`를 기준으로 본다.
   - AGX result root:
     - `/home/everybot/workspace/ondevice-voice-agent/results/tts/agx_smoke/`
@@ -207,10 +214,10 @@
 
 ## 다음 작업
 
-1. AGX에서 검증한 4모델 경로를 Orin Nano env에 최소 변경으로 옮긴다.
-2. `tts/tools/tts_jetson_demo.py` 기준으로 Orin Nano 4모델 smoke를 다시 확인한다.
-3. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
-4. Jetson TTS shortlist를 상위 voice pipeline 통합 대상으로 고정한다.
+1. Orin Nano에서 살아난 4모델 경로를 기준으로 ONNX, TensorRT, hybrid runtime 같은 경량화 가능성을 모델별로 나눈다.
+2. `Piper cpu`, `Kokoro cuda`를 Jetson 상위 voice pipeline local 후보로 먼저 유지한다.
+3. `MeloTTS`, `OpenVoice V2`는 Nano에서 기능 성공 경로를 기준으로 더 가벼운 runtime 변환 가능성을 검토한다.
+4. 모델별 listening sample을 듣고 10점 만점 수기 평가를 입력한다.
 5. 영어 local 후보가 우세하다고 판단되면 custom training 계획 문서를 연다.
 6. A100 benchmark와 Jetson runtime 코드가 서로 깨지지 않도록 공통 SDK 진입점 기준으로 구조를 유지한다.
 7. 실제 현장 오디오 기준으로 wake word threshold와 input gain 기본값을 확정한다.

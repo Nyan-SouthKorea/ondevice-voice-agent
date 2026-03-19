@@ -40,6 +40,11 @@
 - `../env/tts_kokoro_jetson`
   - `Kokoro`
 
+메모:
+- `Orin Nano`에서는 가장 빠른 bring-up을 위해 `tts_openvoice_v2_jetson`을 `tts_melotts_jetson` 기반 shared env 또는 symlink로 두는 실용 경로를 허용한다.
+- `AGX Orin`처럼 여유가 있는 장비에서는 별도 env를 유지하는 편이 더 깔끔하다.
+- 현재 `tts/tools/tts_jetson_demo.py`는 `openvoice_v2` 실행 시 전용 env에 `openvoice` 패키지가 실제로 없으면 `tts_melotts_jetson`으로 자동 fallback한다.
+
 ## Jetson TTS 진행 순서
 
 1. repo 최신화
@@ -123,18 +128,52 @@
 
 ### 현재 권장 device
 
-- `edge_tts`: network
-- `openai_api`: network
-- `piper`: `cpu`
-- `melotts`: `cpu` 또는 AGX에서는 `cuda`
-- `openvoice_v2`: `cuda`
-- `kokoro`: `cuda`
+- 공통
+  - `edge_tts`: network
+  - `openai_api`: network
+  - `piper`: `cpu`
+  - `kokoro`: `cuda`
+- `AGX Orin`
+  - `melotts`: `cuda`
+  - `openvoice_v2`: `cuda`
+- `Orin Nano`
+  - `melotts`: `cpu`
+  - `openvoice_v2`: `cpu`
 
-현재 `tts/tools/tts_jetson_demo.py`는 위 권장 device를 기본값으로 사용한다. 필요한 경우 `--device`로 덮어쓴다.
-기본값 재검증 결과:
-- `piper auto`: `elapsed_sec 0.318`
-- `kokoro auto`: `elapsed_sec 1.629`
-- `melotts auto`: `elapsed_sec 14.506`
+현재 `tts/tools/tts_jetson_demo.py`는 `/proc/device-tree/model`을 읽어 위 장비별 기본 device를 자동으로 고른다. 필요한 경우 `--device`로 덮어쓴다.
+
+## 2026-03-19 Orin Nano 4모델 bring-up 결과
+
+- 상세 결과:
+  - `docs/reports/tts_nano_bringup_20260319.md`
+
+### env별 관찰
+
+- `../env/tts_piper_jetson`
+  - 영어 CPU smoke 재검증 성공
+  - `model_load_sec 1.983`
+  - `elapsed_sec 0.400`
+- `../env/tts_kokoro_jetson`
+  - 영어 CUDA smoke 재검증 성공
+  - `model_load_sec 9.312`
+  - `elapsed_sec 5.235`
+- `../env/tts_melotts_jetson`
+  - 한국어 CPU smoke 재검증 성공
+  - `model_load_sec 4.274`
+  - `elapsed_sec 15.057`
+- `../env/tts_openvoice_v2_jetson`
+  - Nano에서는 `cuda`가 `NvMapMemAlloc error 12`로 실패
+  - `cpu` 경로는 성공
+  - `model_load_sec 16.201`
+  - `elapsed_sec 39.795`
+
+### 현재 해석
+
+- `Orin Nano`에서도 4개 로컬 후보 모두 실제 합성까지는 도달했다.
+- 다만 `MeloTTS`, `OpenVoice V2`는 현재 기준으로는 기능 확인용 성공이고, 실시간 후보는 아니다.
+- 실제 Jetson shortlist는 계속 아래가 맞다.
+  - 영어 local: `Piper cpu`, `Kokoro cuda`
+  - 한국어는 network fallback 유지, 혹은 더 공격적인 경량화/변환 경로를 별도 검토
 
 ## 성공 기준
 

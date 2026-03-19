@@ -2,6 +2,20 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-19 | Human + Codex | Orin Nano에서 TTS 4모델 bring-up 완료
+
+- 기준 문서는 `docs/envs/jetson_tts_env.md`, `docs/reports/tts_agx_bringup_20260319.md`였다.
+- Nano host `192.168.20.165`에서 `Piper`, `Kokoro`, `MeloTTS`, `OpenVoice V2` 4개 로컬 후보를 모두 실제 합성 가능한 상태로 만들었다.
+- 핵심 결과는 아래였다.
+  - `Piper (cpu)` 성공, `elapsed_sec 0.400`
+  - `Kokoro (cuda)` 성공, `elapsed_sec 5.235`
+  - `MeloTTS (cpu)` 성공, `elapsed_sec 15.057`
+  - `OpenVoice V2 (cpu)` 성공, `elapsed_sec 39.795`
+- `OpenVoice V2`는 Nano `cuda`에서 `NvMapMemAlloc error 12`로 실패했고, 현재 안정 경로는 `cpu`다.
+- Nano에서는 `tts_openvoice_v2_jetson`을 `tts_melotts_jetson` 기반 shared env로 두는 실용 경로를 택했다.
+- `tts/tools/tts_jetson_demo.py`는 이제 `/proc/device-tree/model`을 읽어 `AGX Orin`과 `Orin Nano`에서 다른 기본 device를 자동 선택하고, 필요하면 `openvoice_v2 -> tts_melotts_jetson` fallback도 자동 처리한다.
+- 상세 숫자와 산출물 경로는 `docs/reports/tts_nano_bringup_20260319.md`로 승격했다.
+
 ## 2026-03-19 | Human + Codex | AGX Orin에서 TTS 4모델 bring-up 완료
 
 - 기준 문서는 `docs/envs/jetson_tts_env.md`, `docs/envs/jetson/stt_trt_agx_orin_experiment.md`였다.
