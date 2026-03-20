@@ -1243,3 +1243,5 @@
 - AIHub `문학작품 낭송·낭독 음성 데이터`를 `results/wake_word/reference_datasets/raw/260320_aihub_문학작품_낭송낭독_음성데이터`로 반입했다.
 - 현재 라벨은 모두 해제했고, 원천 wav는 `extract_aihub_literature_dataset.sh`로 해제 중이다.
 - 라벨의 `voice.filename`과 실제 원천 zip 구조가 `wav/` vs `splitted/`로 다르다는 점을 확인해 wake word 조사 문서와 raw README에 기록했다.
+- `wake_word/train/00_prepare_reference_bank_from_aihub.py`를 추가해 split wav 기준 `6~12초` reference 후보를 자동 추출할 수 있게 했다.
+- 현재 partial extraction 상태에서 `20명` smoke candidate bank를 `results/wake_word/reference_datasets/candidates/260320_aihub_문학낭독_ref_smoke_v1`로 만들었다.
