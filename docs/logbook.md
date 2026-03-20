@@ -2,6 +2,18 @@
 
 > 최근 작업만 유지한다. 이전 상세 로그는 `docs/archive/logbook_2026_03_full_before_refactor.md`에 보관한다.
 
+## 2026-03-20 | Human + Codex | 자비스 ref wakeword TTS 후보 소량 오디션 생성
+
+- 기준 문서는 `docs/AGENT.md`, `docs/README.md`, `docs/status.md`, `tts/README.md`였다.
+- 사용자는 `results` 아래의 자비스 reference 영상을 적절한 이름으로 정리한 뒤, wakeword 데이터 생성에 앞서 여러 한국어 TTS 후보의 목소리를 직접 들어보고 선택할 수 있게 소량 샘플을 만들길 원했다.
+- 문맥상 사용자가 적은 `STT`는 실제로는 `TTS` 후보 비교로 해석해 진행했다.
+- 원본 영상은 `results/tts_custom/references/source_videos/20260320/ko_jarvis_reference_video.mp4`로 옮겼고, `openvoice_prepare_reference.py`로 `results/tts_custom/references/ko_jarvis/ko_jarvis.wav`를 다시 고정했다.
+- wakeword용 짧은 한국어 문장 10개를 `results/wake_word/tts_audition/260320_jarvis_웨이크워드_TTS_모델비교_v1/prompts.tsv`로 만들고, 아래 세 로컬 한국어 TTS 경로로 각각 10개씩 샘플을 생성했다.
+  - `OpenVoice V2` + `ko_jarvis` reference
+  - `MeloTTS KR`
+  - `Piper` 공식 한국어 파인튜닝 ONNX
+- 결과 비교 폴더는 `results/wake_word/tts_audition/260320_jarvis_웨이크워드_TTS_모델비교_v1/` 아래에 두었고, 각 모델 폴더에 `WW001.wav`~`WW010.wav`, `manifest.tsv`를 남겼다.
+
 ## 2026-03-20 | Human + Codex | 에이전트 시작 게이트를 `AGENT.md`로 강화하고 stale reminder를 정리
 
 - 기준 문서는 `docs/AGENT.md`, `docs/README.md`, `docs/status.md`, `docs/개발방침.md`, `docs/decisions.md`였다.
