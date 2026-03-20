@@ -11,11 +11,9 @@ TTS 문서 허브:
 - 현재 Piper pilot 자동평가 결과: `../tts/docs/보고서/260319_1324_TTS_Piper_파일럿_자동평가_결과.md`
 - 현재 Piper 공식 파인튜닝 실행 계획: `../tts/docs/보고서/260319_1445_TTS_Piper_공식_파인튜닝_실행계획_v1.md`
 - 현재 Piper 공식 파인튜닝 자동평가 결과: `../tts/docs/보고서/260319_1736_TTS_Piper_공식_파인튜닝_자동평가_결과.md`
-- 현재 TTS 상태점검과 다음 계획: `../tts/docs/보고서/260320_0822_TTS_상태점검_및_다음계획.md`
 - 현재 학습 가능성 점검: `../tts/docs/보고서/260319_1100_TTS_학습_가능성_점검.md`
 - 현재 active Piper pilot run root: `../results/tts_custom/training/260319_1312_Piper_한국어_파일럿_v1/`
 - 현재 active Piper 공식 파인튜닝 run root: `../results/tts_custom/training/260319_1440_Piper_한국어_공식_파인튜닝_v1/`
-- 현재 active Piper 남성 ref run root: `../results/tts_custom/training/260319_1840_Piper_한국어_공식_파인튜닝_남성ref_v1/`
 - 현재 TTS 통합 텍스트 코퍼스 인덱스: `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
 - Jetson Nano 구동 기록: `../tts/docs/보고서/260319_0930_TTS_나노_구동기록.md`
 - AGX Orin 구동 기록: `../tts/docs/보고서/260319_0907_TTS_AGX_구동기록.md`
@@ -342,7 +340,6 @@ tts/tools/voice_pipeline_tts_gui_jetson.sh
 
 - 긴 generation run은 [`openvoice_generate_dataset.py`](/data2/iena/260318_ondevice-voice-agent/repo/tts/tools/openvoice_generate_dataset.py)의 `--skip-existing`를 기본으로 사용한다.
 - 이 스크립트는 row 단위로 `manifest.tsv`를 즉시 append하므로, generation이 중간에 멈춰도 이미 생성된 `wav`와 `manifest.tsv`를 기준으로 안전하게 resume할 수 있다.
-- 현재 남성 ref 전체생성 run은 [`260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`](/data2/iena/260318_ondevice-voice-agent/repo/tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md) 기준으로 진행 중이다.
 
 중복 검사는 이렇게 했다.
 

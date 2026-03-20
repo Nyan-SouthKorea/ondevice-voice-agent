@@ -35,7 +35,7 @@
 | Wake word | 완료 후 튜닝 단계 | `final_full_best_trial40`, `threshold 0.80`, Jetson GUI demo 완료 |
 | VAD | 완료 | `VADDetector` 공통 진입점, `silero` 기본 backend |
 | STT | 기본값 확정 완료, 통합 GUI 실사용 검증 단계 | 온디바이스 기본값은 `WhisperTRT small nano safe`, wake word + VAD + STT 통합 GUI 데모 유지 |
-| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Piper 공식 fine-tune control run 검증 완료, 남성 ref 전체학습 재현 단계 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, `Piper` 공식 fine-tune control run까지 자동 benchmark 완료, Jetson Nano 한글 입력용 `PyQt5` 텍스트 입력 GUI 추가, `voice_pipeline_tts_gui_demo.py`는 persistent Piper worker 경로로 전환 완료, 남성 ref OpenVoice 전체 생성은 `24,689문장 / 30.300시간`으로 완료됐고 inventory도 `duplicate 0`으로 닫혔다. 현재는 남성 ref `Piper` 공식 fine-tune의 `preprocessing`이 실제로 진행 중이고, sampler/postprocess/smoke 대기자도 다시 붙어 있다 |
+| TTS | A100 full benchmark 확정, partial human listening 반영, AGX/Nano 4모델 bring-up 완료, Piper 공식 fine-tune control run 검증 완료 | `TTSSynthesizer`, OpenAI API backend, Edge TTS backend, MeloTTS backend, OpenVoice V2 backend, Piper backend, Kokoro backend, A100 4후보 + 2 reference full benchmark 완료, OpenVoice reference 재선정 반영, local STT scorer, listening sample 구조 준비, Jetson Nano GUI 기반 partial human listening 반영, Jetson split env + thin demo 완료, AGX와 Orin Nano에서 4개 로컬 후보 smoke 완료, `Piper` 공식 fine-tune control run까지 자동 benchmark 완료, Jetson Nano 한글 입력용 `PyQt5` 텍스트 입력 GUI 추가, `voice_pipeline_tts_gui_demo.py`는 persistent Piper worker 경로로 전환 완료 |
 | LLM | 대기 | 상위 orchestration만 남아 있음 |
 
 ## 핵심 메모
@@ -118,13 +118,6 @@
     - per-turn model reload 제거
     - permanent wav 저장 제거
     - `tts_wall_sec`를 실제 합성 wall time에 가깝게 맞춤
-- 남성 ref 전체 synthetic generation 현재 기준
-  - run root: `../results/tts_custom/synthetic_dataset/full_male_v1_tts_only/openvoice_ko_male_lee_sunkyun_speed_1p1`
-  - corpus: `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/master_union_unique_by_text.tsv`
-  - 생성 결과: `24,689 wav`, `30.300시간`
-  - 현재 판단: generation 본체는 완료됐고, `monitor_generation_progress.py`와 `wait/watch_generation_and_continue`는 stale 또는 dead 상태였다
-  - inventory 결과: `24,689문장`, `duplicate 0`, `unique_audio_hour 30.3`
-  - 현재 active 단계: `260319_1840_Piper_한국어_공식_파인튜닝_남성ref_v1` 아래에서 `official fine-tune preprocessing`
 - `Kokoro`는 A100 `cuda` 기준 공식 영어 smoke를 통과했고, 현재 공식 language code에는 한국어가 없다.
   - env: `../env/tts_kokoro`
   - 공식 repo/model: `hexgrad/Kokoro-82M`
@@ -234,7 +227,6 @@
   - 현재 active 생성은 기존 `ko_text_corpus_v1/v2/v3`별 코퍼스를 그대로 사용한다.
   - 단, 현재 run이 끝난 뒤 다음 generation/training 입력을 다시 고를 때는 통합본의 `master_union_unique_by_text.tsv`를 기본 출발점으로 삼는다.
   - 즉 이후 데이터 생성과 학습 snapshot 설계는 이 통합 코퍼스를 canonical index로 보고 진행한다.
-- 현재 남성 `ko_male_lee_sunkyun` ref 전체 synthetic generation은 `full_male_v1_tts_only` run root에서 진행 중이다.
 - OpenVoice generation 스크립트는 `--skip-existing`와 즉시 `manifest.tsv` append 방식을 지원하도록 바뀌어, 긴 run이 중간에 멈춰도 같은 run root에서 안전하게 resume할 수 있다.
 - 현재 `Piper` pilot training env 기준 문서는 아래다.
   - `tts/docs/환경/260319_1100_Piper_학습환경.md`
@@ -356,11 +348,9 @@
   - global wall span: `205.123 sec`
   - observed global RTF: `0.2648`
   - 현재 추정: `1.5시간 pilot audio -> 약 24분`, 안전하게는 `25~30분`
-- 현재 OpenVoice 신규 audition reference 후보는 아래 둘을 active pending 상태로 둔다.
-  - 남성 reference: `../results/tts_custom/references/ko_male_lee_sunkyun/ko_male_lee_sunkyun.wav`
+- 현재 OpenVoice 신규 audition reference 후보는 아래를 active pending 상태로 둔다.
   - 여성 reference: `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
 - 현재 사용자가 직접 들어볼 OpenVoice 10문장 샘플 경로는 아래다.
-  - 남성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_male_lee_sunkyun/`
   - 여성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_female_announcer/`
   - prompt 기준: `tts/evaluation/prompts/openvoice_audition_prompts_ko_v2.tsv`
 - OpenVoice custom training active selection은 아래로 고정한다.

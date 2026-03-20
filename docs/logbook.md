@@ -51,14 +51,6 @@
 - 그래서 `nohup`으로 detached supervisor를 다시 걸고, pid 파일 `wait_generation_and_continue.pid`와 실제 `ps` 결과를 확인했다.
 - 이 변경과 함께 `에이전트 모드`에서는 장시간 다단계 파이프라인을 세션과 분리된 supervisor로 넘기는 규칙을 `개발방침`과 `decisions`에 추가했다.
 
-## 2026-03-19 | Human + Codex | 남성 ref 전체 synthetic generation을 resume-safe 방식으로 전환
-
-- 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`였다.
-- 남성 `ko_male_lee_sunkyun` ref 전체생성 run은 초기 174개 생성 뒤 조용히 멈췄다.
-- 같은 구간의 175~181번 문장을 직접 probe한 결과, 특정 텍스트나 reference 자체가 blocker는 아니었다.
-- 운영 리스크를 줄이기 위해 `openvoice_generate_dataset.py`에 `--skip-existing`와 row 단위 `manifest.tsv` append를 추가했다.
-- 이후 같은 run root에서 generation을 다시 시작했고, 현재 `full_male_v1_tts_only/openvoice_ko_male_lee_sunkyun_speed_1p1/` 기준으로 이어서 진행 중이다.
-
 ## 2026-03-19 | Human + Codex | Piper 한국어 전체학습 재현가이드 문서화
 
 - 기준 문서는 `docs/README.md`, `docs/개발방침.md`, `tts/README.md`였다.
@@ -262,7 +254,6 @@
   - active selection manifest: `tts/experiments/custom_training/openvoice_active_selection_20260319.json`
 - source mp4는 이름을 바꾸지 않고 아래에 아카이빙했다.
   - `../results/tts_custom/references/source_videos/20260319/ref 음성-여성 아나운서.mp4`
-  - `../results/tts_custom/references/source_videos/20260319/ref 음성-남성 이션균 배우.mp4`
 
 ## 2026-03-19 | Human + Codex | 한국어 text corpus 설명 아카이브 생성
 
@@ -295,11 +286,9 @@
   - observed global RTF: `0.2648`
   - 현재 추정: `1.5시간 pilot audio -> 약 24분`, 안전하게는 `25~30분`
 - 사용자의 새 요청에 따라 full pilot 생성은 여기서 멈추고, reference audition을 우선하기로 했다.
-- 새 reference 후보는 사용자가 넣은 MP4 두 개에서 직접 정리했다.
-  - 남성: `../results/tts_custom/references/ko_male_lee_sunkyun/ko_male_lee_sunkyun.wav`
+- 새 reference 후보는 사용자가 넣은 MP4에서 직접 정리했다.
   - 여성: `../results/tts_custom/references/ko_female_announcer/ko_female_announcer.wav`
-- 두 reference에 대해 OpenVoice 한국어 10문장 샘플을 생성했다.
-  - 남성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_male_lee_sunkyun/`
+- OpenVoice 한국어 10문장 샘플을 생성했다.
   - 여성: `../results/tts_custom/audition/openvoice_ref_audition_20260319_v2/ko_female_announcer/`
   - prompt 기준: `tts/evaluation/prompts/openvoice_audition_prompts_ko_v2.tsv`
   - 다음 결정 포인트는 사용자가 두 후보를 직접 듣고 active reference를 고르는 것이다.
@@ -1197,9 +1186,6 @@
 
 ### Actions
 
-- `full_male_v1_tts_only` run root의 `progress.local.md`, `manifest.tsv`, `wav` 개수를 다시 대조해 generation 완료를 확정했다.
-- `monitor_generation_progress.py`만 남고 `openvoice_generate_dataset.py` 본체와 `wait/watch_generation_and_continue` 프로세스는 죽어 있음을 확인했다.
-- `docs/status.md`, `tts/docs/보고서/260319_1840_TTS_Piper_남성ref_전체학습_실행계획_v1.md`, 새 보고서 `tts/docs/보고서/260320_0822_TTS_상태점검_및_다음계획.md`를 현재 사실에 맞게 갱신했다.
 
 ### Next
 
