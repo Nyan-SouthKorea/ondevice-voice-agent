@@ -18,6 +18,7 @@
 - wake word와 VAD를 연결해 STT 입력 구간 절단 기준을 확정한다.
 - 상위 음성 파이프라인을 SDK형 인터페이스로 연결할 준비를 한다.
 - STT 전용 GUI와 wake word + VAD + STT 통합 GUI를 기준으로 상위 파이프라인 UX를 검증한다.
+- wake word positive 음성 생성을 `MeloTTS 1개 고정 voice + OpenVoice V2 다화자 reference bank` 구조로 전환하기 위해 AIHub `문학작품 낭송·낭독 음성 데이터` 반입과 reference clip 추출 규칙 설계를 진행한다.
 
 ## 현재 고정 기준
 
@@ -218,6 +219,11 @@
 - 현재 `Piper` 공식 파인튜닝 자동평가 결과 기준 문서는 아래다.
   - `tts/docs/보고서/260319_1736_TTS_Piper_공식_파인튜닝_자동평가_결과.md`
 - 현재 TTS 합성용 텍스트는 비파괴 통합 인덱스로도 정리해뒀다.
+- wake word reference bank용 AIHub `문학작품 낭송·낭독 음성 데이터`는 아래 canonical raw 경로에서 관리한다.
+  - `../results/wake_word/reference_datasets/raw/260320_aihub_문학작품_낭송낭독_음성데이터`
+  - 현재 라벨은 해제 완료, 원천 wav는 해제 진행 중
+  - 현재 확인된 label item 수는 `37,570`, speaker prefix 기준 unique speaker 수는 `1,814`
+  - 주의: 라벨의 `voice.filename`은 `data2/recitation/wav/*.wav`를 가리키지만 실제 원천 zip 구조는 `data2/recitation/splitted/...`라서, reference clip 추출은 split wav 기준으로 다시 맞춰야 한다
   - root:
     - `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
   - 현재 canonical TSV:

@@ -1238,3 +1238,8 @@
 ### Next
 
 - 범용 `agent_watchdog.py`를 실제 구현해 sample smoke와 함께 검증한다.
+# 2026-03-20
+
+- AIHub `문학작품 낭송·낭독 음성 데이터`를 `results/wake_word/reference_datasets/raw/260320_aihub_문학작품_낭송낭독_음성데이터`로 반입했다.
+- 현재 라벨은 모두 해제했고, 원천 wav는 `extract_aihub_literature_dataset.sh`로 해제 중이다.
+- 라벨의 `voice.filename`과 실제 원천 zip 구조가 `wav/` vs `splitted/`로 다르다는 점을 확인해 wake word 조사 문서와 raw README에 기록했다.
