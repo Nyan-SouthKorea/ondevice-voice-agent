@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-sec", type=float, default=12.0)
     parser.add_argument("--max-per-speaker", type=int, default=1)
     parser.add_argument("--speaker-limit", type=int, default=0)
+    parser.add_argument("--gender-filter", choices=["ALL", "MALE", "FEMALE"], default="ALL")
     parser.add_argument("--copy", action="store_true", help="symlink 대신 copy")
     return parser.parse_args()
 
@@ -99,6 +100,8 @@ def main() -> None:
         utt_id = derive_utt_id(wav_path)
         label = labels.get(utt_id)
         speaker_id = utt_id.split("-")[0]
+        if label and args.gender_filter != "ALL" and label.gender != args.gender_filter:
+            continue
         if chosen_per_speaker.get(speaker_id, 0) >= args.max_per_speaker:
             continue
 
@@ -162,6 +165,7 @@ def main() -> None:
         "max_sec": args.max_sec,
         "max_per_speaker": args.max_per_speaker,
         "speaker_limit": args.speaker_limit,
+        "gender_filter": args.gender_filter,
         "selected_speakers": len(chosen_per_speaker),
         "selected_clips": len(selected_rows),
         "copy_mode": bool(args.copy),

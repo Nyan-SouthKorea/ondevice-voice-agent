@@ -221,9 +221,13 @@
 - 현재 TTS 합성용 텍스트는 비파괴 통합 인덱스로도 정리해뒀다.
 - wake word reference bank용 AIHub `문학작품 낭송·낭독 음성 데이터`는 아래 canonical raw 경로에서 관리한다.
   - `../results/wake_word/reference_datasets/raw/260320_aihub_문학작품_낭송낭독_음성데이터`
-  - 현재 라벨은 해제 완료, 원천 wav는 해제 진행 중
+  - 현재 라벨과 원천 wav 해제 완료
   - 현재 확인된 label item 수는 `37,570`, speaker prefix 기준 unique speaker 수는 `1,814`
   - 주의: 라벨의 `voice.filename`은 `data2/recitation/wav/*.wav`를 가리키지만 실제 원천 zip 구조는 `data2/recitation/splitted/...`라서, reference clip 추출은 split wav 기준으로 다시 맞춰야 한다
+  - OpenVoice용 canonical ref bank는 raw와 분리해 아래 경로에 보존한다.
+    - `../results/wake_word/reference_datasets/ref_bank/260320_aihub_문학낭독_openvoice_ref_bank_v1`
+    - copied wav `46개`
+    - 현재 구성 규칙은 `FEMALE 23 + MALE 23`, `gender + speaker_slot` 기반 v1 sampling이다
   - root:
     - `../results/tts_custom/corpora/260319_1510_tts_텍스트코퍼스_통합_v1/`
   - 현재 canonical TSV:

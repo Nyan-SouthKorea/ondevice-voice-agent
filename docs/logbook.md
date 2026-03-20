@@ -1245,3 +1245,5 @@
 - 라벨의 `voice.filename`과 실제 원천 zip 구조가 `wav/` vs `splitted/`로 다르다는 점을 확인해 wake word 조사 문서와 raw README에 기록했다.
 - `wake_word/train/00_prepare_reference_bank_from_aihub.py`를 추가해 split wav 기준 `6~12초` reference 후보를 자동 추출할 수 있게 했다.
 - 현재 partial extraction 상태에서 `20명` smoke candidate bank를 `results/wake_word/reference_datasets/candidates/260320_aihub_문학낭독_ref_smoke_v1`로 만들었다.
+- 전체 추출 완료 후 `wake_word/train/00b_build_openvoice_ref_bank_from_aihub.py`로 `46개` copied ref bank를 `results/wake_word/reference_datasets/ref_bank/260320_aihub_문학낭독_openvoice_ref_bank_v1`에 고정했다.
+- 이 bank는 공식 narrator id가 라벨에 직접 없어서 `FEMALE 23 + MALE 23`, `gender + speaker_slot` 조합 기준으로 구성했다.
